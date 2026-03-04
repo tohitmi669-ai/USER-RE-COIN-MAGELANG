@@ -123,12 +123,6 @@
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        @media (max-width: 480px) {
-            .card { padding: 25px 20px; }
-            .val-botol { font-size: 40px; }
-            .val-rupiah { font-size: 24px; }
-        }
-
         .hidden { display: none; }
         .thank-you { 
             color: var(--primary); font-weight: 700; font-size: 13px; 
@@ -206,11 +200,8 @@
         document.getElementById('user-display').innerText = phone;
 
         const dbRef = firebase.database().ref('/user/' + phone);
-        
-        // AUTO REGISTRATION
         dbRef.once('value', (s) => { if(!s.exists()) dbRef.set(0); });
 
-        // MONITORING REALTIME
         dbRef.on('value', (snapshot) => {
             currentBotol = snapshot.val() || 0;
             const saldo = currentBotol * HARGA_PER_BOTOL;
@@ -247,28 +238,36 @@
     }
 
     function prosesCairkan() {
-        // --- LOGIKA KEAMANAN ---
+        // 1. CEK NOMOR HP DULU (KEAMANAN)
         const konfirmasiNomor = prompt("Demi keamanan, masukkan kembali nomor HP Anda yang terdaftar:");
 
+        // Jika nomor salah, langsung berhenti (Return). Database TIDAK diupdate.
         if (konfirmasiNomor !== currentPhone) {
             alert("❌ Maaf, nomor handphone Anda tidak sesuai dengan nomor yang terdaftar. Silahkan login menggunakan nomor handphone yang terdaftar.");
             return; 
         }
-        // -----------------------
 
+        // 2. CEK DETAIL PEMBAYARAN
         const details = document.getElementById('payment-details').value;
-        if (!details) return alert("Mohon isi detail pembayaran!");
+        if (!details) {
+            alert("Mohon isi detail pembayaran!");
+            return;
+        }
 
+        // 3. JIKA SEMUA BENAR, BARU RESET SALDO & KIRIM WA
         const saldoRupiah = currentBotol * HARGA_PER_BOTOL;
         const waOperator = "6289524538835";
         const pesan = `*PENARIKAN RE-COIN TERVERIFIKASI*%0A------------------------------------%0A*ID User:* ${currentPhone}%0A*Metode:* ${document.getElementById('payment-method').value}%0A*Detail:* ${details}%0A%0A*Botol:* ${currentBotol}%0A*Total:* Rp ${saldoRupiah.toLocaleString('id-ID')}%0A------------------------------------%0APesan ini dikirim otomatis oleh sistem RE-COIN.`;
 
+        // Reset saldo di Firebase hanya dilakukan SETELAH verifikasi nomor sukses
         firebase.database().ref('/user/' + currentPhone).set(0).then(() => {
             window.open(`https://wa.me/${waOperator}?text=${pesan}`, '_blank');
             closeModal();
             document.getElementById('closing-msg').classList.remove('hidden');
             document.getElementById('btn-tarik').classList.add('hidden');
             document.getElementById('msg-limit').classList.add('hidden');
+        }).catch((err) => {
+            alert("Terjadi kesalahan sistem: " + err.message);
         });
     }
 </script>
