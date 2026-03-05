@@ -14,7 +14,7 @@
             --secondary: #00cec9;
             --dark: #2d3436;
             --gold: #fdcb6e;
-            --glass: rgba(255, 255, 255, 0.92);
+            --glass: rgba(255, 255, 255, 0.95);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -49,56 +49,33 @@
         }
 
         .logo-container {
-            background: white;
-            width: 70px;
-            height: 70px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 35px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            background: white; width: 70px; height: 70px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px; font-size: 35px; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
         }
 
         h2 { font-weight: 800; margin: 0; letter-spacing: -1px; font-size: 26px; }
         .subtitle { color: #636e72; font-size: 13px; margin-bottom: 25px; display: block; }
 
         input, select, textarea {
-            width: 100%;
-            padding: 16px;
-            margin-bottom: 15px;
-            border: 2px solid #dfe6e9;
-            border-radius: 15px;
-            font-size: 16px;
-            outline: none;
-            transition: 0.3s;
-            font-family: inherit;
+            width: 100%; padding: 16px; margin-bottom: 15px;
+            border: 2px solid #dfe6e9; border-radius: 15px;
+            font-size: 16px; outline: none; transition: 0.3s; font-family: inherit;
         }
 
         .btn-main, .btn-tarik {
-            padding: 16px;
-            font-size: 16px;
-            border-radius: 15px;
-            font-weight: 700;
-            width: 100%;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
+            padding: 16px; font-size: 16px; border-radius: 15px;
+            font-weight: 700; width: 100%; border: none; cursor: pointer; transition: 0.3s;
         }
 
         .btn-main {
             background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-            box-shadow: 0 8px 15px rgba(0,184,148,0.25);
+            color: white; box-shadow: 0 8px 15px rgba(0,184,148,0.25);
         }
 
         .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 18px;
-            margin-bottom: 12px;
-            border: 1px solid #f1f2f6;
+            background: white; padding: 15px; border-radius: 18px;
+            margin-bottom: 12px; border: 1px solid #f1f2f6;
         }
 
         .val-botol { font-size: 48px; font-weight: 800; color: var(--primary); margin: 0; }
@@ -106,19 +83,13 @@
 
         #modal-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display:none; align-items:flex-end;
-            justify-content:center; z-index: 1000;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+            display:none; align-items:flex-end; justify-content:center; z-index: 1000;
         }
 
         .modal {
-            background: white;
-            padding: 25px;
-            border-radius: 25px 25px 0 0;
-            width: 100%;
-            max-width: 500px;
-            animation: slideUp 0.4s ease-out;
+            background: white; padding: 25px; border-radius: 25px 25px 0 0;
+            width: 100%; max-width: 500px; animation: slideUp 0.4s ease-out;
         }
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -238,37 +209,40 @@
     }
 
     function prosesCairkan() {
-        // 1. CEK NOMOR HP DULU (KEAMANAN)
-        const konfirmasiNomor = prompt("Demi keamanan, masukkan kembali nomor HP Anda yang terdaftar:");
-
-        // Jika nomor salah, langsung berhenti (Return). Database TIDAK diupdate.
-        if (konfirmasiNomor !== currentPhone) {
-            alert("❌ Maaf, nomor handphone Anda tidak sesuai dengan nomor yang terdaftar. Silahkan login menggunakan nomor handphone yang terdaftar.");
-            return; 
-        }
-
-        // 2. CEK DETAIL PEMBAYARAN
+        // --- TAHAP 1: VALIDASI INPUT ---
         const details = document.getElementById('payment-details').value;
         if (!details) {
-            alert("Mohon isi detail pembayaran!");
+            alert("Mohon isi detail akun pembayaran Anda!");
             return;
         }
 
-        // 3. JIKA SEMUA BENAR, BARU RESET SALDO & KIRIM WA
-        const saldoRupiah = currentBotol * HARGA_PER_BOTOL;
-        const waOperator = "6289524538835";
-        const pesan = `*PENARIKAN RE-COIN TERVERIFIKASI*%0A------------------------------------%0A*ID User:* ${currentPhone}%0A*Metode:* ${document.getElementById('payment-method').value}%0A*Detail:* ${details}%0A%0A*Botol:* ${currentBotol}%0A*Total:* Rp ${saldoRupiah.toLocaleString('id-ID')}%0A------------------------------------%0APesan ini dikirim otomatis oleh sistem RE-COIN.`;
+        // --- TAHAP 2: KONFIRMASI KEAMANAN (CRITICAL) ---
+        const konfirmasiNomor = prompt("Demi keamanan, masukkan kembali nomor HP yang sedang Anda gunakan:");
 
-        // Reset saldo di Firebase hanya dilakukan SETELAH verifikasi nomor sukses
-        firebase.database().ref('/user/' + currentPhone).set(0).then(() => {
-            window.open(`https://wa.me/${waOperator}?text=${pesan}`, '_blank');
-            closeModal();
-            document.getElementById('closing-msg').classList.remove('hidden');
-            document.getElementById('btn-tarik').classList.add('hidden');
-            document.getElementById('msg-limit').classList.add('hidden');
-        }).catch((err) => {
-            alert("Terjadi kesalahan sistem: " + err.message);
-        });
+        // JIKA NOMOR SALAH: KELUAR DARI FUNGSI (Saldo Tetap Utuh)
+        if (konfirmasiNomor !== currentPhone) {
+            alert("❌ GAGAL: Nomor handphone tidak sesuai. Saldo Anda tetap aman. Silakan gunakan nomor yang terdaftar.");
+            return; 
+        }
+
+        // --- TAHAP 3: EKSEKUSI (Hanya jika Tahap 2 Lolos) ---
+        const saldoRupiah = currentBotol * HARGA_PER_BOTOL;
+        const method = document.getElementById('payment-method').value;
+        const waOperator = "6289524538835";
+        const pesan = `*PENARIKAN RE-COIN TERVERIFIKASI*%0A------------------------------------%0A*ID User:* ${currentPhone}%0A*Metode:* ${method}%0A*Detail:* ${details}%0A%0A*Total Botol:* ${currentBotol}%0A*Total Rupiah:* Rp ${saldoRupiah.toLocaleString('id-ID')}%0A------------------------------------`;
+
+        // Reset saldo di database
+        firebase.database().ref('/user/' + currentPhone).set(0)
+            .then(() => {
+                // HANYA SETELAH SALDO BERHASIL DI-RESET DI DATABASE, BARU BUKA WHATSAPP
+                window.open(`https://wa.me/${waOperator}?text=${pesan}`, '_blank');
+                closeModal();
+                document.getElementById('closing-msg').classList.remove('hidden');
+                document.getElementById('btn-tarik').classList.add('hidden');
+            })
+            .catch((err) => {
+                alert("Koneksi gagal, saldo tidak terpotong. Coba lagi.");
+            });
     }
 </script>
 </body>
