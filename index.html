@@ -26,9 +26,12 @@
             width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.4);
         }
         .logo-container {
-            background: white; width: 70px; height: 70px; border-radius: 20px;
+            background: white; width: 150px; height: 150px; border-radius: 100px;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 15px; font-size: 35px; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            margin: 0 auto 10px; padding: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .logo-container img {
+            width: 150%; height: 120%; object-fit: contain; border-radius: 20px;
         }
         h2 { font-weight: 800; margin: 0; letter-spacing: -1px; font-size: 26px; }
         .subtitle { color: #636e72; font-size: 13px; margin-bottom: 25px; display: block; }
@@ -56,9 +59,14 @@
 <body>
 
     <div id="login-page" class="card">
-        <div class="logo-container">♻️</div>
+        <!-- LOGO DARI LINK YANG DIBERIKAN -->
+        <div class="logo-container">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8" 
+                 alt="RE-COIN Logo" 
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/100x100/00b894/ffffff?text=RE+COIN';">
+        </div>
         <h2 id="auth-title">RE-COIN</h2>
-        <span id="auth-subtitle" class="subtitle">Digitalizing Waste for Better Future</span>
+        <span id="auth-subtitle" class="subtitle">Sampah Jadi Rupiah</span>
         
         <input type="number" id="phone-input" placeholder="Masukkan Nomor HP">
         <input type="password" id="pass-input" class="hidden" placeholder="Masukkan Password/PIN">
