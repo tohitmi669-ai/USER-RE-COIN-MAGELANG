@@ -26,22 +26,12 @@
             width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.4);
         }
         .logo-container {
-            /* background dihapus sesuai permintaan */
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; /* bentuk lingkaran */
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            margin: 0 auto 10px; 
-            padding: 0; /* padding dihilangkan agar gambar full */
-            /* box-shadow juga dihapus agar tidak ada background */
+            width: 150px; height: 150px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 10px; padding: 0;
         }
         .logo-container img {
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; /* agar logo tidak terpotong */
-            border-radius: 50%; /* mengikuti bentuk container */
+            width: 100%; height: 100%; object-fit: contain; border-radius: 50%;
             display: block;
         }
         h2 { font-weight: 800; margin: 0; letter-spacing: -1px; font-size: 26px; }
@@ -70,7 +60,7 @@
 <body>
 
     <div id="login-page" class="card">
-        <!-- LOGO DARI LINK YANG DIBERIKAN - BACKGROUND SUDAH DIHAPUS -->
+        <!-- LOGO DARI LINK YANG DIBERIKAN -->
         <div class="logo-container">
             <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8" 
                  alt="RE-COIN Logo" 
@@ -215,11 +205,23 @@
     }
 
     function prosesCairkan() {
+        const method = document.getElementById('payment-method').value;
         const details = document.getElementById('payment-details').value;
+        
+        // Mendapatkan label metode yang lebih ramah
+        let methodLabel = '';
+        switch(method) {
+            case 'BANK': methodLabel = 'Transfer BANK'; break;
+            case 'DANA': methodLabel = 'DANA'; break;
+            case 'OVO': methodLabel = 'OVO'; break;
+            default: methodLabel = method;
+        }
+        
         if (!details) return alert("Isi detail pembayaran!");
 
         const saldoRupiah = currentBotol * HARGA_PER_BOTOL;
-        const pesan = `*PENARIKAN RE-COIN*%0AID: ${currentPhone}%0ATotal: Rp ${saldoRupiah.toLocaleString('id-ID')}%0ADetail: ${details}`;
+        // Pesan WhatsApp sekarang menyertakan metode pembayaran yang dipilih
+        const pesan = `*PENARIKAN RE-COIN*%0AID: ${currentPhone}%0ATotal: Rp ${saldoRupiah.toLocaleString('id-ID')}%0AMetode: ${methodLabel}%0ADetail: ${details}`;
 
         // RESET BOTOL SAJA, PASSWORD TETAP ADA
         db.ref('/accounts/' + currentPhone + '/botol').set(0).then(() => {
