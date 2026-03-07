@@ -427,13 +427,37 @@
             font-weight: 600;
         }
         
+        /* CSS Tombol Lokasi yang sudah diperbarui */
         .btn-lokasi {
-            background: none;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
             border: none;
-            color: var(--primary);
-            text-decoration: underline;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 13px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-lokasi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+            background: linear-gradient(135deg, #00a884, #00b8b8);
+        }
+        
+        .btn-lokasi:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(0, 184, 148, 0.3);
+        }
+        
+        .btn-lokasi:disabled {
+            background: #b2bec3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
     </style>
 </head>
@@ -527,9 +551,15 @@
                     <label for="simpan-alamat" style="font-size: 13px;">Simpan alamat untuk下次 belanja</label>
                 </div>
                 
+                <!-- TOMBOL LOKASI YANG SUDAH DIPERBARUI -->
                 <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
                     <span style="font-size: 13px; color: #666;">📍 Atau kirim lokasi:</span>
-                    <button class="btn-lokasi" onclick="getLocation()">Ambil Koordinat GPS</button>
+                    <button class="btn-lokasi" onclick="getLocation()">
+                        <span style="display: flex; align-items: center; gap: 5px;">
+                            <span style="font-size: 16px;">📍</span>
+                            <span>Ambil Lokasi Saya</span>
+                        </span>
+                    </button>
                 </div>
                 
                 <div id="koordinat-display" style="display: none;" class="koordinat-box">
