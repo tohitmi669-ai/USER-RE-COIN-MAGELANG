@@ -91,7 +91,7 @@
             transition: 0.3s;
         }
         
-        input:focus {
+        input:focus, textarea:focus {
             border-color: var(--primary);
         }
         
@@ -192,6 +192,11 @@
         @keyframes slideDown {
             from { transform: translate(-50%, -100px); opacity: 0; }
             to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 0); opacity: 1; }
+            to { transform: translate(-50%, -100px); opacity: 0; }
         }
         
         .hidden {
@@ -389,6 +394,47 @@
             margin-top: 10px;
             text-align: center;
         }
+        
+        /* ALAMAT PANEL */
+        .alamat-panel {
+            margin: 16px 0;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .alamat-panel textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .alamat-panel button:active {
+            transform: scale(0.95);
+        }
+        
+        .koordinat-box {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e8f8f5;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .koordinat-box a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .btn-lokasi {
+            background: none;
+            border: none;
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -465,8 +511,35 @@
             <h4>Keranjang</h4>
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
+            
+            <!-- ALAMAT PENGIRIMAN -->
+            <div class="alamat-panel">
+                <h4 style="margin:12px 0 8px 0; display: flex; align-items: center; gap: 5px;">
+                    📍 Alamat Pengiriman
+                    <span style="font-size: 11px; color: var(--danger);">(wajib)</span>
+                </h4>
+                
+                <textarea id="alamat-pengiriman" rows="3" 
+                          placeholder="Contoh: Jl. Merdeka No. 123, RT 01/RW 02, Kelurahan Sukajadi, Kecamatan Sukasari, Kota Magelang, Jawa Tengah 56123"></textarea>
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
+                    <input type="checkbox" id="simpan-alamat" style="width: auto;">
+                    <label for="simpan-alamat" style="font-size: 13px;">Simpan alamat untuk下次 belanja</label>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                    <span style="font-size: 13px; color: #666;">📍 Atau kirim lokasi:</span>
+                    <button class="btn-lokasi" onclick="getLocation()">Ambil Koordinat GPS</button>
+                </div>
+                
+                <div id="koordinat-display" style="display: none;" class="koordinat-box">
+                    <span id="koordinat-text"></span>
+                    <button onclick="clearLocation()" style="background:none; border:none; color:var(--danger); cursor:pointer;">✕</button>
+                </div>
+            </div>
+            
             <button class="btn-checkout" onclick="checkout()" id="btn-checkout" disabled>
-                CHECKOUT
+                CHECKOUT & KIRIM VIA WA
             </button>
         </div>
         
@@ -491,7 +564,9 @@
     </div>
 
     <script>
-        // Firebase Config
+        // ===========================================
+        // FIREBASE CONFIGURATION
+        // ===========================================
         const firebaseConfig = {
             databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
@@ -499,7 +574,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // Global Variables
+        // ===========================================
+        // GLOBAL VARIABLES
+        // ===========================================
         let currentUser = {
             phone: "",
             botol: 0,
@@ -509,14 +586,22 @@
         
         let isRegistering = false;
         const HARGA_PER_BOTOL = 50;
+        const ADMIN_WA = "6289524538835"; // Ganti dengan nomor WA admin
+        
         let sessionTimer = null;
         let cart = [];
         let products = [];
         
-        // Admin WhatsApp (ganti dengan nomor admin)
-        const ADMIN_WA = "6289524538835";
+        // Lokasi pengiriman
+        let currentLocation = {
+            lat: null,
+            lng: null,
+            alamat: ""
+        };
         
-        // ==================== UTILITY ====================
+        // ===========================================
+        // UTILITY FUNCTIONS
+        // ===========================================
         function getMachineFromUrl() {
             return new URLSearchParams(window.location.search).get('mesin') || "";
         }
@@ -529,11 +614,14 @@
             const notif = document.createElement('div');
             notif.className = 'notification';
             notif.innerHTML = message;
+            if (type === 'error') notif.style.borderColor = '#ff7675';
             document.getElementById('notification').appendChild(notif);
             setTimeout(() => notif.remove(), 3000);
         }
         
-        // ==================== AUTH ====================
+        // ===========================================
+        // AUTHENTICATION
+        // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
             const password = document.getElementById('pass-input').value;
@@ -613,7 +701,9 @@
             });
         }
         
-        // ==================== LISTENERS ====================
+        // ===========================================
+        // FIREBASE LISTENERS
+        // ===========================================
         function setupListeners() {
             db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
                 const botolBaru = snap.val() || 0;
@@ -634,7 +724,9 @@
             });
         }
         
-        // ==================== SESSION ====================
+        // ===========================================
+        // SESSION MANAGEMENT
+        // ===========================================
         function startSessionTimer() {
             if (sessionTimer) clearInterval(sessionTimer);
             sessionTimer = setInterval(() => {
@@ -666,7 +758,9 @@
             location.reload();
         }
         
-        // ==================== UI UPDATE ====================
+        // ===========================================
+        // UI UPDATE
+        // ===========================================
         function updateUI() {
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             document.getElementById('count').innerText = currentUser.botol;
@@ -676,7 +770,9 @@
             btnTarik.disabled = saldo < 5000;
         }
         
-        // ==================== SHOP ====================
+        // ===========================================
+        // SHOP & PRODUCTS
+        // ===========================================
         function loadProducts() {
             db.ref('/products').once('value', (snap) => {
                 products = [];
@@ -697,7 +793,7 @@
             products.forEach(p => {
                 html += `
                     <div class="product-card">
-                        <img src="${p.image || 'https://via.placeholder.com/200x200'}" alt="${p.name}">
+                        <img src="${p.image || 'https://via.placeholder.com/200x200/00b894/ffffff?text=Produk'}" alt="${p.name}">
                         <div class="product-name">${p.name}</div>
                         <div class="product-price">${formatRupiah(p.price || 0)}</div>
                         <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
@@ -765,11 +861,75 @@
             
             itemsDiv.innerHTML = html;
             totalSpan.innerHTML = `Total: ${formatRupiah(total)}`;
-            checkoutBtn.disabled = total > (currentUser.botol * HARGA_PER_BOTOL);
+            
+            const saldo = currentUser.botol * HARGA_PER_BOTOL;
+            checkoutBtn.disabled = total > saldo;
         }
         
-        // ==================== 🔥 WHATSAPP CHECKOUT (FITUR BARU) ====================
+        // ===========================================
+        // FITUR ALAMAT PENGIRIMAN
+        // ===========================================
+        function loadSavedAddress() {
+            const saved = localStorage.getItem('recoin_alamat_' + currentUser.phone);
+            if (saved) {
+                document.getElementById('alamat-pengiriman').value = saved;
+            }
+        }
+        
+        function getLocation() {
+            if (navigator.geolocation) {
+                showNotification('Mendapatkan lokasi...', 'info');
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentLocation.lat = position.coords.latitude;
+                        currentLocation.lng = position.coords.longitude;
+                        
+                        // Reverse geocoding
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLocation.lat}&lon=${currentLocation.lng}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.display_name) {
+                                    document.getElementById('alamat-pengiriman').value = data.display_name;
+                                    currentLocation.alamat = data.display_name;
+                                }
+                            })
+                            .catch(err => console.log(err));
+                        
+                        // Tampilkan koordinat
+                        const mapsLink = `https://www.google.com/maps?q=${currentLocation.lat},${currentLocation.lng}`;
+                        document.getElementById('koordinat-display').style.display = 'flex';
+                        document.getElementById('koordinat-text').innerHTML = 
+                            `<a href="${mapsLink}" target="_blank">📍 Lihat di Google Maps</a>`;
+                        
+                        showNotification('Lokasi berhasil didapatkan!');
+                    },
+                    (error) => {
+                        let msg = 'Gagal mendapatkan lokasi';
+                        showNotification(msg, 'error');
+                    }
+                );
+            } else {
+                showNotification('Browser tidak mendukung GPS', 'error');
+            }
+        }
+        
+        function clearLocation() {
+            currentLocation = { lat: null, lng: null, alamat: "" };
+            document.getElementById('koordinat-display').style.display = 'none';
+        }
+        
+        // ===========================================
+        // CHECKOUT DENGAN WHATSAPP & ALAMAT
+        // ===========================================
         function checkout() {
+            const alamat = document.getElementById('alamat-pengiriman').value.trim();
+            
+            if (!alamat) {
+                showNotification('Mohon isi alamat pengiriman!', 'error');
+                return;
+            }
+            
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             const sisaSaldo = saldo - total;
@@ -781,7 +941,12 @@
                 return;
             }
             
-            // 1. Format pesan WhatsApp
+            // Simpan alamat jika dicentang
+            if (document.getElementById('simpan-alamat').checked) {
+                localStorage.setItem('recoin_alamat_' + currentUser.phone, alamat);
+            }
+            
+            // Format pesan WhatsApp
             const now = new Date();
             const tanggal = now.toLocaleDateString('id-ID');
             const waktu = now.toLocaleTimeString('id-ID');
@@ -790,6 +955,11 @@
             cart.forEach(item => {
                 itemsList += `• ${item.name} (${item.quantity}x) = ${formatRupiah(item.price * item.quantity)}\n`;
             });
+            
+            let mapsLink = '';
+            if (currentLocation.lat && currentLocation.lng) {
+                mapsLink = `https://www.google.com/maps?q=${currentLocation.lat},${currentLocation.lng}`;
+            }
             
             const pesan = 
 `🛍️ *NOTA PEMBELIAN RE-COIN*
@@ -806,10 +976,14 @@ ${itemsList}
 💳 *SISA SALDO:* ${formatRupiah(sisaSaldo)}
 🌱 *BOTOL TERPAKAI:* ${botolDipakai} botol
 ━━━━━━━━━━━━━━━━━━━━━
+📍 *ALAMAT PENGIRIMAN:*
+${alamat}
+${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
+━━━━━━━━━━━━━━━━━━━━━
 ✅ Terima kasih telah berbelanja!
 🌿 RE-COIN - Sampah Jadi Rupiah`;
 
-            // 2. Update ke Firebase
+            // Update ke Firebase
             const updates = {};
             updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
             
@@ -826,33 +1000,32 @@ ${itemsList}
                     quantity: i.quantity,
                     price: i.price
                 })),
+                alamat: alamat,
+                koordinat: currentLocation.lat && currentLocation.lng ? {
+                    lat: currentLocation.lat,
+                    lng: currentLocation.lng
+                } : null,
                 total: total,
                 timestamp: Date.now(),
                 mesin: currentUser.machine
             };
             
-            // 3. Simpan ke Firebase dulu
             db.ref().update(updates).then(() => {
-                // 4. Kirim ke WhatsApp
                 const waUrl = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`;
                 window.open(waUrl, '_blank');
                 
-                // 5. Reset cart dan tampilkan notifikasi
                 cart = [];
                 updateCartDisplay();
                 document.getElementById('cart-panel').classList.add('hidden');
+                clearLocation();
                 
-                // 6. Tampilkan nota ringkas di notifikasi
                 showNotification(`✅ Checkout berhasil! Total: ${formatRupiah(total)}`);
-                
-                // 7. Notifikasi tambahan untuk struk
-                setTimeout(() => {
-                    showNotification(`📱 Cek WhatsApp untuk struk belanja`, 'info');
-                }, 1500);
             });
         }
         
-        // ==================== WITHDRAWAL ====================
+        // ===========================================
+        // WITHDRAWAL
+        // ===========================================
         function openWithdrawalModal() {
             document.getElementById('modal-overlay').style.display = 'flex';
         }
@@ -901,7 +1074,9 @@ ${itemsList}
             });
         }
         
-        // ==================== NAVIGATION ====================
+        // ===========================================
+        // NAVIGATION
+        // ===========================================
         function toggleCart() {
             document.getElementById('cart-panel').classList.toggle('hidden');
         }
@@ -910,6 +1085,7 @@ ${itemsList}
             document.getElementById('dashboard-page').classList.add('hidden');
             document.getElementById('shop-page').classList.remove('hidden');
             loadProducts();
+            loadSavedAddress();
         }
         
         function hideShop() {
@@ -917,7 +1093,21 @@ ${itemsList}
             document.getElementById('dashboard-page').classList.remove('hidden');
         }
         
-        // ==================== INIT ====================
+        // ===========================================
+        // AUTO CLEANUP
+        // ===========================================
+        window.addEventListener('beforeunload', function() {
+            if (currentUser.machine && currentUser.phone) {
+                db.ref().update({
+                    ['/' + currentUser.machine + '/active_user']: null,
+                    ['/accounts/' + currentUser.phone + '/active_machine']: null
+                });
+            }
+        });
+        
+        // ===========================================
+        // INITIALIZATION
+        // ===========================================
         window.onload = function() {
             const machineId = getMachineFromUrl();
             if (machineId) {
