@@ -9,15 +9,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
-    <!-- Font & Style -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         :root {
@@ -26,8 +23,6 @@
             --dark: #2d3436;
             --gold: #fdcb6e;
             --danger: #ff7675;
-            --warning: #fdcb6e;
-            --glass: rgba(255, 255, 255, 0.95);
         }
         
         body {
@@ -37,18 +32,15 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
-            margin: 0;
         }
         
         .card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
+            background: white;
             padding: 24px;
             border-radius: 32px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             width: 100%;
             max-width: 400px;
-            border: 1px solid rgba(255,255,255,0.4);
         }
         
         .card-full {
@@ -63,8 +55,7 @@
             margin: 0 auto 16px;
             border-radius: 60px;
             overflow: hidden;
-            background: white;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            background: #f1f2f6;
         }
         
         .logo-container img {
@@ -76,7 +67,6 @@
         h2 {
             font-weight: 800;
             margin: 0;
-            letter-spacing: -1px;
             font-size: 28px;
             color: var(--dark);
             text-align: center;
@@ -99,14 +89,13 @@
             font-size: 16px;
             outline: none;
             transition: 0.3s;
-            font-family: inherit;
         }
         
         input:focus {
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-scan {
+        .btn-main, .btn-tarik, .btn-belanja {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -115,7 +104,6 @@
             border: none;
             cursor: pointer;
             transition: 0.3s;
-            font-family: inherit;
             margin-bottom: 10px;
         }
         
@@ -125,7 +113,7 @@
         }
         
         .btn-tarik {
-            background: linear-gradient(to right, var(--gold), #f39c12);
+            background: linear-gradient(to right, #fdcb6e, #f39c12);
             color: var(--dark);
         }
         
@@ -134,29 +122,20 @@
             color: white;
         }
         
-        .btn-scan {
-            background: linear-gradient(to right, #00b894, #0984e3);
-            color: white;
-        }
-        
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-scan:active {
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active {
             transform: scale(0.98);
         }
         
         .btn-main:disabled, .btn-tarik:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
-            transform: none;
-            opacity: 0.5;
         }
         
         .stat-card {
-            background: white;
+            background: #f8f9fa;
             padding: 20px;
             border-radius: 24px;
             margin-bottom: 16px;
-            border: 1px solid #f1f2f6;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
         }
         
         .stat-label {
@@ -164,7 +143,6 @@
             font-weight: 700;
             color: #b2bec3;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .val-botol {
@@ -187,13 +165,7 @@
             padding: 12px;
             border-radius: 20px;
             margin-bottom: 20px;
-            font-size: 14px;
             border-left: 4px solid var(--primary);
-        }
-        
-        .machine-label {
-            color: #636e72;
-            font-size: 12px;
         }
         
         .machine-id {
@@ -213,23 +185,13 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             font-weight: 600;
             z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             animation: slideDown 0.3s ease;
             border: 2px solid var(--primary);
-            min-width: 280px;
-            max-width: 90%;
         }
         
         @keyframes slideDown {
             from { transform: translate(-50%, -100px); opacity: 0; }
             to { transform: translate(-50%, 0); opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translate(-50%, 0); opacity: 1; }
-            to { transform: translate(-50%, -100px); opacity: 0; }
         }
         
         .hidden {
@@ -242,7 +204,6 @@
             padding: 8px 16px;
             border-radius: 40px;
             font-size: 14px;
-            font-weight: 600;
             display: inline-block;
             margin-bottom: 20px;
         }
@@ -262,7 +223,6 @@
             cursor: pointer;
             margin-top: 20px;
             text-decoration: underline;
-            width: 100%;
         }
         
         .product-grid {
@@ -273,10 +233,9 @@
         }
         
         .product-card {
-            background: white;
+            background: #f8f9fa;
             border-radius: 20px;
             padding: 12px;
-            border: 1px solid #f1f2f6;
         }
         
         .product-card img {
@@ -312,10 +271,6 @@
             cursor: pointer;
         }
         
-        .btn-beli:active {
-            transform: scale(0.95);
-        }
-        
         .btn-beli:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
@@ -344,13 +299,12 @@
         }
         
         .cart-panel {
-            background: white;
+            background: #f8f9fa;
             border-radius: 20px;
             padding: 16px;
             margin: 16px 0;
             max-height: 300px;
             overflow-y: auto;
-            border: 1px solid #f1f2f6;
         }
         
         .cart-item {
@@ -358,11 +312,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
-            border-bottom: 1px solid #f1f2f6;
-        }
-        
-        .cart-item:last-child {
-            border-bottom: none;
+            border-bottom: 1px solid #dfe6e9;
         }
         
         .cart-total {
@@ -370,7 +320,7 @@
             font-size: 18px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 2px solid #f1f2f6;
+            border-top: 2px solid #dfe6e9;
         }
         
         .btn-checkout {
@@ -397,16 +347,12 @@
             font-size: 14px;
             cursor: pointer;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
         .loading {
             text-align: center;
             padding: 30px;
             color: #b2bec3;
-            grid-column: span 2;
         }
         
         #modal-overlay {
@@ -428,7 +374,6 @@
             border-radius: 32px 32px 0 0;
             width: 100%;
             max-width: 500px;
-            animation: slideUp 0.3s ease;
         }
         
         .cart-header {
@@ -444,37 +389,27 @@
             margin-top: 10px;
             text-align: center;
         }
-        
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- NOTIFICATION AREA -->
     <div id="notification"></div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
         <div class="logo-container">
-            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8" 
-                 alt="RE-COIN Logo"
-                 onerror="this.src='https://via.placeholder.com/120x120/00b894/ffffff?text=RC'">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8">
         </div>
         
         <h2 id="auth-title">RE-COIN</h2>
         <span id="auth-subtitle" class="subtitle">Scan QR Mesin untuk Mulai</span>
         
-        <input type="number" id="phone-input" placeholder="Nomor HP (contoh: 081234567890)">
-        <input type="password" id="pass-input" class="hidden" placeholder="Password (min 4 karakter)">
+        <input type="number" id="phone-input" placeholder="Nomor HP">
+        <input type="password" id="pass-input" class="hidden" placeholder="Password">
         
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LANJUTKAN</button>
         
         <div id="machine-info-login" class="machine-info hidden">
-            <span class="machine-label">Mesin Terdeteksi:</span>
-            <span id="machine-id-display" class="machine-id">-</span>
+            <span>Mesin Terdeteksi: <span id="machine-id-display" class="machine-id">-</span></span>
         </div>
     </div>
 
@@ -482,9 +417,8 @@
     <div id="dashboard-page" class="card hidden">
         <div class="user-badge" id="user-display"></div>
         
-        <div id="machine-info-dashboard" class="machine-info">
-            <span class="machine-label">Anda menggunakan mesin:</span>
-            <span id="active-machine" class="machine-id">-</span>
+        <div class="machine-info">
+            <span>Anda menggunakan mesin: <span id="active-machine" class="machine-id">-</span></span>
         </div>
         
         <div class="stat-card">
@@ -493,7 +427,7 @@
         </div>
         
         <div class="stat-card">
-            <div class="stat-label">SALDO TABUNGAN</div>
+            <div class="stat-label">SALDO</div>
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
         
@@ -502,38 +436,33 @@
         </button>
         
         <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
-            🛒 BELANJA SEKARANG
+            🛒 BELANJA
         </button>
         
         <div id="msg-limit" class="warning-text">
-            Minimal saldo Rp 5.000 untuk tarik tunai
+            Minimal saldo Rp 5.000 untuk tarik
         </div>
         
         <div class="session-timer" id="session-timer">
-            Sesi akan berakhir dalam 5:00
+            Sesi: 5:00
         </div>
         
-        <button class="btn-logout" onclick="logout()">
-            LOGOUT
-        </button>
+        <button class="btn-logout" onclick="logout()">LOGOUT</button>
     </div>
 
     <!-- SHOP PAGE -->
     <div id="shop-page" class="card card-full hidden">
-        <button class="btn-back" onclick="hideShop()">
-            ← Kembali ke Dashboard
-        </button>
+        <button class="btn-back" onclick="hideShop()">← Kembali</button>
         
         <div class="cart-header">
-            <h3 style="margin:0;">🛍️ Produk Tersedia</h3>
+            <h3>🛍️ Produk</h3>
             <div class="cart-icon" onclick="toggleCart()">
-                🛒
-                <span class="cart-count" id="cart-count">0</span>
+                🛒 <span class="cart-count" id="cart-count">0</span>
             </div>
         </div>
         
         <div id="cart-panel" class="cart-panel hidden">
-            <h4 style="margin:0 0 12px 0;">Keranjang Belanja</h4>
+            <h4>Keranjang</h4>
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
             <button class="btn-checkout" onclick="checkout()" id="btn-checkout" disabled>
@@ -549,30 +478,20 @@
     <!-- WITHDRAWAL MODAL -->
     <div id="modal-overlay">
         <div class="modal">
-            <h3 style="margin:0 0 16px 0;">Metode Penarikan</h3>
-            
+            <h3>Metode Penarikan</h3>
             <select id="payment-method" onchange="updatePaymentPlaceholder()">
-                <option value="BANK">Transfer BANK</option>
+                <option value="BANK">BANK</option>
                 <option value="DANA">DANA</option>
                 <option value="OVO">OVO</option>
             </select>
-            
-            <textarea id="payment-details" rows="3" placeholder="Nama Bank, No Rekening, Atas Nama"></textarea>
-            
-            <button class="btn-main" onclick="processWithdrawal()" style="margin-bottom: 10px;">
-                KONFIRMASI PENARIKAN
-            </button>
-            
-            <button onclick="closeModal()" style="background:none; border:none; width:100%; color:#b2bec3; cursor:pointer;">
-                Batal
-            </button>
+            <textarea id="payment-details" rows="3" placeholder="Detail rekening"></textarea>
+            <button class="btn-main" onclick="processWithdrawal()">KONFIRMASI</button>
+            <button onclick="closeModal()" style="background:none; border:none; width:100%; margin-top:10px;">Batal</button>
         </div>
     </div>
 
     <script>
-        // ===========================================
-        // FIREBASE CONFIGURATION
-        // ===========================================
+        // Firebase Config
         const firebaseConfig = {
             databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
@@ -580,9 +499,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // ===========================================
-        // GLOBAL VARIABLES
-        // ===========================================
+        // Global Variables
         let currentUser = {
             phone: "",
             botol: 0,
@@ -593,24 +510,15 @@
         let isRegistering = false;
         const HARGA_PER_BOTOL = 50;
         let sessionTimer = null;
-        
-        // Shopping cart
         let cart = [];
         let products = [];
         
-        // Firebase listeners
-        let listeners = {
-            botol: null,
-            transactions: null,
-            machine: null
-        };
+        // Admin WhatsApp (ganti dengan nomor admin)
+        const ADMIN_WA = "6289524538835";
         
-        // ===========================================
-        // UTILITY FUNCTIONS
-        // ===========================================
+        // ==================== UTILITY ====================
         function getMachineFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('mesin') || "";
+            return new URLSearchParams(window.location.search).get('mesin') || "";
         }
         
         function formatRupiah(angka) {
@@ -618,85 +526,45 @@
         }
         
         function showNotification(message, type = 'success') {
-            const notifDiv = document.getElementById('notification');
             const notif = document.createElement('div');
             notif.className = 'notification';
-            notif.innerHTML = `
-                <span style="font-size:20px;">${type === 'success' ? '🎉' : '⚠️'}</span>
-                <span>${message}</span>
-            `;
-            
-            if (type === 'error') {
-                notif.style.borderColor = '#ff7675';
-            }
-            
-            notifDiv.innerHTML = '';
-            notifDiv.appendChild(notif);
-            
-            setTimeout(() => {
-                notif.style.animation = 'slideUp 0.3s ease';
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
+            notif.innerHTML = message;
+            document.getElementById('notification').appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
         }
         
-        // ===========================================
-        // AUTHENTICATION
-        // ===========================================
+        // ==================== AUTH ====================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
             const password = document.getElementById('pass-input').value;
             const machineId = getMachineFromUrl();
             
-            if (phone.length < 10) {
-                showNotification('Nomor HP minimal 10 digit', 'error');
-                return;
-            }
-            
-            if (!machineId) {
-                showNotification('QR Code tidak valid! Scan dari mesin', 'error');
-                return;
-            }
+            if (phone.length < 10) return showNotification('HP minimal 10 digit', 'error');
+            if (!machineId) return showNotification('QR tidak valid!', 'error');
             
             currentUser.phone = phone;
             currentUser.machine = machineId;
             
-            // Cek apakah user sudah ada
-            db.ref('/accounts/' + phone).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    // User sudah ada, cek password
-                    const data = snapshot.val();
-                    
+            db.ref('/accounts/' + phone).once('value', (snap) => {
+                if (snap.exists()) {
                     if (!password) {
-                        // Minta password
-                        showPasswordInput('LOGIN', 'Masukkan Password Anda');
+                        showPasswordInput('LOGIN', 'Masukkan Password');
                         return;
                     }
-                    
-                    if (data.password === password) {
-                        checkMachineAndLogin();
-                    } else {
-                        showNotification('Password salah!', 'error');
-                    }
+                    if (snap.val().password === password) checkMachineAndLogin();
+                    else showNotification('Password salah!', 'error');
                 } else {
-                    // User baru
                     if (!password) {
-                        showPasswordInput('DAFTAR', 'Buat Password Baru');
+                        showPasswordInput('DAFTAR', 'Buat Password');
                         return;
                     }
+                    if (password.length < 4) return showNotification('Password min 4 karakter', 'error');
                     
-                    if (password.length < 4) {
-                        showNotification('Password minimal 4 karakter', 'error');
-                        return;
-                    }
-                    
-                    // Buat user baru
                     db.ref('/accounts/' + phone).set({
                         password: password,
                         botol: 0,
                         created_at: Date.now()
-                    }).then(() => {
-                        checkMachineAndLogin();
-                    });
+                    }).then(() => checkMachineAndLogin());
                 }
             });
         }
@@ -710,237 +578,134 @@
         }
         
         function checkMachineAndLogin() {
-            const machineId = currentUser.machine;
-            
-            // Cek apakah mesin sudah dipakai orang lain
-            db.ref('/' + machineId + '/active_user/id').once('value', (snap) => {
+            db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
                 const activeUser = snap.val();
-                
                 if (activeUser && activeUser !== currentUser.phone) {
-                    showNotification('Mesin sedang dipakai orang lain', 'error');
-                    return;
+                    return showNotification('Mesin dipakai orang lain', 'error');
                 }
-                
-                // Login sukses
                 performLogin();
             });
         }
         
         function performLogin() {
-            const sessionExpires = Date.now() + 300000; // 5 menit
+            const sessionExpires = Date.now() + 300000;
             
-            // Update ke Firebase
-            const updates = {};
-            updates['/' + currentUser.machine + '/active_user'] = {
-                id: currentUser.phone,
-                login_time: Date.now(),
-                expires: sessionExpires
-            };
-            updates['/accounts/' + currentUser.phone + '/active_machine'] = currentUser.machine;
-            
-            db.ref().update(updates).then(() => {
+            db.ref().update({
+                ['/' + currentUser.machine + '/active_user']: {
+                    id: currentUser.phone,
+                    login_time: Date.now(),
+                    expires: sessionExpires
+                },
+                ['/accounts/' + currentUser.phone + '/active_machine']: currentUser.machine
+            }).then(() => {
                 currentUser.sessionExpires = sessionExpires;
                 
-                // Tampilkan dashboard
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('dashboard-page').classList.remove('hidden');
-                
                 document.getElementById('user-display').innerText = currentUser.phone;
                 document.getElementById('active-machine').innerText = currentUser.machine;
                 
-                // Setup semua listeners
                 setupListeners();
-                
-                // Start session timer
                 startSessionTimer();
-                
-                // Load products
                 loadProducts();
                 
-                showNotification('Selamat datang di RE-COIN!');
+                showNotification('Selamat datang!');
             });
         }
         
-        // ===========================================
-        // FIREBASE LISTENERS
-        // ===========================================
+        // ==================== LISTENERS ====================
         function setupListeners() {
-            // 1. Listener saldo botol
-            if (listeners.botol) db.ref('/accounts/' + currentUser.phone + '/botol').off();
-            
-            listeners.botol = db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
+            db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
                 const botolBaru = snap.val() || 0;
                 const sebelumnya = currentUser.botol;
-                
                 currentUser.botol = botolBaru;
                 updateUI();
                 
                 if (botolBaru > sebelumnya) {
-                    const tambah = botolBaru - sebelumnya;
-                    showNotification(`🎉 +${tambah} BOTOL BARU!`);
+                    showNotification(`🎉 +${botolBaru - sebelumnya} BOTOL!`);
                 }
             });
             
-            // 2. Listener transaksi baru
-            if (listeners.transactions) db.ref('/transactions/' + currentUser.phone).off();
-            
-            listeners.transactions = db.ref('/transactions/' + currentUser.phone)
-                .orderByKey()
-                .limitToLast(1)
-                .on('child_added', (snap) => {
-                    const trans = snap.val();
-                    
-                    if (trans.type === 'TABUNG') {
-                        showNotification(`🍾 Botol masuk! +${trans.poin || 0} botol (${trans.berat || 0}g)`);
-                    } else if (trans.type === 'PENARIKAN') {
-                        showNotification(`💰 Penarikan Rp ${(trans.amount || 0).toLocaleString()} diproses`);
-                    }
-                });
-            
-            // 3. Listener status mesin (force logout)
-            if (listeners.machine) db.ref('/' + currentUser.machine + '/active_user/id').off();
-            
-            listeners.machine = db.ref('/' + currentUser.machine + '/active_user/id').on('value', (snap) => {
-                const activeUserId = snap.val();
-                
-                if (activeUserId !== currentUser.phone) {
-                    showNotification('Anda telah di-logout dari mesin', 'error');
+            db.ref('/' + currentUser.machine + '/active_user/id').on('value', (snap) => {
+                if (snap.val() !== currentUser.phone) {
+                    showNotification('Anda di-logout dari mesin', 'error');
                     logout();
                 }
             });
         }
         
-        // ===========================================
-        // SESSION MANAGEMENT
-        // ===========================================
+        // ==================== SESSION ====================
         function startSessionTimer() {
             if (sessionTimer) clearInterval(sessionTimer);
-            
             sessionTimer = setInterval(() => {
-                const now = Date.now();
-                const remaining = Math.max(0, Math.floor((currentUser.sessionExpires - now) / 1000));
-                
+                const remaining = Math.max(0, (currentUser.sessionExpires - Date.now()) / 1000);
                 const minutes = Math.floor(remaining / 60);
-                const seconds = remaining % 60;
-                
+                const seconds = Math.floor(remaining % 60);
                 document.getElementById('session-timer').innerText = 
-                    `Sesi akan berakhir dalam ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    `Sesi: ${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
                 if (remaining <= 0) {
                     clearInterval(sessionTimer);
-                    showNotification('Sesi habis, silakan login lagi', 'error');
                     logout();
+                    showNotification('Sesi habis', 'error');
                 }
             }, 1000);
         }
         
         function logout() {
-            // Hapus dari Firebase
             if (currentUser.machine && currentUser.phone) {
-                const updates = {};
-                updates['/' + currentUser.machine + '/active_user'] = null;
-                updates['/accounts/' + currentUser.phone + '/active_machine'] = null;
-                
-                db.ref().update(updates);
+                db.ref().update({
+                    ['/' + currentUser.machine + '/active_user']: null,
+                    ['/accounts/' + currentUser.phone + '/active_machine']: null
+                });
             }
             
-            // Hapus semua listeners
-            if (listeners.botol) db.ref('/accounts/' + currentUser.phone + '/botol').off();
-            if (listeners.transactions) db.ref('/transactions/' + currentUser.phone).off();
-            if (listeners.machine) db.ref('/' + currentUser.machine + '/active_user/id').off();
+            db.ref('/accounts/' + currentUser.phone + '/botol').off();
+            db.ref('/' + currentUser.machine + '/active_user/id').off();
             
-            // Reset UI
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('login-page').classList.remove('hidden');
-            
-            document.getElementById('phone-input').value = '';
-            document.getElementById('pass-input').value = '';
-            document.getElementById('phone-input').readOnly = false;
-            document.getElementById('pass-input').classList.add('hidden');
-            document.getElementById('auth-title').innerText = 'RE-COIN';
-            document.getElementById('auth-subtitle').innerText = 'Scan QR Mesin untuk Mulai';
-            document.getElementById('btn-auth').onclick = handleAuth;
-            
-            // Reset current user
-            currentUser = {
-                phone: "",
-                botol: 0,
-                machine: "",
-                sessionExpires: 0
-            };
-            
-            if (sessionTimer) clearInterval(sessionTimer);
+            location.reload();
         }
         
-        // ===========================================
-        // UI UPDATE
-        // ===========================================
+        // ==================== UI UPDATE ====================
         function updateUI() {
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            
             document.getElementById('count').innerText = currentUser.botol;
             document.getElementById('rupiah').innerText = formatRupiah(saldo);
             
             const btnTarik = document.getElementById('btn-tarik');
-            const msgLimit = document.getElementById('msg-limit');
-            
-            if (saldo >= 5000) {
-                btnTarik.disabled = false;
-                msgLimit.style.display = 'none';
-            } else {
-                btnTarik.disabled = true;
-                msgLimit.style.display = 'block';
-            }
-            
-            updateCartDisplay();
+            btnTarik.disabled = saldo < 5000;
         }
         
-        // ===========================================
-        // PRODUCTS & SHOP
-        // ===========================================
+        // ==================== SHOP ====================
         function loadProducts() {
             db.ref('/products').once('value', (snap) => {
-                const data = snap.val() || {};
                 products = [];
-                
-                for (let id in data) {
-                    products.push({
-                        id: id,
-                        ...data[id]
-                    });
-                }
-                
+                const data = snap.val() || {};
+                for (let id in data) products.push({ id, ...data[id] });
                 displayProducts();
             });
         }
         
         function displayProducts() {
             const grid = document.getElementById('product-grid');
-            
             if (products.length === 0) {
-                grid.innerHTML = '<div class="loading">Belum ada produk</div>';
+                grid.innerHTML = '<div class="loading">Tidak ada produk</div>';
                 return;
             }
             
             let html = '';
-            products.forEach(product => {
-                const stock = product.stock || 0;
+            products.forEach(p => {
                 html += `
                     <div class="product-card">
-                        <img src="${product.image || 'https://via.placeholder.com/200x200/00b894/ffffff?text=Produk'}" 
-                             alt="${product.name}"
-                             onerror="this.src='https://via.placeholder.com/200x200/00b894/ffffff?text=Produk'">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-price">${formatRupiah(product.price || 0)}</div>
-                        <button class="btn-beli" 
-                                onclick="addToCart('${product.id}')"
-                                ${stock <= 0 ? 'disabled' : ''}>
-                            ${stock <= 0 ? 'Stok Habis' : '🛒 Beli'}
+                        <img src="${p.image || 'https://via.placeholder.com/200x200'}" alt="${p.name}">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${formatRupiah(p.price || 0)}</div>
+                        <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
+                            ${p.stock <= 0 ? 'Habis' : 'Beli'}
                         </button>
                     </div>
                 `;
             });
-            
             grid.innerHTML = html;
         }
         
@@ -949,50 +714,34 @@
             if (!product) return;
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            if (saldo < product.price) {
-                showNotification('Saldo tidak cukup!', 'error');
-                return;
-            }
+            if (saldo < product.price) return showNotification('Saldo tidak cukup', 'error');
             
-            const existing = cart.find(item => item.id === productId);
-            if (existing) {
-                existing.quantity++;
-            } else {
-                cart.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    quantity: 1
-                });
-            }
+            const existing = cart.find(i => i.id === productId);
+            existing ? existing.quantity++ : cart.push({ ...product, quantity: 1 });
             
             updateCartDisplay();
-            showNotification(`${product.name} ditambahkan`);
         }
         
         function removeFromCart(productId) {
-            const index = cart.findIndex(item => item.id === productId);
-            if (index !== -1) {
-                if (cart[index].quantity > 1) {
-                    cart[index].quantity--;
-                } else {
-                    cart.splice(index, 1);
-                }
-            }
+            const index = cart.findIndex(i => i.id === productId);
+            if (index === -1) return;
+            
+            if (cart[index].quantity > 1) cart[index].quantity--;
+            else cart.splice(index, 1);
+            
             updateCartDisplay();
         }
         
         function updateCartDisplay() {
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            document.getElementById('cart-count').textContent = totalItems;
+            document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.quantity, 0);
             
-            const cartItemsDiv = document.getElementById('cart-items');
-            const cartTotalSpan = document.getElementById('cart-total');
+            const itemsDiv = document.getElementById('cart-items');
+            const totalSpan = document.getElementById('cart-total');
             const checkoutBtn = document.getElementById('btn-checkout');
             
             if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center;">Keranjang kosong</p>';
-                cartTotalSpan.innerHTML = 'Total: Rp 0';
+                itemsDiv.innerHTML = '<p style="color:#b2bec3;">Keranjang kosong</p>';
+                totalSpan.innerHTML = 'Total: Rp 0';
                 checkoutBtn.disabled = true;
                 return;
             }
@@ -1005,51 +754,62 @@
                 total += itemTotal;
                 html += `
                     <div class="cart-item">
+                        <div>${item.name} x${item.quantity}</div>
                         <div>
-                            <div>${item.name} x${item.quantity}</div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span>${formatRupiah(itemTotal)}</span>
-                            <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">✕</button>
+                            ${formatRupiah(itemTotal)}
+                            <button onclick="removeFromCart('${item.id}')" style="border:none; background:none; color:var(--danger);">✕</button>
                         </div>
                     </div>
                 `;
             });
             
-            cartItemsDiv.innerHTML = html;
-            cartTotalSpan.innerHTML = `Total: ${formatRupiah(total)}`;
-            
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            checkoutBtn.disabled = total > saldo;
+            itemsDiv.innerHTML = html;
+            totalSpan.innerHTML = `Total: ${formatRupiah(total)}`;
+            checkoutBtn.disabled = total > (currentUser.botol * HARGA_PER_BOTOL);
         }
         
-        function toggleCart() {
-            document.getElementById('cart-panel').classList.toggle('hidden');
-        }
-        
-        function showShop() {
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.remove('hidden');
-            loadProducts();
-        }
-        
-        function hideShop() {
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
-        }
-        
+        // ==================== 🔥 WHATSAPP CHECKOUT (FITUR BARU) ====================
         function checkout() {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
+            const sisaSaldo = saldo - total;
+            const botolDipakai = Math.ceil(total / HARGA_PER_BOTOL);
+            const newBotol = currentUser.botol - botolDipakai;
             
             if (total > saldo) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
             
-            const botolDipakai = Math.ceil(total / HARGA_PER_BOTOL);
-            const newBotol = currentUser.botol - botolDipakai;
+            // 1. Format pesan WhatsApp
+            const now = new Date();
+            const tanggal = now.toLocaleDateString('id-ID');
+            const waktu = now.toLocaleTimeString('id-ID');
             
+            let itemsList = '';
+            cart.forEach(item => {
+                itemsList += `• ${item.name} (${item.quantity}x) = ${formatRupiah(item.price * item.quantity)}\n`;
+            });
+            
+            const pesan = 
+`🛍️ *NOTA PEMBELIAN RE-COIN*
+━━━━━━━━━━━━━━━━━━━━━
+📱 *ID User:* ${currentUser.phone}
+⚙️ *Mesin:* ${currentUser.machine}
+📅 *Tanggal:* ${tanggal}
+⏰ *Waktu:* ${waktu}
+━━━━━━━━━━━━━━━━━━━━━
+*PRODUK YANG DIBELI:*
+${itemsList}
+━━━━━━━━━━━━━━━━━━━━━
+💰 *TOTAL BELANJA:* ${formatRupiah(total)}
+💳 *SISA SALDO:* ${formatRupiah(sisaSaldo)}
+🌱 *BOTOL TERPAKAI:* ${botolDipakai} botol
+━━━━━━━━━━━━━━━━━━━━━
+✅ Terima kasih telah berbelanja!
+🌿 RE-COIN - Sampah Jadi Rupiah`;
+
+            // 2. Update ke Firebase
             const updates = {};
             updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
             
@@ -1057,7 +817,6 @@
                 updates[`/products/${item.id}/stock`] = firebase.database.ServerValue.increment(-item.quantity);
             });
             
-            // Catat transaksi
             const transId = Date.now().toString();
             updates[`/transactions/${currentUser.phone}/${transId}`] = {
                 type: 'PEMBELIAN',
@@ -1072,17 +831,28 @@
                 mesin: currentUser.machine
             };
             
+            // 3. Simpan ke Firebase dulu
             db.ref().update(updates).then(() => {
+                // 4. Kirim ke WhatsApp
+                const waUrl = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`;
+                window.open(waUrl, '_blank');
+                
+                // 5. Reset cart dan tampilkan notifikasi
                 cart = [];
                 updateCartDisplay();
                 document.getElementById('cart-panel').classList.add('hidden');
-                showNotification('Pembelian berhasil!');
+                
+                // 6. Tampilkan nota ringkas di notifikasi
+                showNotification(`✅ Checkout berhasil! Total: ${formatRupiah(total)}`);
+                
+                // 7. Notifikasi tambahan untuk struk
+                setTimeout(() => {
+                    showNotification(`📱 Cek WhatsApp untuk struk belanja`, 'info');
+                }, 1500);
             });
         }
         
-        // ===========================================
-        // WITHDRAWAL
-        // ===========================================
+        // ==================== WITHDRAWAL ====================
         function openWithdrawalModal() {
             document.getElementById('modal-overlay').style.display = 'flex';
         }
@@ -1103,14 +873,10 @@
             const method = document.getElementById('payment-method').value;
             const details = document.getElementById('payment-details').value;
             
-            if (!details) {
-                showNotification('Isi detail pembayaran!', 'error');
-                return;
-            }
+            if (!details) return showNotification('Isi detail!', 'error');
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
-            // Catat transaksi penarikan
             const transId = Date.now().toString();
             db.ref('/transactions/' + currentUser.phone + '/' + transId).set({
                 type: 'PENARIKAN',
@@ -1118,49 +884,45 @@
                 details: details,
                 amount: saldo,
                 timestamp: Date.now(),
-                mesin: currentUser.machine,
-                status: 'pending'
+                mesin: currentUser.machine
             }).then(() => {
-                // Reset saldo ke 0
                 db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
                     const pesan = `*PENARIKAN RE-COIN*\n` +
                                  `ID: ${currentUser.phone}\n` +
                                  `Mesin: ${currentUser.machine}\n` +
-                                 `Total: Rp ${saldo.toLocaleString('id-ID')}\n` +
+                                 `Jumlah: Rp ${saldo.toLocaleString()}\n` +
                                  `Metode: ${method}\n` +
                                  `Detail: ${details}`;
                     
-                    window.open(`https://wa.me/6289524538835?text=${encodeURIComponent(pesan)}`, '_blank');
+                    window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
                     closeModal();
-                    showNotification('Permintaan penarikan dikirim');
+                    showNotification('Penarikan diproses');
                 });
             });
         }
         
-        // ===========================================
-        // AUTO CLEANUP ON TAB CLOSE
-        // ===========================================
-        window.addEventListener('beforeunload', function() {
-            if (currentUser.machine && currentUser.phone) {
-                const updates = {};
-                updates['/' + currentUser.machine + '/active_user'] = null;
-                updates['/accounts/' + currentUser.phone + '/active_machine'] = null;
-                
-                db.ref().update(updates);
-            }
-        });
+        // ==================== NAVIGATION ====================
+        function toggleCart() {
+            document.getElementById('cart-panel').classList.toggle('hidden');
+        }
         
-        // ===========================================
-        // INITIALIZATION
-        // ===========================================
+        function showShop() {
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('shop-page').classList.remove('hidden');
+            loadProducts();
+        }
+        
+        function hideShop() {
+            document.getElementById('shop-page').classList.add('hidden');
+            document.getElementById('dashboard-page').classList.remove('hidden');
+        }
+        
+        // ==================== INIT ====================
         window.onload = function() {
             const machineId = getMachineFromUrl();
-            
             if (machineId) {
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = machineId;
-            } else {
-                showNotification('Scan QR dari mesin untuk memulai', 'info');
             }
         };
     </script>
