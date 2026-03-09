@@ -23,7 +23,6 @@
             --dark: #2d3436;
             --gold: #fdcb6e;
             --danger: #ff7675;
-            --warning: #fdcb6e;
         }
         
         body {
@@ -175,34 +174,6 @@
             font-size: 16px;
         }
         
-        /* Machine Status Card - BARU */
-        .machine-status-card {
-            padding: 16px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            transition: all 0.3s;
-            border-left: 4px solid;
-        }
-        
-        .machine-status-own {
-            background: #e8f8f5;
-            border-left-color: var(--primary);
-            color: var(--dark);
-        }
-        
-        .machine-status-other {
-            background: #fff3cd;
-            border-left-color: var(--warning);
-            color: #856404;
-        }
-        
-        .machine-status-idle {
-            background: #dfe6e9;
-            border-left-color: #636e72;
-            color: #2d3436;
-        }
-        
         .notification {
             position: fixed;
             top: 20px;
@@ -219,12 +190,12 @@
         }
         
         .notification.warning {
-            border-color: var(--warning);
+            border-color: #fdcb6e;
             background: #fff3cd;
         }
         
         .notification.error {
-            border-color: var(--danger);
+            border-color: #ff7675;
             background: #ffe8e8;
         }
         
@@ -513,14 +484,6 @@
     <div id="dashboard-page" class="card hidden">
         <div class="user-badge" id="user-display"></div>
         
-        <!-- MACHINE STATUS CARD - YANG SUDAH DIPERBAIKI -->
-        <div id="machine-status-card" class="machine-status-card machine-status-idle">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="machine-status-icon">🟢</span>
-                <span id="machine-status-text">Memuat status mesin...</span>
-            </div>
-        </div>
-        
         <div class="machine-info">
             <span>Mesin Anda: <span id="active-machine" class="machine-id">-</span></span>
         </div>
@@ -684,7 +647,7 @@
         }
         
         // ===========================================
-        // AUTHENTICATION - YANG SUDAH DIPERBAIKI
+        // AUTHENTICATION - TANPA MONITORING MESIN
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -704,8 +667,8 @@
                         return;
                     }
                     if (snap.val().password === password) {
-                        // ✅ CEK MESIN - TAPI TIDAK BLOKIR!
-                        checkMachineAndProceed();
+                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
+                        performLogin();
                     } else {
                         showNotification('Password salah!', 'error');
                     }
@@ -721,29 +684,10 @@
                         botol: 0,
                         created_at: Date.now()
                     }).then(() => {
-                        // ✅ CEK MESIN - TAPI TIDAK BLOKIR!
-                        checkMachineAndProceed();
+                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
+                        performLogin();
                     });
                 }
-            });
-        }
-        
-        function checkMachineAndProceed() {
-            // ✅ CEK SIAPA YANG PAKAI MESIN
-            db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
-                const activeUser = snap.val();
-                
-                if (activeUser && activeUser !== currentUser.phone) {
-                    // ⚠️ HANYA NOTIFIKASI, TETAP LOGIN!
-                    showNotification(
-                        '⚠️ Mesin sedang dipakai oleh ' + activeUser + 
-                        ', tapi Anda tetap bisa akses website untuk belanja/tarik saldo',
-                        'warning'
-                    );
-                }
-                
-                // ✅ TETAP JALANKAN LOGIN!
-                performLogin();
             });
         }
         
@@ -758,12 +702,12 @@
         function performLogin() {
             const sessionExpires = Date.now() + 300000;
             
-            // ✅ UPDATE USER DI MESIN (jika belum dipakai)
+            // ✅ UPDATE USER DI MESIN (hanya jika belum ada user)
             db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                 const currentActive = snap.val();
                 
-                // Hanya update jika belum ada user atau user itu sendiri
-                if (!currentActive || !currentActive.id || currentActive.id === currentUser.phone) {
+                // Hanya update jika belum ada user
+                if (!currentActive || !currentActive.id) {
                     db.ref().update({
                         ['/' + currentUser.machine + '/active_user']: {
                             id: currentUser.phone,
@@ -785,41 +729,8 @@
             setupListeners();
             startSessionTimer();
             loadProducts();
-            monitorMachineStatus(); // ✅ PANGGIL MONITORING MESIN
             
             showNotification('Selamat datang di RE-COIN!');
-        }
-        
-        // ===========================================
-        // MONITORING STATUS MESIN - BARU!
-        // ===========================================
-        function monitorMachineStatus() {
-            const statusCard = document.getElementById('machine-status-card');
-            const iconEl = document.getElementById('machine-status-icon');
-            const textEl = document.getElementById('machine-status-text');
-            
-            db.ref('/' + currentUser.machine + '/active_user/id').on('value', (snap) => {
-                const activeUser = snap.val();
-                
-                if (!activeUser) {
-                    // Mesin kosong
-                    statusCard.className = 'machine-status-card machine-status-idle';
-                    iconEl.innerHTML = '🟢';
-                    textEl.innerHTML = 'Mesin tersedia. Silakan datang ke mesin untuk menabung.';
-                } 
-                else if (activeUser === currentUser.phone) {
-                    // Mesin dipakai USER INI
-                    statusCard.className = 'machine-status-card machine-status-own';
-                    iconEl.innerHTML = '✅';
-                    textEl.innerHTML = 'Anda sedang menggunakan mesin. Silakan masukkan botol.';
-                } 
-                else {
-                    // Mesin dipakai orang lain
-                    statusCard.className = 'machine-status-card machine-status-other';
-                    iconEl.innerHTML = '⚠️';
-                    textEl.innerHTML = `Mesin sedang dipakai oleh ${activeUser}. Anda tetap bisa belanja/tarik saldo.`;
-                }
-            });
         }
         
         // ===========================================
