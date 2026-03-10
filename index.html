@@ -3,57 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    
-    <!-- PWA MANIFEST - Ditulis langsung, tidak pakai base64 -->
-    <link rel="manifest" href="/manifest.json">
-    
-    <!-- Fallback manifest inline jika file tidak ada -->
-    <script>
-        // Buat manifest.json secara otomatis jika belum ada
-        if (!window.location.href.includes('localhost')) {
-            const manifestData = {
-                name: "RE-COIN - Tukar Botol Jadi Belanja",
-                short_name: "RE-COIN",
-                description: "Tukar botol plastik jadi saldo belanja. Program daur ulang inovatif dari Magelang.",
-                start_url: "/",
-                display: "standalone",
-                background_color: "#00b894",
-                theme_color: "#00b894",
-                orientation: "portrait",
-                scope: "/",
-                icons: [
-                    {
-                        src: "https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8",
-                        sizes: "192x192",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    },
-                    {
-                        src: "https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8",
-                        sizes: "512x512",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }
-                ]
-            };
-            
-            // Buat blob untuk manifest
-            const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
-            const manifestUrl = URL.createObjectURL(manifestBlob);
-            
-            // Ganti link manifest dengan blob URL
-            const manifestLink = document.querySelector('link[rel="manifest"]');
-            if (manifestLink) {
-                manifestLink.href = manifestUrl;
-            }
-        }
-    </script>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RE-COIN">
-    <link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8">
-    
     <title>RE-COIN | Tukar Botol Jadi Belanja</title>
     
     <!-- Firebase SDK -->
@@ -507,68 +456,9 @@
             transform: none;
             box-shadow: none;
         }
-        
-        /* PWA Install Button - Dipastikan muncul */
-        #install-button {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 16px;
-            box-shadow: 0 10px 30px rgba(0, 184, 148, 0.4);
-            z-index: 10000;
-            cursor: pointer;
-            animation: bounce 2s infinite;
-            border: 2px solid rgba(255,255,255,0.3);
-            width: auto;
-            max-width: 90%;
-            display: none; /* Default hidden, akan muncul via JS */
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-10px); }
-        }
-        
-        /* Offline indicator */
-        #offline-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: var(--danger);
-            color: white;
-            text-align: center;
-            padding: 5px;
-            font-size: 12px;
-            font-weight: 600;
-            z-index: 10001;
-            display: none;
-        }
-        
-        /* PWA Badge */
-        #pwa-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            z-index: 999;
-        }
     </style>
 </head>
 <body>
-    <div id="offline-indicator">📡 Anda sedang offline - beberapa fitur mungkin terbatas</div>
-    <div id="pwa-badge" style="display: none;">📱 PWA Mode</div>
     <div id="notification"></div>
 
     <!-- LOGIN PAGE -->
@@ -699,9 +589,6 @@
         </div>
     </div>
 
-    <!-- PWA INSTALL BUTTON - Pasti muncul -->
-    <button id="install-button" style="display: none;">📲 Install Aplikasi RE-COIN</button>
-
     <script>
         // ===========================================
         // FIREBASE CONFIGURATION
@@ -739,224 +626,6 @@
         };
         
         // ===========================================
-        // PWA INSTALLATION - DIPERBAIKI
-        // ===========================================
-        let deferredPrompt;
-        const installButton = document.getElementById('install-button');
-        
-        // Fungsi cek apakah sudah diinstall sebagai PWA
-        function isRunningAsPWA() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone || 
-                   document.referrer.includes('android-app://');
-        }
-        
-        // Tampilkan badge jika running sebagai PWA
-        if (isRunningAsPWA()) {
-            document.getElementById('pwa-badge').style.display = 'block';
-            console.log('✅ Aplikasi berjalan dalam mode PWA');
-        }
-        
-        // Event listener untuk beforeinstallprompt - PASTI DITANGKAP
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Mencegah browser menampilkan prompt otomatis
-            e.preventDefault();
-            
-            // Simpan event untuk digunakan nanti
-            deferredPrompt = e;
-            
-            // Tampilkan tombol install kustom - PASTI MUNCUL
-            if (!isRunningAsPWA()) {
-                console.log('📲 Menampilkan tombol install');
-                installButton.style.display = 'block';
-                
-                // Tambahkan efek flash untuk memastikan user melihat
-                installButton.style.animation = 'bounce 1s 3';
-                setTimeout(() => {
-                    installButton.style.animation = 'bounce 2s infinite';
-                }, 3000);
-            }
-            
-            // Log untuk debugging
-            console.log('beforeinstallprompt ditangkap!');
-        });
-        
-        // Tombol install diklik
-        installButton.addEventListener('click', async () => {
-            if (!deferredPrompt) {
-                console.log('Tidak ada deferredPrompt');
-                showNotification('Tunggu beberapa saat, atau buka menu Chrome > Install aplikasi', 'warning');
-                return;
-            }
-            
-            // Sembunyikan tombol
-            installButton.style.display = 'none';
-            
-            // Tampilkan prompt install bawaan browser
-            deferredPrompt.prompt();
-            
-            // Tunggu user memilih
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`Hasil install: ${outcome}`);
-            
-            if (outcome === 'accepted') {
-                showNotification('✅ RE-COIN berhasil diinstall ke layar utama!');
-            } else {
-                // Jika ditolak, tampilkan lagi tombol besok
-                setTimeout(() => {
-                    if (!isRunningAsPWA()) {
-                        installButton.style.display = 'block';
-                    }
-                }, 24 * 60 * 60 * 1000); // 24 jam
-            }
-            
-            // Bersihkan
-            deferredPrompt = null;
-        });
-        
-        // Event setelah install sukses
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('✅ RE-COIN berhasil diinstall');
-            installButton.style.display = 'none';
-            document.getElementById('pwa-badge').style.display = 'block';
-            showNotification('🎉 Terima kasih telah menginstall RE-COIN!');
-        });
-        
-        // ===========================================
-        // SERVICE WORKER REGISTRATION - DIPERBAIKI
-        // ===========================================
-        if ('serviceWorker' in navigator) {
-            // Coba register service worker dari blob
-            window.addEventListener('load', function() {
-                // Buat service worker sederhana
-                const swCode = `
-                    const CACHE_NAME = 're-coin-cache-v3';
-                    const urlsToCache = [
-                        './',
-                        '${window.location.href}',
-                        'https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js',
-                        'https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js'
-                    ];
-                    
-                    self.addEventListener('install', event => {
-                        console.log('Service Worker: Install');
-                        self.skipWaiting();
-                        event.waitUntil(
-                            caches.open(CACHE_NAME).then(cache => {
-                                console.log('Service Worker: Caching files');
-                                return cache.addAll(urlsToCache).catch(err => {
-                                    console.log('Cache failed:', err);
-                                });
-                            })
-                        );
-                    });
-                    
-                    self.addEventListener('activate', event => {
-                        console.log('Service Worker: Activate');
-                        event.waitUntil(
-                            caches.keys().then(cacheNames => {
-                                return Promise.all(
-                                    cacheNames.map(cacheName => {
-                                        if (cacheName !== CACHE_NAME) {
-                                            console.log('Service Worker: Menghapus cache lama', cacheName);
-                                            return caches.delete(cacheName);
-                                        }
-                                    })
-                                );
-                            })
-                        );
-                        return self.clients.claim();
-                    });
-                    
-                    self.addEventListener('fetch', event => {
-                        // Abaikan request ke Firebase dan API
-                        if (event.request.url.includes('firebaseio.com') || 
-                            event.request.url.includes('googleapis') ||
-                            event.request.url.includes('nominatim.openstreetmap')) {
-                            return;
-                        }
-                        
-                        event.respondWith(
-                            caches.match(event.request)
-                                .then(response => {
-                                    if (response) {
-                                        return response;
-                                    }
-                                    return fetch(event.request)
-                                        .then(response => {
-                                            // Cache file yang sukses di-fetch
-                                            if (response && response.status === 200) {
-                                                const responseClone = response.clone();
-                                                caches.open(CACHE_NAME).then(cache => {
-                                                    cache.put(event.request, responseClone);
-                                                });
-                                            }
-                                            return response;
-                                        })
-                                        .catch(() => {
-                                            // Fallback offline
-                                            if (event.request.mode === 'navigate') {
-                                                return caches.match('./');
-                                            }
-                                        });
-                                })
-                        );
-                    });
-                `;
-                
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                
-                navigator.serviceWorker.register(swUrl)
-                    .then(registration => {
-                        console.log('✅ Service Worker terdaftar:', registration.scope);
-                        
-                        // Cek update setiap jam
-                        setInterval(() => {
-                            registration.update();
-                        }, 60 * 60 * 1000);
-                        
-                        // Jika waiting, aktifkan
-                        if (registration.waiting) {
-                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                        }
-                    })
-                    .catch(error => {
-                        console.log('❌ Service Worker gagal:', error);
-                        
-                        // Fallback: register dari inline
-                        navigator.serviceWorker.register('data:application/javascript,' + encodeURIComponent(swCode))
-                            .then(reg => console.log('SW registered via data URL'))
-                            .catch(err => console.log('SW gagal total'));
-                    });
-            });
-        }
-        
-        // ===========================================
-        // OFFLINE DETECTION
-        // ===========================================
-        window.addEventListener('online', function() {
-            document.getElementById('offline-indicator').style.display = 'none';
-            showNotification('📶 Koneksi tersambung kembali');
-        });
-        
-        window.addEventListener('offline', function() {
-            document.getElementById('offline-indicator').style.display = 'block';
-            showNotification('📡 Anda sedang offline', 'warning');
-        });
-        
-        // Cache user data untuk offline
-        function cacheUserData() {
-            if (currentUser.phone) {
-                localStorage.setItem('recoin_user_cache', JSON.stringify({
-                    phone: currentUser.phone,
-                    botol: currentUser.botol,
-                    timestamp: Date.now()
-                }));
-            }
-        }
-        
-        // ===========================================
         // UTILITY FUNCTIONS
         // ===========================================
         function getMachineFromUrl() {
@@ -978,7 +647,7 @@
         }
         
         // ===========================================
-        // AUTHENTICATION
+        // AUTHENTICATION - TANPA MONITORING MESIN
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -998,6 +667,7 @@
                         return;
                     }
                     if (snap.val().password === password) {
+                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
                         performLogin();
                     } else {
                         showNotification('Password salah!', 'error');
@@ -1014,6 +684,7 @@
                         botol: 0,
                         created_at: Date.now()
                     }).then(() => {
+                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
                         performLogin();
                     });
                 }
@@ -1031,9 +702,11 @@
         function performLogin() {
             const sessionExpires = Date.now() + 300000;
             
+            // ✅ UPDATE USER DI MESIN (hanya jika belum ada user)
             db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                 const currentActive = snap.val();
                 
+                // Hanya update jika belum ada user
                 if (!currentActive || !currentActive.id) {
                     db.ref().update({
                         ['/' + currentUser.machine + '/active_user']: {
@@ -1058,9 +731,6 @@
             loadProducts();
             
             showNotification('Selamat datang di RE-COIN!');
-            
-            // Cache data user
-            cacheUserData();
         }
         
         // ===========================================
@@ -1072,7 +742,6 @@
                 const sebelumnya = currentUser.botol;
                 currentUser.botol = botolBaru;
                 updateUI();
-                cacheUserData();
                 
                 if (botolBaru > sebelumnya) {
                     showNotification(`🎉 +${botolBaru - sebelumnya} BOTOL!`);
@@ -1373,9 +1042,6 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
                 clearLocation();
                 
                 showNotification(`✅ Checkout berhasil! Total: ${formatRupiah(total)}`);
-                
-                // Cache data setelah transaksi
-                cacheUserData();
             });
         }
         
@@ -1426,9 +1092,6 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
                     closeModal();
                     showNotification('Penarikan diproses');
-                    
-                    // Cache data setelah tarik
-                    cacheUserData();
                 });
             });
         }
@@ -1477,33 +1140,8 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = machineId;
             }
-            
-            // Load cached user data jika ada
-            const cached = localStorage.getItem('recoin_user_cache');
-            if (cached) {
-                try {
-                    const data = JSON.parse(cached);
-                    if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) { // Cache valid 24 jam
-                        console.log('Data user dimuat dari cache:', data.phone);
-                    }
-                } catch (e) {}
-            }
-            
-            // Cek apakah sudah diinstall
-            if (isRunningAsPWA()) {
-                console.log('Aplikasi berjalan dalam mode PWA');
-                installButton.style.display = 'none';
-            }
-            
-            // FORCE TEST: Tampilkan tombol install setelah 3 detik untuk testing
-            // Hapus bagian ini setelah selesai testing
-            setTimeout(() => {
-                if (!isRunningAsPWA() && !deferredPrompt) {
-                    console.log('Test mode: menampilkan tombol install');
-                    installButton.style.display = 'block';
-                }
-            }, 3000);
         };
     </script>
 </body>
 </html>
+
