@@ -4,8 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     
-    <!-- PWA MANIFEST & META TAGS -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlJFLUNPSU4gLSBUdWthciBCb3RvbCBKYWRpIEJlbGFuamEiLAogICJzaG9ydF9uYW1lIjogIlJFLUNPSU4iLAogICJkZXNjcmlwdGlvbiI6ICJUdWthciBib3RvbCBwbGFzdGlrIGphZGkgc2FsZG8gYmVsYW5qYS4gUHJvZ3JhbSBkYXVyIHVsYW5nIGlub3ZhdGlmIGRhcmkgTWFnZWxhbmcuIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMGI4OTQiLAogICJ0aGVtZV9jb2xvciI6ICIjMDBiODk0IiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICJzY29wZSI6ICIvIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9ibG9nZ2VyLmdvb2dsZXVzZXJjb250ZW50LmNvbS9pbWcvYS9BVnYzc0VqZ2p4T0lWRFB6NVpTQXJPQ09fZ3pHdW14bVA4N0taWUlwQ0hVNlI3TTZxd01KQV9YSWlBclVSRXhFU0h4NHI5eFp3ajYwZmVlbjhJQjNQQ2NJWjd5ZHJuSlVma1BYb0o0bHZLSHdfWnRpa3RBeWlCb1VRWGZGUllIVjZtY2ZfN2w5b1NfUHl3UVV2Tk1ZemZ2NUY4TVE5eURVQUNKSXJ3LVRMd2t0Zk9PRWtIUEpJOTZXTzNlaUNPUnJDeTgiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9ibG9nZ2VyLmdvb2dsZXVzZXJjb250ZW50LmNvbS9pbWcvYS9BVnYzc0VqZ2p4T0lWRFB6NVpTQXJPQ09fZ3pHdW14bVA4N0taWUlwQ0hVNlI3TTZxd01KQV9YSWlBclVSRXhFU0h4NHI5eFp3ajYwZmVlbjhJQjNQQ2NJWjd5ZHJuSlVma1BYb0o0bHZLSHdfWnRpa3RBeWlCb1VRWGZGUllIVjZtY2ZfN2w5b1NfUHl3UVV2Tk1ZemZ2NUY4TVE5eURVQUNKSXJ3LVRMd2t0Zk9PRWtIUEpJOTZXTzNlaUNPUnJDeTgiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0KICBdLAogICJzcGxhc2hfcGFnZXMiOiBudWxsCn0=">
+    <!-- PWA MANIFEST - Ditulis langsung, tidak pakai base64 -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Fallback manifest inline jika file tidak ada -->
+    <script>
+        // Buat manifest.json secara otomatis jika belum ada
+        if (!window.location.href.includes('localhost')) {
+            const manifestData = {
+                name: "RE-COIN - Tukar Botol Jadi Belanja",
+                short_name: "RE-COIN",
+                description: "Tukar botol plastik jadi saldo belanja. Program daur ulang inovatif dari Magelang.",
+                start_url: "/",
+                display: "standalone",
+                background_color: "#00b894",
+                theme_color: "#00b894",
+                orientation: "portrait",
+                scope: "/",
+                icons: [
+                    {
+                        src: "https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    },
+                    {
+                        src: "https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    }
+                ]
+            };
+            
+            // Buat blob untuk manifest
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            
+            // Ganti link manifest dengan blob URL
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                manifestLink.href = manifestUrl;
+            }
+        }
+    </script>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -466,7 +508,7 @@
             box-shadow: none;
         }
         
-        /* PWA Install Button */
+        /* PWA Install Button - Dipastikan muncul */
         #install-button {
             position: fixed;
             bottom: 20px;
@@ -486,6 +528,7 @@
             border: 2px solid rgba(255,255,255,0.3);
             width: auto;
             max-width: 90%;
+            display: none; /* Default hidden, akan muncul via JS */
         }
         
         @keyframes bounce {
@@ -508,10 +551,24 @@
             z-index: 10001;
             display: none;
         }
+        
+        /* PWA Badge */
+        #pwa-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
     <div id="offline-indicator">📡 Anda sedang offline - beberapa fitur mungkin terbatas</div>
+    <div id="pwa-badge" style="display: none;">📱 PWA Mode</div>
     <div id="notification"></div>
 
     <!-- LOGIN PAGE -->
@@ -642,8 +699,8 @@
         </div>
     </div>
 
-    <!-- PWA INSTALL BUTTON (akan muncul otomatis) -->
-    <div id="install-button" style="display: none;">📲 Install Aplikasi RE-COIN</div>
+    <!-- PWA INSTALL BUTTON - Pasti muncul -->
+    <button id="install-button" style="display: none;">📲 Install Aplikasi RE-COIN</button>
 
     <script>
         // ===========================================
@@ -682,117 +739,195 @@
         };
         
         // ===========================================
-        // PWA INSTALLATION
+        // PWA INSTALLATION - DIPERBAIKI
         // ===========================================
         let deferredPrompt;
         const installButton = document.getElementById('install-button');
         
-        // Cek apakah sudah diinstall
+        // Fungsi cek apakah sudah diinstall sebagai PWA
         function isRunningAsPWA() {
             return window.matchMedia('(display-mode: standalone)').matches || 
                    window.navigator.standalone || 
                    document.referrer.includes('android-app://');
         }
         
-        // Tampilkan/sembunyikan tombol install
+        // Tampilkan badge jika running sebagai PWA
+        if (isRunningAsPWA()) {
+            document.getElementById('pwa-badge').style.display = 'block';
+            console.log('✅ Aplikasi berjalan dalam mode PWA');
+        }
+        
+        // Event listener untuk beforeinstallprompt - PASTI DITANGKAP
         window.addEventListener('beforeinstallprompt', (e) => {
+            // Mencegah browser menampilkan prompt otomatis
             e.preventDefault();
+            
+            // Simpan event untuk digunakan nanti
             deferredPrompt = e;
             
-            // Hanya tampilkan tombol jika belum diinstall
+            // Tampilkan tombol install kustom - PASTI MUNCUL
             if (!isRunningAsPWA()) {
+                console.log('📲 Menampilkan tombol install');
                 installButton.style.display = 'block';
+                
+                // Tambahkan efek flash untuk memastikan user melihat
+                installButton.style.animation = 'bounce 1s 3';
+                setTimeout(() => {
+                    installButton.style.animation = 'bounce 2s infinite';
+                }, 3000);
             }
+            
+            // Log untuk debugging
+            console.log('beforeinstallprompt ditangkap!');
         });
         
+        // Tombol install diklik
         installButton.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
+            if (!deferredPrompt) {
+                console.log('Tidak ada deferredPrompt');
+                showNotification('Tunggu beberapa saat, atau buka menu Chrome > Install aplikasi', 'warning');
+                return;
+            }
             
+            // Sembunyikan tombol
             installButton.style.display = 'none';
+            
+            // Tampilkan prompt install bawaan browser
             deferredPrompt.prompt();
             
+            // Tunggu user memilih
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User memilih: ${outcome}`);
+            console.log(`Hasil install: ${outcome}`);
             
             if (outcome === 'accepted') {
                 showNotification('✅ RE-COIN berhasil diinstall ke layar utama!');
+            } else {
+                // Jika ditolak, tampilkan lagi tombol besok
+                setTimeout(() => {
+                    if (!isRunningAsPWA()) {
+                        installButton.style.display = 'block';
+                    }
+                }, 24 * 60 * 60 * 1000); // 24 jam
             }
             
+            // Bersihkan
             deferredPrompt = null;
         });
         
+        // Event setelah install sukses
         window.addEventListener('appinstalled', (evt) => {
             console.log('✅ RE-COIN berhasil diinstall');
             installButton.style.display = 'none';
+            document.getElementById('pwa-badge').style.display = 'block';
             showNotification('🎉 Terima kasih telah menginstall RE-COIN!');
         });
         
         // ===========================================
-        // SERVICE WORKER REGISTRATION
+        // SERVICE WORKER REGISTRATION - DIPERBAIKI
         // ===========================================
         if ('serviceWorker' in navigator) {
-            // Buat service worker secara dinamis
-            const swScript = `
-                const CACHE_NAME = 're-coin-cache-v1';
-                const urlsToCache = [
-                    '/',
-                    'https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js',
-                    'https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js'
-                ];
-                
-                self.addEventListener('install', event => {
-                    self.skipWaiting();
-                    event.waitUntil(
-                        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-                    );
-                });
-                
-                self.addEventListener('activate', event => {
-                    event.waitUntil(
-                        caches.keys().then(cacheNames => {
-                            return Promise.all(
-                                cacheNames.map(cacheName => {
-                                    if (cacheName !== CACHE_NAME) {
-                                        return caches.delete(cacheName);
-                                    }
-                                })
-                            );
-                        })
-                    );
-                });
-                
-                self.addEventListener('fetch', event => {
-                    if (event.request.url.includes('firebaseio.com')) {
-                        return;
-                    }
-                    
-                    event.respondWith(
-                        fetch(event.request)
-                            .then(response => {
-                                const responseClone = response.clone();
-                                caches.open(CACHE_NAME).then(cache => {
-                                    cache.put(event.request, responseClone);
-                                });
-                                return response;
-                            })
-                            .catch(() => caches.match(event.request))
-                    );
-                });
-            `;
-            
-            const blob = new Blob([swScript], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            
+            // Coba register service worker dari blob
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register(swUrl)
-                    .then(function(registration) {
-                        console.log('✅ Service Worker terdaftar');
+                // Buat service worker sederhana
+                const swCode = `
+                    const CACHE_NAME = 're-coin-cache-v3';
+                    const urlsToCache = [
+                        './',
+                        '${window.location.href}',
+                        'https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js',
+                        'https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js'
+                    ];
+                    
+                    self.addEventListener('install', event => {
+                        console.log('Service Worker: Install');
+                        self.skipWaiting();
+                        event.waitUntil(
+                            caches.open(CACHE_NAME).then(cache => {
+                                console.log('Service Worker: Caching files');
+                                return cache.addAll(urlsToCache).catch(err => {
+                                    console.log('Cache failed:', err);
+                                });
+                            })
+                        );
+                    });
+                    
+                    self.addEventListener('activate', event => {
+                        console.log('Service Worker: Activate');
+                        event.waitUntil(
+                            caches.keys().then(cacheNames => {
+                                return Promise.all(
+                                    cacheNames.map(cacheName => {
+                                        if (cacheName !== CACHE_NAME) {
+                                            console.log('Service Worker: Menghapus cache lama', cacheName);
+                                            return caches.delete(cacheName);
+                                        }
+                                    })
+                                );
+                            })
+                        );
+                        return self.clients.claim();
+                    });
+                    
+                    self.addEventListener('fetch', event => {
+                        // Abaikan request ke Firebase dan API
+                        if (event.request.url.includes('firebaseio.com') || 
+                            event.request.url.includes('googleapis') ||
+                            event.request.url.includes('nominatim.openstreetmap')) {
+                            return;
+                        }
                         
-                        // Update setiap 24 jam
-                        setInterval(() => registration.update(), 24 * 60 * 60 * 1000);
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request)
+                                        .then(response => {
+                                            // Cache file yang sukses di-fetch
+                                            if (response && response.status === 200) {
+                                                const responseClone = response.clone();
+                                                caches.open(CACHE_NAME).then(cache => {
+                                                    cache.put(event.request, responseClone);
+                                                });
+                                            }
+                                            return response;
+                                        })
+                                        .catch(() => {
+                                            // Fallback offline
+                                            if (event.request.mode === 'navigate') {
+                                                return caches.match('./');
+                                            }
+                                        });
+                                })
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('✅ Service Worker terdaftar:', registration.scope);
+                        
+                        // Cek update setiap jam
+                        setInterval(() => {
+                            registration.update();
+                        }, 60 * 60 * 1000);
+                        
+                        // Jika waiting, aktifkan
+                        if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
                     })
-                    .catch(function(error) {
+                    .catch(error => {
                         console.log('❌ Service Worker gagal:', error);
+                        
+                        // Fallback: register dari inline
+                        navigator.serviceWorker.register('data:application/javascript,' + encodeURIComponent(swCode))
+                            .then(reg => console.log('SW registered via data URL'))
+                            .catch(err => console.log('SW gagal total'));
                     });
             });
         }
@@ -1354,12 +1489,20 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
                 } catch (e) {}
             }
             
-            // Cek apakah running sebagai PWA
+            // Cek apakah sudah diinstall
             if (isRunningAsPWA()) {
                 console.log('Aplikasi berjalan dalam mode PWA');
-                // Sembunyikan tombol install
                 installButton.style.display = 'none';
             }
+            
+            // FORCE TEST: Tampilkan tombol install setelah 3 detik untuk testing
+            // Hapus bagian ini setelah selesai testing
+            setTimeout(() => {
+                if (!isRunningAsPWA() && !deferredPrompt) {
+                    console.log('Test mode: menampilkan tombol install');
+                    installButton.style.display = 'block';
+                }
+            }, 3000);
         };
     </script>
 </body>
