@@ -23,7 +23,6 @@
             --dark: #2d3436;
             --gold: #fdcb6e;
             --danger: #ff7675;
-            --glass: rgba(255, 255, 255, 0.95);
         }
         
         body {
@@ -33,18 +32,15 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
-            margin: 0;
         }
         
         .card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
+            background: white;
             padding: 24px;
             border-radius: 32px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             width: 100%;
             max-width: 400px;
-            border: 1px solid rgba(255,255,255,0.4);
         }
         
         .card-full {
@@ -59,8 +55,7 @@
             margin: 0 auto 16px;
             border-radius: 60px;
             overflow: hidden;
-            background: white;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            background: #f1f2f6;
         }
         
         .logo-container img {
@@ -72,7 +67,6 @@
         h2 {
             font-weight: 800;
             margin: 0;
-            letter-spacing: -1px;
             font-size: 28px;
             color: var(--dark);
             text-align: center;
@@ -86,26 +80,6 @@
             text-align: center;
         }
         
-        .mode-badge {
-            background: #00b894;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-            margin-left: 8px;
-        }
-        
-        .machine-mode {
-            background: #0984e3;
-        }
-        
-        .online-mode {
-            background: #fdcb6e;
-            color: #2d3436;
-        }
-        
         input, select, textarea {
             width: 100%;
             padding: 16px;
@@ -115,14 +89,13 @@
             font-size: 16px;
             outline: none;
             transition: 0.3s;
-            font-family: inherit;
         }
         
         input:focus {
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-scan {
+        .btn-main, .btn-tarik, .btn-belanja {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -131,7 +104,6 @@
             border: none;
             cursor: pointer;
             transition: 0.3s;
-            font-family: inherit;
             margin-bottom: 10px;
         }
         
@@ -141,7 +113,7 @@
         }
         
         .btn-tarik {
-            background: linear-gradient(to right, var(--gold), #f39c12);
+            background: linear-gradient(to right, #fdcb6e, #f39c12);
             color: var(--dark);
         }
         
@@ -157,17 +129,13 @@
         .btn-main:disabled, .btn-tarik:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
-            transform: none;
-            opacity: 0.5;
         }
         
         .stat-card {
-            background: white;
+            background: #f8f9fa;
             padding: 20px;
             border-radius: 24px;
             margin-bottom: 16px;
-            border: 1px solid #f1f2f6;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
         }
         
         .stat-label {
@@ -175,7 +143,6 @@
             font-weight: 700;
             color: #b2bec3;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .val-botol {
@@ -198,37 +165,13 @@
             padding: 12px;
             border-radius: 20px;
             margin-bottom: 20px;
-            font-size: 14px;
             border-left: 4px solid var(--primary);
-        }
-        
-        .machine-label {
-            color: #636e72;
-            font-size: 12px;
         }
         
         .machine-id {
             font-weight: 700;
             color: var(--dark);
             font-size: 16px;
-        }
-        
-        .info-box {
-            background: #e8f8f5;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            color: #00a187;
-            margin-top: 20px;
-            text-align: left;
-            line-height: 1.6;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .info-box strong {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
         }
         
         .notification {
@@ -242,23 +185,13 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             font-weight: 600;
             z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             animation: slideDown 0.3s ease;
             border: 2px solid var(--primary);
-            min-width: 280px;
-            max-width: 90%;
         }
         
         @keyframes slideDown {
             from { transform: translate(-50%, -100px); opacity: 0; }
             to { transform: translate(-50%, 0); opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translate(-50%, 0); opacity: 1; }
-            to { transform: translate(-50%, -100px); opacity: 0; }
         }
         
         .hidden {
@@ -271,16 +204,27 @@
             padding: 8px 16px;
             border-radius: 40px;
             font-size: 14px;
-            font-weight: 600;
             display: inline-block;
             margin-bottom: 20px;
         }
         
-        .session-timer {
-            font-size: 12px;
-            color: #b2bec3;
-            margin-top: 10px;
-            text-align: center;
+        .mode-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        .machine-mode {
+            background: #0984e3;
+            color: white;
+        }
+        
+        .online-mode {
+            background: #fdcb6e;
+            color: #2d3436;
         }
         
         .btn-logout {
@@ -291,7 +235,6 @@
             cursor: pointer;
             margin-top: 20px;
             text-decoration: underline;
-            width: 100%;
         }
         
         .product-grid {
@@ -302,10 +245,9 @@
         }
         
         .product-card {
-            background: white;
+            background: #f8f9fa;
             border-radius: 20px;
             padding: 12px;
-            border: 1px solid #f1f2f6;
         }
         
         .product-card img {
@@ -341,10 +283,6 @@
             cursor: pointer;
         }
         
-        .btn-beli:active {
-            transform: scale(0.95);
-        }
-        
         .btn-beli:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
@@ -373,13 +311,12 @@
         }
         
         .cart-panel {
-            background: white;
+            background: #f8f9fa;
             border-radius: 20px;
             padding: 16px;
             margin: 16px 0;
             max-height: 300px;
             overflow-y: auto;
-            border: 1px solid #f1f2f6;
         }
         
         .cart-item {
@@ -387,11 +324,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
-            border-bottom: 1px solid #f1f2f6;
-        }
-        
-        .cart-item:last-child {
-            border-bottom: none;
+            border-bottom: 1px solid #dfe6e9;
         }
         
         .cart-total {
@@ -399,7 +332,7 @@
             font-size: 18px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 2px solid #f1f2f6;
+            border-top: 2px solid #dfe6e9;
         }
         
         .btn-checkout {
@@ -426,16 +359,12 @@
             font-size: 14px;
             cursor: pointer;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
         .loading {
             text-align: center;
             padding: 30px;
             color: #b2bec3;
-            grid-column: span 2;
         }
         
         #modal-overlay {
@@ -457,39 +386,17 @@
             border-radius: 32px 32px 0 0;
             width: 100%;
             max-width: 500px;
-            animation: slideUp 0.3s ease;
         }
         
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .warning-text {
-            color: var(--danger);
+        .info-box {
+            background: #e8f8f5;
+            padding: 12px;
+            border-radius: 12px;
             font-size: 13px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        .divider {
-            height: 1px;
-            background: #dfe6e9;
-            margin: 24px 0 16px 0;
-        }
-        
-        .mode-info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: 1fr;
-            }
+            color: #00a187;
+            margin-top: 20px;
+            text-align: left;
+            border-left: 4px solid var(--primary);
         }
     </style>
 </head>
@@ -499,9 +406,7 @@
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
         <div class="logo-container">
-            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8" 
-                 alt="RE-COIN Logo"
-                 onerror="this.src='https://via.placeholder.com/120x120/00b894/ffffff?text=RC'">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjgjxOIVDPz5ZSArOCO_gzGumxmP87KZYIpCHU6R7M6qwMJA_XIiArURexEySHx4r9xZwj60feen8IB3PCcIZ7ydrnJUfkPXoJ4lvKHw_ZtiKtAyiBoUQXaFRYHV6mcf_7l9oS_PywQUvNMYzfv5F8MQ9yDUACJIrw-TLwktfOOEkHPIJ96OW3eiCORrCy8">
         </div>
         
         <h2 id="auth-title">RE-COIN</h2>
@@ -509,37 +414,31 @@
         
         <!-- Mode info (akan tampil jika ada QR) -->
         <div id="machine-info-login" class="machine-info hidden">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span class="machine-label">Mode Mesin:</span>
-                <span id="machine-id-display" class="machine-id"></span>
-                <span class="mode-badge machine-mode">🏭 Nabung Botol</span>
-            </div>
-            <div class="mode-info">Anda dapat menabung botol di mesin ini</div>
+            <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
         </div>
         
-        <input type="number" id="phone-input" placeholder="Nomor HP (contoh: 081234567890)">
-        <input type="password" id="pass-input" class="hidden" placeholder="Password">
+        <input type="number" id="phone-input" placeholder="Nomor HP">
+        <input type="password" id="pass-input" placeholder="Password">
         
-        <button id="btn-auth" class="btn-main" onclick="handleAuth()">LANJUTKAN</button>
+        <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
         
         <div class="info-box">
-            <strong>📌 Pilih Cara Masuk:</strong>
-            • 🏭 <strong>Scan QR di mesin</strong> → Login otomatis, bisa nabung botol<br>
-            • 🌐 <strong>Login langsung</strong> → Pakai password, bisa tarik saldo & belanja<br><br>
-            Belum punya akun? Cukup masukkan nomor HP dan password untuk mendaftar.
+            <strong>📌 Cara Masuk:</strong><br>
+            • 🏭 <strong>Scan QR di mesin</strong> → Login otomatis (tanpa password)<br>
+            • 🌐 <strong>Login langsung</strong> → Pakai password untuk akses penuh<br>
+            Belum punya akun? Cukup login dengan nomor HP dan password untuk mendaftar.
         </div>
     </div>
 
     <!-- DASHBOARD PAGE -->
     <div id="dashboard-page" class="card hidden">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
             <div class="user-badge" id="user-display"></div>
             <span id="mode-badge-dashboard" class="mode-badge"></span>
         </div>
         
         <div id="machine-info-dashboard" class="machine-info hidden">
-            <span class="machine-label">Anda menggunakan mesin:</span>
-            <span id="active-machine" class="machine-id">-</span>
+            <span>Anda menggunakan mesin: <span id="active-machine" class="machine-id">-</span></span>
         </div>
         
         <div class="stat-card">
@@ -548,7 +447,7 @@
         </div>
         
         <div class="stat-card">
-            <div class="stat-label">SALDO TABUNGAN</div>
+            <div class="stat-label">SALDO</div>
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
         
@@ -557,36 +456,29 @@
         </button>
         
         <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
-            🛒 BELANJA SEKARANG
+            🛒 BELANJA
         </button>
         
         <div id="msg-limit" class="warning-text">
-            Minimal saldo Rp 5.000 untuk tarik tunai
+            Minimal saldo Rp 5.000 untuk tarik
         </div>
         
-        <div class="session-timer" id="session-timer"></div>
-        
-        <button class="btn-logout" onclick="logout()">
-            LOGOUT
-        </button>
+        <button class="btn-logout" onclick="logout()">LOGOUT</button>
     </div>
 
     <!-- SHOP PAGE -->
     <div id="shop-page" class="card card-full hidden">
-        <button class="btn-back" onclick="hideShop()">
-            ← Kembali ke Dashboard
-        </button>
+        <button class="btn-back" onclick="hideShop()">← Kembali</button>
         
         <div class="cart-header">
-            <h3 style="margin:0;">🛍️ Produk Tersedia</h3>
+            <h3>🛍️ Produk</h3>
             <div class="cart-icon" onclick="toggleCart()">
-                🛒
-                <span class="cart-count" id="cart-count">0</span>
+                🛒 <span class="cart-count" id="cart-count">0</span>
             </div>
         </div>
         
         <div id="cart-panel" class="cart-panel hidden">
-            <h4 style="margin:0 0 12px 0;">Keranjang Belanja</h4>
+            <h4>Keranjang</h4>
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
             <button class="btn-checkout" onclick="checkout()" id="btn-checkout" disabled>
@@ -602,23 +494,15 @@
     <!-- WITHDRAWAL MODAL -->
     <div id="modal-overlay">
         <div class="modal">
-            <h3 style="margin:0 0 16px 0;">Metode Penarikan</h3>
-            
+            <h3>Metode Penarikan</h3>
             <select id="payment-method" onchange="updatePaymentPlaceholder()">
-                <option value="BANK">Transfer BANK</option>
+                <option value="BANK">BANK</option>
                 <option value="DANA">DANA</option>
                 <option value="OVO">OVO</option>
             </select>
-            
-            <textarea id="payment-details" rows="3" placeholder="Nama Bank, No Rekening, Atas Nama"></textarea>
-            
-            <button class="btn-main" onclick="processWithdrawal()" style="margin-bottom: 10px;">
-                KONFIRMASI PENARIKAN
-            </button>
-            
-            <button onclick="closeModal()" style="background:none; border:none; width:100%; color:#b2bec3; cursor:pointer;">
-                Batal
-            </button>
+            <textarea id="payment-details" rows="3" placeholder="Detail rekening"></textarea>
+            <button class="btn-main" onclick="processWithdrawal()">KONFIRMASI</button>
+            <button onclick="closeModal()" style="background:none; border:none; width:100%; margin-top:10px;">Batal</button>
         </div>
     </div>
 
@@ -640,13 +524,11 @@
             phone: "",
             botol: 0,
             machine: "",
-            isMachineMode: false,
-            sessionExpires: 0
+            isMachineMode: false
         };
         
         const HARGA_PER_BOTOL = 50;
         const ADMIN_WA = "6289524538835";
-        let sessionTimer = null;
         let cart = [];
         let products = [];
         
@@ -669,25 +551,11 @@
         }
         
         function showNotification(message, type = 'success') {
-            const notifDiv = document.getElementById('notification');
             const notif = document.createElement('div');
             notif.className = 'notification';
-            notif.innerHTML = `
-                <span style="font-size:20px;">${type === 'success' ? '🎉' : '⚠️'}</span>
-                <span>${message}</span>
-            `;
-            
-            if (type === 'error') {
-                notif.style.borderColor = '#ff7675';
-            }
-            
-            notifDiv.innerHTML = '';
-            notifDiv.appendChild(notif);
-            
-            setTimeout(() => {
-                notif.style.animation = 'slideUp 0.3s ease';
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
+            notif.innerHTML = message;
+            document.getElementById('notification').appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
         }
         
         // ===========================================
@@ -699,7 +567,7 @@
             const mode = getModeFromUrl();
             
             if (phone.length < 10) {
-                showNotification('Nomor HP minimal 10 digit', 'error');
+                showNotification('HP minimal 10 digit', 'error');
                 return;
             }
             
@@ -723,7 +591,7 @@
                     // User sudah ada, langsung login
                     loginSuccess();
                 } else {
-                    // User baru? Buat akun otomatis
+                    // User baru, buat akun tanpa password
                     db.ref('/accounts/' + phone).set({
                         botol: 0,
                         created_at: Date.now()
@@ -736,20 +604,26 @@
         
         function handleOnlineLogin(phone, password) {
             if (!password) {
-                showPasswordInput('LOGIN ONLINE', 'Masukkan Password');
+                showNotification('Password harus diisi!', 'error');
                 return;
             }
             
             db.ref('/accounts/' + phone).once('value', (snap) => {
                 if (snap.exists()) {
                     const data = snap.val();
-                    if (data.password === password) {
+                    // Cek apakah user punya password
+                    if (data.password && data.password === password) {
                         loginSuccess();
+                    } else if (!data.password) {
+                        // User dari mesin, set password sekarang
+                        db.ref('/accounts/' + phone + '/password').set(password).then(() => {
+                            loginSuccess();
+                        });
                     } else {
                         showNotification('Password salah!', 'error');
                     }
                 } else {
-                    // User baru, minta daftar
+                    // User baru, buat akun dengan password
                     if (password.length < 4) {
                         showNotification('Password minimal 4 karakter', 'error');
                         return;
@@ -763,14 +637,6 @@
                     });
                 }
             });
-        }
-        
-        function showPasswordInput(title, subtitle) {
-            document.getElementById('phone-input').readOnly = true;
-            document.getElementById('pass-input').classList.remove('hidden');
-            document.getElementById('auth-title').innerText = title;
-            document.getElementById('auth-subtitle').innerText = subtitle;
-            document.getElementById('btn-auth').onclick = handleAuth;
         }
         
         function loginSuccess() {
@@ -791,7 +657,7 @@
                 db.ref('/' + currentUser.machine + '/active_user').set({
                     id: currentUser.phone,
                     login_time: Date.now(),
-                    expires: Date.now() + 300000 // 5 menit
+                    expires: Date.now() + 300000
                 });
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -802,12 +668,9 @@
             startSaldoListener();
             loadProducts();
             
-            showNotification('Selamat datang di RE-COIN!');
+            showNotification('Selamat datang!');
         }
         
-        // ===========================================
-        // FIREBASE LISTENERS
-        // ===========================================
         function startSaldoListener() {
             db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
                 currentUser.botol = snap.val() || 0;
@@ -815,9 +678,6 @@
             });
         }
         
-        // ===========================================
-        // UI UPDATE
-        // ===========================================
         function updateUI() {
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
@@ -825,25 +685,11 @@
             document.getElementById('rupiah').innerText = formatRupiah(saldo);
             
             const btnTarik = document.getElementById('btn-tarik');
-            const msgLimit = document.getElementById('msg-limit');
-            
-            if (saldo >= 5000) {
-                btnTarik.disabled = false;
-                msgLimit.style.display = 'none';
-            } else {
-                btnTarik.disabled = true;
-                msgLimit.style.display = 'block';
-            }
-            
-            updateCartDisplay();
+            btnTarik.disabled = saldo < 5000;
         }
         
-        // ===========================================
-        // LOGOUT
-        // ===========================================
         function logout() {
             if (currentUser.isMachineMode && currentUser.machine) {
-                // Hapus active user di mesin
                 db.ref('/' + currentUser.machine + '/active_user').remove();
             }
             
@@ -854,24 +700,13 @@
             
             document.getElementById('phone-input').value = '';
             document.getElementById('pass-input').value = '';
-            document.getElementById('phone-input').readOnly = false;
-            document.getElementById('pass-input').classList.add('hidden');
-            document.getElementById('auth-title').innerText = 'RE-COIN';
-            document.getElementById('auth-subtitle').innerText = 'Masuk untuk mengelola saldo Anda';
-            document.getElementById('btn-auth').onclick = handleAuth;
-            
-            const modeInfo = document.getElementById('machine-info-login');
-            modeInfo.classList.add('hidden');
             
             currentUser = {
                 phone: "",
                 botol: 0,
                 machine: "",
-                isMachineMode: false,
-                sessionExpires: 0
+                isMachineMode: false
             };
-            
-            if (sessionTimer) clearInterval(sessionTimer);
         }
         
         // ===========================================
@@ -888,9 +723,8 @@
         
         function displayProducts() {
             const grid = document.getElementById('product-grid');
-            
             if (products.length === 0) {
-                grid.innerHTML = '<div class="loading">Belum ada produk</div>';
+                grid.innerHTML = '<div class="loading">Tidak ada produk</div>';
                 return;
             }
             
@@ -902,7 +736,7 @@
                         <div class="product-name">${p.name}</div>
                         <div class="product-price">${formatRupiah(p.price || 0)}</div>
                         <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
-                            ${p.stock <= 0 ? 'Stok Habis' : 'Beli'}
+                            ${p.stock <= 0 ? 'Habis' : 'Beli'}
                         </button>
                     </div>
                 `;
@@ -1050,10 +884,7 @@
             const method = document.getElementById('payment-method').value;
             const details = document.getElementById('payment-details').value;
             
-            if (!details) {
-                showNotification('Isi detail pembayaran!', 'error');
-                return;
-            }
+            if (!details) return showNotification('Isi detail!', 'error');
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
@@ -1064,20 +895,19 @@
                 details: details,
                 amount: saldo,
                 timestamp: Date.now(),
-                source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE',
-                status: 'pending'
+                source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE'
             }).then(() => {
                 db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
                     const pesan = `*PENARIKAN RE-COIN*\n` +
                                  `ID: ${currentUser.phone}\n` +
                                  `Sumber: ${currentUser.isMachineMode ? 'Mesin' : 'Website'}\n` +
-                                 `Jumlah: Rp ${saldo.toLocaleString('id-ID')}\n` +
+                                 `Jumlah: Rp ${saldo.toLocaleString()}\n` +
                                  `Metode: ${method}\n` +
                                  `Detail: ${details}`;
                     
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
                     closeModal();
-                    showNotification('Permintaan penarikan dikirim');
+                    showNotification('Penarikan diproses');
                 });
             });
         }
@@ -1092,6 +922,7 @@
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = mode.machineId;
                 document.getElementById('auth-subtitle').innerText = 'Login via QR (tanpa password)';
+                document.getElementById('pass-input').placeholder = 'Password (opsional)';
             } else {
                 document.getElementById('machine-info-login').classList.add('hidden');
                 document.getElementById('auth-subtitle').innerText = 'Login dengan password';
