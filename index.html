@@ -398,6 +398,13 @@
             text-align: left;
             border-left: 4px solid var(--primary);
         }
+        
+        .password-warning {
+            color: #e17055;
+            font-size: 12px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -410,23 +417,23 @@
         </div>
         
         <h2 id="auth-title">RE-COIN</h2>
-        <span id="auth-subtitle" class="subtitle">Masuk untuk mengelola saldo Anda</span>
+        <span id="auth-subtitle" class="subtitle">Masukkan nomor HP dan password</span>
         
         <!-- Mode info (akan tampil jika ada QR) -->
         <div id="machine-info-login" class="machine-info hidden">
             <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
         </div>
         
-        <input type="number" id="phone-input" placeholder="Nomor HP">
-        <input type="password" id="pass-input" placeholder="Password">
+        <input type="number" id="phone-input" placeholder="Nomor HP" required>
+        <input type="password" id="pass-input" placeholder="Password" required>
+        <div id="pass-warning" class="password-warning hidden">Password minimal 4 karakter</div>
         
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
         
         <div class="info-box">
-            <strong>📌 Cara Masuk:</strong><br>
-            • 🏭 <strong>Scan QR di mesin</strong> → Login otomatis (tanpa password)<br>
-            • 🌐 <strong>Login langsung</strong> → Pakai password untuk akses penuh<br>
-            Belum punya akun? Cukup login dengan nomor HP dan password untuk mendaftar.
+            <strong>📌 Informasi:</strong><br>
+            • Semua akses (QR maupun langsung) memerlukan password<br>
+            • Belum punya akun? Login dengan nomor HP dan password baru akan mendaftar otomatis
         </div>
     </div>
 
@@ -559,81 +566,63 @@
         }
         
         // ===========================================
-        // AUTHENTICATION
+        // AUTHENTICATION - SEMUA MODE PAKAI PASSWORD
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
             const password = document.getElementById('pass-input').value;
             const mode = getModeFromUrl();
             
+            // Validasi
             if (phone.length < 10) {
-                showNotification('HP minimal 10 digit', 'error');
+                showNotification('Nomor HP minimal 10 digit', 'error');
                 return;
             }
             
+            if (password.length < 4) {
+                document.getElementById('pass-warning').classList.remove('hidden');
+                showNotification('Password minimal 4 karakter', 'error');
+                return;
+            }
+            
+            document.getElementById('pass-warning').classList.add('hidden');
             currentUser.phone = phone;
             
             if (mode.mode === 'machine') {
-                // 🔥 MODE MESIN - Login tanpa password
                 currentUser.machine = mode.machineId;
                 currentUser.isMachineMode = true;
-                handleMachineLogin(phone);
             } else {
-                // 🔥 MODE ONLINE - Login dengan password
                 currentUser.isMachineMode = false;
-                handleOnlineLogin(phone, password);
-            }
-        }
-        
-        function handleMachineLogin(phone) {
-            db.ref('/accounts/' + phone).once('value', (snap) => {
-                if (snap.exists()) {
-                    // User sudah ada, langsung login
-                    loginSuccess();
-                } else {
-                    // User baru, buat akun tanpa password
-                    db.ref('/accounts/' + phone).set({
-                        botol: 0,
-                        created_at: Date.now()
-                    }).then(() => {
-                        loginSuccess();
-                    });
-                }
-            });
-        }
-        
-        function handleOnlineLogin(phone, password) {
-            if (!password) {
-                showNotification('Password harus diisi!', 'error');
-                return;
             }
             
+            // Proses login/registrasi
+            processLogin(phone, password);
+        }
+        
+        function processLogin(phone, password) {
             db.ref('/accounts/' + phone).once('value', (snap) => {
                 if (snap.exists()) {
+                    // User sudah ada, cek password
                     const data = snap.val();
-                    // Cek apakah user punya password
-                    if (data.password && data.password === password) {
+                    
+                    if (data.password === password) {
+                        // Password cocok, login sukses
                         loginSuccess();
-                    } else if (!data.password) {
-                        // User dari mesin, set password sekarang
-                        db.ref('/accounts/' + phone + '/password').set(password).then(() => {
-                            loginSuccess();
-                        });
                     } else {
+                        // Password salah
                         showNotification('Password salah!', 'error');
                     }
                 } else {
                     // User baru, buat akun dengan password
-                    if (password.length < 4) {
-                        showNotification('Password minimal 4 karakter', 'error');
-                        return;
-                    }
                     db.ref('/accounts/' + phone).set({
                         password: password,
                         botol: 0,
                         created_at: Date.now()
                     }).then(() => {
+                        showNotification('Akun berhasil dibuat!', 'success');
                         loginSuccess();
+                    }).catch((error) => {
+                        showNotification('Gagal membuat akun', 'error');
                     });
                 }
             });
@@ -657,7 +646,7 @@
                 db.ref('/' + currentUser.machine + '/active_user').set({
                     id: currentUser.phone,
                     login_time: Date.now(),
-                    expires: Date.now() + 300000
+                    expires: Date.now() + 300000 // 5 menit
                 });
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -668,7 +657,7 @@
             startSaldoListener();
             loadProducts();
             
-            showNotification('Selamat datang!');
+            showNotification('Selamat datang di RE-COIN!');
         }
         
         function startSaldoListener() {
@@ -921,12 +910,11 @@
             if (mode.mode === 'machine') {
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = mode.machineId;
-                document.getElementById('auth-subtitle').innerText = 'Login via QR (tanpa password)';
-                document.getElementById('pass-input').placeholder = 'Password (opsional)';
-            } else {
-                document.getElementById('machine-info-login').classList.add('hidden');
-                document.getElementById('auth-subtitle').innerText = 'Login dengan password';
+                document.getElementById('auth-subtitle').innerText = 'Login via QR (wajib password)';
             }
+            
+            // Sembunyikan warning password
+            document.getElementById('pass-warning').classList.add('hidden');
         };
     </script>
 </body>
