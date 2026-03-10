@@ -218,13 +218,6 @@
             margin-bottom: 20px;
         }
         
-        .session-timer {
-            font-size: 12px;
-            color: #b2bec3;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
         .btn-logout {
             background: none;
             border: none;
@@ -510,10 +503,6 @@
             Minimal saldo Rp 5.000 untuk tarik
         </div>
         
-        <div class="session-timer" id="session-timer">
-            Sesi: 5:00
-        </div>
-        
         <button class="btn-logout" onclick="logout()">LOGOUT</button>
     </div>
 
@@ -606,15 +595,13 @@
         let currentUser = {
             phone: "",
             botol: 0,
-            machine: "",
-            sessionExpires: 0
+            machine: ""
         };
         
         let isRegistering = false;
         const HARGA_PER_BOTOL = 50;
         const ADMIN_WA = "6289524538835";
         
-        let sessionTimer = null;
         let cart = [];
         let products = [];
         
@@ -647,7 +634,7 @@
         }
         
         // ===========================================
-        // AUTHENTICATION - TANPA MONITORING MESIN
+        // AUTHENTICATION
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -667,7 +654,6 @@
                         return;
                     }
                     if (snap.val().password === password) {
-                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
                         performLogin();
                     } else {
                         showNotification('Password salah!', 'error');
@@ -684,7 +670,6 @@
                         botol: 0,
                         created_at: Date.now()
                     }).then(() => {
-                        // ✅ LANGSUNG LOGIN, TANPA CEK MESIN
                         performLogin();
                     });
                 }
@@ -700,26 +685,13 @@
         }
         
         function performLogin() {
-            const sessionExpires = Date.now() + 300000;
-            
-            // ✅ UPDATE USER DI MESIN (hanya jika belum ada user)
-            db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
-                const currentActive = snap.val();
-                
-                // Hanya update jika belum ada user
-                if (!currentActive || !currentActive.id) {
-                    db.ref().update({
-                        ['/' + currentUser.machine + '/active_user']: {
-                            id: currentUser.phone,
-                            login_time: Date.now(),
-                            expires: sessionExpires
-                        },
-                        ['/accounts/' + currentUser.phone + '/active_machine']: currentUser.machine
-                    });
-                }
+            // ✅ UPDATE USER DI MESIN
+            db.ref('/' + currentUser.machine + '/active_user').set({
+                id: currentUser.phone,
+                login_time: Date.now()
             });
             
-            currentUser.sessionExpires = sessionExpires;
+            db.ref('/accounts/' + currentUser.phone + '/active_machine').set(currentUser.machine);
             
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
@@ -727,7 +699,6 @@
             document.getElementById('active-machine').innerText = currentUser.machine;
             
             setupListeners();
-            startSessionTimer();
             loadProducts();
             
             showNotification('Selamat datang di RE-COIN!');
@@ -749,36 +720,10 @@
             });
         }
         
-        // ===========================================
-        // SESSION MANAGEMENT
-        // ===========================================
-        function startSessionTimer() {
-            if (sessionTimer) clearInterval(sessionTimer);
-            sessionTimer = setInterval(() => {
-                const remaining = Math.max(0, (currentUser.sessionExpires - Date.now()) / 1000);
-                const minutes = Math.floor(remaining / 60);
-                const seconds = Math.floor(remaining % 60);
-                document.getElementById('session-timer').innerText = 
-                    `Sesi: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (remaining <= 0) {
-                    clearInterval(sessionTimer);
-                    logout();
-                    showNotification('Sesi habis', 'error');
-                }
-            }, 1000);
-        }
-        
         function logout() {
             if (currentUser.machine && currentUser.phone) {
-                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
-                    if (snap.val() === currentUser.phone) {
-                        db.ref().update({
-                            ['/' + currentUser.machine + '/active_user']: null,
-                            ['/accounts/' + currentUser.phone + '/active_machine']: null
-                        });
-                    }
-                });
+                db.ref('/' + currentUser.machine + '/active_user').remove();
+                db.ref('/accounts/' + currentUser.phone + '/active_machine').remove();
             }
             
             db.ref('/accounts/' + currentUser.phone + '/botol').off();
@@ -1119,16 +1064,7 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
         // AUTO CLEANUP
         // ===========================================
         window.addEventListener('beforeunload', function() {
-            if (currentUser.machine && currentUser.phone) {
-                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
-                    if (snap.val() === currentUser.phone) {
-                        db.ref().update({
-                            ['/' + currentUser.machine + '/active_user']: null,
-                            ['/accounts/' + currentUser.phone + '/active_machine']: null
-                        });
-                    }
-                });
-            }
+            // Tidak melakukan apa-apa, biarkan user tetap login
         });
         
         // ===========================================
@@ -1144,4 +1080,3 @@ ${mapsLink ? `🗺️ *Lokasi GPS:* ${mapsLink}` : ''}
     </script>
 </body>
 </html>
-
