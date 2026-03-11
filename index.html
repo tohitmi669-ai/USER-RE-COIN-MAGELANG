@@ -139,6 +139,17 @@
             padding: 20px;
             border-radius: 24px;
             margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card.botol-added {
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); background-color: #f8f9fa; }
+            50% { transform: scale(1.05); background-color: #d4edda; }
+            100% { transform: scale(1); background-color: #f8f9fa; }
         }
         
         .stat-label {
@@ -193,6 +204,13 @@
             min-width: 280px;
             max-width: 90%;
             text-align: center;
+        }
+        
+        .notification-botol {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.3);
         }
         
         @keyframes slideDown {
@@ -459,6 +477,28 @@
             margin: 24px 0 16px 0;
         }
         
+        .coin-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--gold);
+            color: var(--dark);
+            padding: 20px 40px;
+            border-radius: 60px;
+            font-size: 48px;
+            font-weight: 800;
+            z-index: 10000;
+            animation: coinPop 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes coinPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+        
         @media (max-width: 480px) {
             .product-grid {
                 grid-template-columns: 1fr;
@@ -468,6 +508,7 @@
 </head>
 <body>
     <div id="notification"></div>
+    <div id="coin-animation" class="coin-animation hidden">+1</div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -509,7 +550,7 @@
             <span>Anda menggunakan mesin: <span id="active-machine" class="machine-id">-</span></span>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" id="botol-stat-card">
             <div class="stat-label">TOTAL BOTOL</div>
             <div class="val-botol" id="count">0</div>
         </div>
@@ -610,6 +651,88 @@
         const ADMIN_WA = "6289524538835";
         let cart = [];
         let products = [];
+        let previousBotol = 0;
+        
+        // ===========================================
+        // AUDIO FUNCTIONS
+        // ===========================================
+        function playCoinSound() {
+            try {
+                // Cek apakah browser mendukung Audio
+                if (window.AudioContext || window.webkitAudioContext) {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Buat oscillator untuk suara "cling" sederhana
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    
+                    // Resume audio context jika suspended
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume();
+                    }
+                } else {
+                    // Fallback: gunakan Audio HTML5
+                    const audio = new Audio();
+                    audio.src = 'data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==';
+                    audio.volume = 0.3;
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                }
+            } catch (e) {
+                console.log('Sound not supported:', e);
+            }
+        }
+        
+        // ===========================================
+        // ANIMATION FUNCTIONS
+        // ===========================================
+        function showCoinAnimation(botolAdded) {
+            const animDiv = document.getElementById('coin-animation');
+            animDiv.textContent = `+${botolAdded}`;
+            animDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                animDiv.classList.add('hidden');
+            }, 1000);
+        }
+        
+        function animateBotolCard() {
+            const card = document.getElementById('botol-stat-card');
+            card.classList.add('botol-added');
+            
+            setTimeout(() => {
+                card.classList.remove('botol-added');
+            }, 500);
+        }
+        
+        function showBotolNotification(oldValue, newValue) {
+            const added = newValue - oldValue;
+            if (added > 0) {
+                // Mainkan suara
+                playCoinSound();
+                
+                // Tampilkan animasi
+                showCoinAnimation(added);
+                
+                // Animasi card
+                animateBotolCard();
+                
+                // Tampilkan notifikasi
+                showNotification(`+${added} botol! Saldo bertambah Rp ${(added * HARGA_PER_BOTOL).toLocaleString('id-ID')}`, 'success', true);
+            }
+        }
         
         // ===========================================
         // UTILITY FUNCTIONS
@@ -629,10 +752,13 @@
             return 'Rp ' + angka.toLocaleString('id-ID');
         }
         
-        function showNotification(message, type = 'success') {
+        function showNotification(message, type = 'success', isBotol = false) {
             const notifDiv = document.getElementById('notification');
             const notif = document.createElement('div');
             notif.className = 'notification';
+            if (isBotol) {
+                notif.classList.add('notification-botol');
+            }
             notif.innerHTML = message;
             
             if (type === 'error') {
@@ -750,8 +876,27 @@
         }
         
         function startSaldoListener() {
+            // Ambil nilai awal
+            db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
+                previousBotol = snap.val() || 0;
+                currentUser.botol = previousBotol;
+                updateUI();
+            });
+            
+            // Listener untuk perubahan
             db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
-                currentUser.botol = snap.val() || 0;
+                const newBotol = snap.val() || 0;
+                const oldBotol = currentUser.botol;
+                
+                // Update current user
+                currentUser.botol = newBotol;
+                
+                // Cek apakah botol bertambah
+                if (newBotol > oldBotol) {
+                    showBotolNotification(oldBotol, newBotol);
+                }
+                
+                // Update UI
                 updateUI();
             });
         }
@@ -1056,6 +1201,11 @@
             
             // Sembunyikan warning password
             document.getElementById('pass-warning').classList.add('hidden');
+            
+            // Cek dukungan audio
+            if (!window.AudioContext && !window.webkitAudioContext) {
+                console.log('Web Audio API tidak didukung, menggunakan fallback');
+            }
         };
     </script>
 </body>
