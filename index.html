@@ -866,6 +866,16 @@
             margin-bottom: 15px;
             border: 1px solid #ecf0f1;
             position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .order-card-updated {
+            animation: highlight 1s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: #fff3cd; }
+            100% { background-color: #f8f9fa; }
         }
         
         .empty-state {
@@ -922,6 +932,23 @@
             background: #dfe6e9;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        /* Status Update Badge */
+        .status-update-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 1s infinite;
         }
         
         @media (max-width: 480px) {
@@ -1496,6 +1523,7 @@
             startSaldoListener();
             loadMerchantsAndProducts();
             loadUserOrders();
+            startOrderListener(); // <-- REAL-TIME LISTENER DITAMBAHKAN
             
             showNotification('Selamat datang di RE-COIN!');
         }
@@ -1544,6 +1572,8 @@
         
         function logout() {
             showNotification('Proses logout...', 'info');
+            
+            stopOrderListener(); // <-- HENTIKAN LISTENER
             
             if (currentUser.isMachineMode && currentUser.machine) {
                 db.ref('/' + currentUser.machine + '/active_user').remove().catch(error => {
@@ -2310,6 +2340,93 @@
                 container.innerHTML = html;
                 
             }, 100);
+        }
+        
+        // ===========================================
+        // REAL-TIME ORDER LISTENER
+        // ===========================================
+        function startOrderListener() {
+            if (!currentUser.phone) return;
+            
+            // Listen untuk perubahan di transaksi user
+            db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
+                const updatedOrder = snap.val();
+                const orderId = snap.key;
+                
+                console.log('Order berubah:', orderId, updatedOrder);
+                
+                // Update di array local
+                const index = userOrders.findIndex(o => o.id === orderId);
+                if (index !== -1) {
+                    userOrders[index] = {
+                        id: orderId,
+                        ...updatedOrder
+                    };
+                } else {
+                    // Order baru
+                    userOrders.push({
+                        id: orderId,
+                        ...updatedOrder
+                    });
+                }
+                
+                // Urutkan ulang
+                userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
+                // Update tampilan
+                displayRecentOrders();
+                
+                // Jika di halaman orders, update juga
+                if (!document.getElementById('orders-page').classList.contains('hidden')) {
+                    displayAllOrders();
+                } else {
+                    // Kasih efek highlight di dashboard
+                    const recentContainer = document.getElementById('recent-orders');
+                    if (recentContainer) {
+                        recentContainer.style.backgroundColor = '#fff3cd';
+                        setTimeout(() => {
+                            recentContainer.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                }
+                
+                // Notifikasi
+                if (updatedOrder.status === 'dikirim') {
+                    showNotification('📦 Pesanan #' + orderId.slice(-8) + ' sudah dikirim! Silakan cek dan konfirmasi.', 'info');
+                } else if (updatedOrder.status === 'selesai') {
+                    showNotification('✅ Pesanan #' + orderId.slice(-8) + ' selesai! Terima kasih.', 'success');
+                }
+            });
+            
+            // Listen untuk order baru
+            db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
+                const newOrder = snap.val();
+                const orderId = snap.key;
+                
+                // Cek apakah sudah ada
+                if (!userOrders.some(o => o.id === orderId)) {
+                    userOrders.push({
+                        id: orderId,
+                        ...newOrder
+                    });
+                    
+                    userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    
+                    displayRecentOrders();
+                    
+                    if (!document.getElementById('orders-page').classList.contains('hidden')) {
+                        displayAllOrders();
+                    }
+                    
+                    showNotification('📦 Ada pesanan baru!', 'success');
+                }
+            });
+        }
+        
+        function stopOrderListener() {
+            if (currentUser.phone) {
+                db.ref('/transactions/' + currentUser.phone).off();
+            }
         }
         
         // ===========================================
