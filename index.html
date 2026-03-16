@@ -103,7 +103,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -140,7 +140,20 @@
             color: white;
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active {
+        .btn-maps {
+            background: var(--info);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            font-size: 14px;
+            width: auto;
+            margin-top: 5px;
+        }
+        
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active {
             transform: scale(0.98);
         }
         
@@ -605,6 +618,8 @@
             width: 100%;
             margin: 10px 0;
             cursor: pointer;
+            font-size: 16px; /* Lebih besar untuk mobile */
+            padding: 14px; /* Lebih besar untuk mobile */
         }
         
         .delivery-info {
@@ -970,10 +985,37 @@
             cursor: pointer;
         }
         
+        /* Mobile Optimization */
         @media (max-width: 480px) {
             .product-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .btn-get-location {
+                font-size: 18px;
+                padding: 16px;
+            }
+            
+            .delivery-info p {
+                font-size: 16px;
+            }
+            
+            .btn-maps {
+                font-size: 16px;
+                padding: 14px;
+            }
+        }
+        
+        /* Manual Address Input */
+        .manual-address {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 12px;
+        }
+        
+        .manual-address textarea {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -1099,11 +1141,24 @@
                         📍 Gunakan Lokasi Saya
                     </button>
                     
+                    <!-- Tombol Manual Input (FALLBACK) -->
+                    <button class="btn-secondary" onclick="showManualAddressInput()" style="margin-top: 5px;">
+                        ✏️ Input Alamat Manual
+                    </button>
+                    
                     <div id="delivery-info" class="delivery-info hidden">
                         <p><strong>📍 Lokasi Tujuan:</strong> <span id="delivery-address">-</span></p>
                         <p><strong>📏 Jarak:</strong> <span id="delivery-distance" class="delivery-distance">0 km</span></p>
                         <p><strong>💰 Ongkos Kirim:</strong> <span style="color: var(--gold); font-weight: 700;">GRATIS</span></p>
                         <a id="maps-link" class="maps-link hidden" target="_blank">🗺️ Buka di Google Maps</a>
+                    </div>
+                    
+                    <!-- Manual Address Input (Hidden by default) -->
+                    <div id="manual-address-input" class="manual-address hidden">
+                        <textarea id="manual-address" class="form-control" rows="2" placeholder="Masukkan alamat lengkap..."></textarea>
+                        <button class="btn-success" onclick="submitManualAddress()">
+                            <i class="fas fa-check"></i> Gunakan Alamat Ini
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1219,6 +1274,7 @@
         let previousBotol = 0;
         let userLocation = null;
         let deliveryEnabled = false;
+        let manualAddress = "";
         
         // ===========================================
         // AUDIO & ANIMATION FUNCTIONS
@@ -1340,7 +1396,7 @@
         }
         
         // ===========================================
-        // DELIVERY FUNCTIONS
+        // DELIVERY FUNCTIONS - OPTIMIZED FOR MOBILE
         // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
@@ -1355,18 +1411,77 @@
                 userLocation = null;
                 document.getElementById('delivery-info').classList.add('hidden');
                 document.getElementById('maps-link').classList.add('hidden');
+                document.getElementById('manual-address-input').classList.add('hidden');
             }
             
             updateCartDisplay();
+        }
+        
+        function showManualAddressInput() {
+            document.getElementById('manual-address-input').classList.remove('hidden');
+        }
+        
+        function submitManualAddress() {
+            const address = document.getElementById('manual-address').value.trim();
+            
+            if (!address) {
+                showNotification('Masukkan alamat terlebih dahulu!', 'error');
+                return;
+            }
+            
+            manualAddress = address;
+            
+            // Simulasi lokasi (gunakan koordinat default toko)
+            userLocation = {
+                lat: STORE_LOCATION.lat + (Math.random() * 0.01 - 0.005),
+                lng: STORE_LOCATION.lng + (Math.random() * 0.01 - 0.005)
+            };
+            
+            // Hitung jarak (estimasi)
+            const distance = calculateDistance(userLocation.lat, userLocation.lng);
+            
+            // Update UI
+            document.getElementById('delivery-address').textContent = address;
+            document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
+            
+            // Buat link Google Maps (gunakan koordinat)
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
+            document.getElementById('maps-link').href = mapsLink;
+            document.getElementById('maps-link').classList.remove('hidden');
+            
+            document.getElementById('delivery-info').classList.remove('hidden');
+            document.getElementById('manual-address-input').classList.add('hidden');
+            
+            updateCartDisplay();
+            
+            showNotification('Alamat manual berhasil digunakan', 'success');
         }
         
         function getUserLocation() {
             showNotification('Mendapatkan lokasi Anda...', 'info');
             
             if (!navigator.geolocation) {
-                showNotification('Browser tidak mendukung geolokasi', 'error');
+                showNotification('Browser tidak mendukung geolokasi. Silakan input manual.', 'error');
+                showManualAddressInput();
                 return;
             }
+            
+            // Cek apakah di mobile dan HTTPS
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isHttps = window.location.protocol === 'https:';
+            
+            if (isMobile && !isHttps) {
+                showNotification('Untuk menggunakan GPS di HP, akses via HTTPS. Gunakan input manual.', 'warning');
+                showManualAddressInput();
+                return;
+            }
+            
+            // Opsi untuk mobile (timeout lebih lama, enableHighAccuracy true)
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 30000, // 30 detik untuk mobile
+                maximumAge: 0
+            };
             
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -1379,8 +1494,8 @@
                     const distance = calculateDistance(lat, lng);
                     document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
                     
-                    // Dapatkan alamat sederhana
-                    getSimpleAddress(lat, lng);
+                    // Coba dapatkan alamat dengan timeout pendek
+                    getAddressWithTimeout(lat, lng, 5000); // 5 detik timeout
                     
                     // Buat link Google Maps
                     createGoogleMapsLink(lat, lng);
@@ -1392,25 +1507,59 @@
                 },
                 (error) => {
                     let message = 'Gagal mendapatkan lokasi';
+                    let showManual = true;
+                    
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            message = 'Akses lokasi ditolak';
+                            message = 'Akses lokasi ditolak. Silakan izinkan akses atau input manual.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            message = 'Lokasi tidak tersedia';
+                            message = 'Lokasi tidak tersedia. Silakan input manual.';
                             break;
                         case error.TIMEOUT:
-                            message = 'Waktu permintaan lokasi habis';
+                            message = 'Waktu permintaan lokasi habis. Silakan input manual.';
                             break;
+                        default:
+                            message = 'Error tidak diketahui. Silakan input manual.';
                     }
+                    
                     showNotification(message, 'error');
+                    
+                    if (showManual) {
+                        showManualAddressInput();
+                    }
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
-                }
+                options
             );
+        }
+        
+        function getAddressWithTimeout(lat, lng, timeoutMs) {
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+            });
+            
+            const fetchPromise = fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`, {
+                headers: {
+                    'User-Agent': 'RE-COIN-App/1.0'
+                }
+            }).then(response => response.json());
+            
+            Promise.race([fetchPromise, timeoutPromise])
+                .then(data => {
+                    if (data && data.display_name) {
+                        let address = data.display_name;
+                        if (address.length > 100) {
+                            address = address.substring(0, 100) + '...';
+                        }
+                        document.getElementById('delivery-address').textContent = address;
+                    } else {
+                        document.getElementById('delivery-address').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    }
+                })
+                .catch(() => {
+                    // Fallback ke koordinat
+                    document.getElementById('delivery-address').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)} (alamat tidak tersedia)`;
+                });
         }
         
         function calculateDistance(lat, lng) {
@@ -1433,32 +1582,6 @@
             return deg * (Math.PI/180);
         }
         
-        function getSimpleAddress(lat, lng) {
-            const latStr = lat.toFixed(6);
-            const lngStr = lng.toFixed(6);
-            
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`, {
-                headers: {
-                    'User-Agent': 'RE-COIN-App/1.0'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.display_name) {
-                    let address = data.display_name;
-                    if (address.length > 100) {
-                        address = address.substring(0, 100) + '...';
-                    }
-                    document.getElementById('delivery-address').textContent = address;
-                } else {
-                    document.getElementById('delivery-address').textContent = `${latStr}, ${lngStr}`;
-                }
-            })
-            .catch(() => {
-                document.getElementById('delivery-address').textContent = `${latStr}, ${lngStr}`;
-            });
-        }
-        
         function createGoogleMapsLink(lat, lng) {
             const mapsLink = document.getElementById('maps-link');
             const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -1471,7 +1594,7 @@
         // ===========================================
         function saveUserSession() {
             if (!currentUser.phone) return;
-            if (currentUser.rememberMe === false) return; // Jangan save jika tidak dicentang
+            if (currentUser.rememberMe === false) return;
             
             const sessionData = {
                 phone: currentUser.phone,
@@ -1497,27 +1620,20 @@
             try {
                 const session = JSON.parse(sessionJson);
                 
-                // Cek apakah session masih berlaku
                 if (session.expiresAt && session.expiresAt > Date.now()) {
                     console.log('🔄 Auto login dengan session:', session);
                     
-                    // Set current user dari session
                     currentUser.phone = session.phone;
                     currentUser.machine = session.machine || "";
                     currentUser.isMachineMode = session.isMachineMode || false;
                     currentUser.rememberMe = true;
                     
-                    // Verifikasi ke Firebase apakah user masih ada
                     db.ref('/accounts/' + session.phone).once('value', (snap) => {
                         if (snap.exists()) {
-                            // Update botol dari Firebase
                             const userData = snap.val();
                             currentUser.botol = userData.botol || 0;
-                            
-                            // Login sukses
                             completeLogin();
                         } else {
-                            // User tidak ditemukan di Firebase
                             console.log('❌ User tidak ditemukan di Firebase');
                             clearUserSession();
                             showLoginPage();
@@ -1541,7 +1657,6 @@
         }
 
         function completeLogin() {
-            // Update UI
             document.getElementById('user-display').innerText = currentUser.phone;
             
             const modeBadge = document.getElementById('mode-badge-dashboard');
@@ -1565,13 +1680,11 @@
                 modeBadge.className = 'mode-badge online-mode';
             }
             
-            // Start listeners
             startSaldoListener();
             loadMerchantsAndProducts();
             loadUserOrders();
             startOrderListener();
             
-            // Tampilkan halaman dashboard
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
             
@@ -1607,7 +1720,7 @@
             
             document.getElementById('pass-warning').classList.add('hidden');
             currentUser.phone = phone;
-            currentUser.rememberMe = rememberMe; // Simpan preferensi
+            currentUser.rememberMe = rememberMe;
             
             if (mode.mode === 'machine') {
                 currentUser.machine = mode.machineId;
@@ -1672,7 +1785,6 @@
                 modeBadge.className = 'mode-badge online-mode';
             }
             
-            // SIMPAN SESSION
             saveUserSession();
             
             startSaldoListener();
@@ -1730,7 +1842,6 @@
             
             stopOrderListener();
             
-            // HAPUS SESSION
             clearUserSession();
             
             if (currentUser.isMachineMode && currentUser.machine) {
@@ -1774,7 +1885,6 @@
             const container = document.getElementById('products-container');
             if (!container) return;
             
-            // Load merchants
             db.ref('/merchants').once('value', (snap) => {
                 merchants = [];
                 const merchantData = snap.val() || {};
@@ -1788,7 +1898,6 @@
                     }
                 }
                 
-                // Load products
                 db.ref('/products').once('value', (productSnap) => {
                     products = [];
                     const productData = productSnap.val() || {};
@@ -1851,13 +1960,15 @@
                 
                 merchantProducts.slice(0, 4).forEach(product => {
                     const stockClass = product.stock <= 5 ? 'stock-low' : '';
+                    const deliveryIcon = product.delivery_antar ? '<i class="fas fa-truck" style="color: var(--info); margin-left: 5px;"></i>' : '';
+                    
                     html += `
                         <div class="product-card">
                             <div class="product-image">
                                 <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
                                      onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
                             </div>
-                            <div class="product-name">${product.name || 'Produk'}</div>
+                            <div class="product-name">${product.name || 'Produk'} ${deliveryIcon}</div>
                             <div class="product-price">${formatRupiah(product.price || 0)}</div>
                             <div class="product-stock ${stockClass}">
                                 <i class="fas fa-box"></i> Stok: ${product.stock || 0}
@@ -1921,12 +2032,14 @@
             
             merchantProducts.forEach(product => {
                 const stockClass = product.stock <= 5 ? 'stock-low' : '';
+                const deliveryIcon = product.delivery_antar ? '<i class="fas fa-truck" style="color: var(--info); margin-left: 5px;"></i>' : '';
+                
                 html += `
                     <div class="product-card">
                         <div class="product-image">
                             <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
                         </div>
-                        <div class="product-name">${product.name || 'Produk'}</div>
+                        <div class="product-name">${product.name || 'Produk'} ${deliveryIcon}</div>
                         <div class="product-price">${formatRupiah(product.price || 0)}</div>
                         <div class="product-stock ${stockClass}">
                             <i class="fas fa-box"></i> Stok: ${product.stock || 0}
@@ -1959,7 +2072,6 @@
             if (existing) {
                 existing.quantity++;
             } else {
-                // Cari merchant
                 const merchant = merchants.find(m => m.id === product.merchant_id);
                 cart.push({ 
                     ...product, 
@@ -2016,7 +2128,6 @@
             let html = '';
             let subtotal = 0;
             
-            // Group by merchant
             const cartByMerchant = {};
             cart.forEach(item => {
                 if (!cartByMerchant[item.merchant_id]) {
@@ -2044,6 +2155,7 @@
                             <div class="cart-item-info">
                                 <div class="cart-item-name">${item.name || 'Produk'}</div>
                                 <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
+                                ${item.delivery_antar ? '<div style="font-size: 10px; color: var(--info);"><i class="fas fa-truck"></i> Bisa diantar</div>' : ''}
                             </div>
                             <div class="cart-item-actions">
                                 <div class="cart-quantity">
@@ -2065,11 +2177,8 @@
             itemsDiv.innerHTML = html;
             totalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
             subtotalSpan.innerHTML = formatRupiah(subtotal);
-            
-            // Grand total (gratis ongkir)
             grandTotalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
             
-            // Check if sufficient balance
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             checkoutBtn.disabled = subtotal > saldo;
         }
@@ -2101,14 +2210,12 @@
             const updates = {};
             updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
             
-            // Update stok produk
             cart.forEach(item => {
                 updates[`/products/${item.id}/stock`] = firebase.database.ServerValue.increment(-item.quantity);
             });
             
             const transId = Date.now().toString();
             
-            // Group items by merchant
             const itemsByMerchant = {};
             cart.forEach(item => {
                 if (!itemsByMerchant[item.merchant_id]) {
@@ -2143,22 +2250,30 @@
                 source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE'
             };
             
-            // Tambah info delivery jika ada
-            if (deliveryEnabled && userLocation) {
-                const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
+            if (deliveryEnabled && (userLocation || manualAddress)) {
+                let googleMapsLink = '';
+                let address = '';
+                
+                if (userLocation) {
+                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
+                    address = document.getElementById('delivery-address').textContent || 'Lokasi user';
+                } else {
+                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${STORE_LOCATION.lat},${STORE_LOCATION.lng}`;
+                    address = manualAddress || 'Alamat manual';
+                }
                 
                 transactionData.delivery = {
                     user_location: userLocation,
-                    distance: calculateDistance(userLocation.lat, userLocation.lng),
+                    distance: userLocation ? calculateDistance(userLocation.lat, userLocation.lng) : 0,
                     cost: 0,
-                    address: document.getElementById('delivery-address').textContent || 'Lokasi user',
-                    google_maps_link: googleMapsLink
+                    address: address,
+                    google_maps_link: googleMapsLink,
+                    manual_address: manualAddress || null
                 };
             }
             
             updates[`/transactions/${currentUser.phone}/${transId}`] = transactionData;
             
-            // Simpan juga di per-merchant untuk notifikasi
             for (let merchantId in itemsByMerchant) {
                 updates[`/merchant_orders/${merchantId}/${transId}`] = {
                     user_id: currentUser.phone,
@@ -2166,29 +2281,29 @@
                     total: itemsByMerchant[merchantId].reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
                     timestamp: Date.now(),
                     status: 'diproses',
-                    delivery: transactionData.delivery || null
+                    delivery: transactionData.delivery || null,
+                    delivery_cost: 0
                 };
             }
             
             db.ref().update(updates).then(() => {
-                // Kirim notifikasi WhatsApp ke admin
                 sendWhatsAppNotification(transactionData);
                 
-                // Reset cart
                 cart = [];
                 deliveryEnabled = false;
                 userLocation = null;
+                manualAddress = "";
                 document.getElementById('delivery-checkbox').checked = false;
                 document.getElementById('delivery-options').classList.add('hidden');
                 document.getElementById('delivery-info').classList.add('hidden');
                 document.getElementById('maps-link').classList.add('hidden');
+                document.getElementById('manual-address-input').classList.add('hidden');
                 
                 updateCartDisplay();
                 document.getElementById('cart-panel').classList.add('hidden');
                 
                 showNotification('Pembelian berhasil! Pesanan sedang diproses', 'success');
                 
-                // Reload orders
                 loadUserOrders();
             }).catch((error) => {
                 console.error('Error checkout:', error);
@@ -2203,7 +2318,6 @@
             
             pesan += `*PRODUK:*\n`;
             
-            // Group by merchant untuk notifikasi
             const byMerchant = {};
             transactionData.items.forEach(item => {
                 if (!item) return;
@@ -2234,7 +2348,7 @@
         }
         
         // ===========================================
-        // USER ORDERS - OPTIMIZED VERSION
+        // USER ORDERS
         // ===========================================
         function loadUserOrders() {
             if (!currentUser.phone) return;
@@ -2244,7 +2358,6 @@
                 recentContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Memuat pesanan...</p>';
             }
             
-            // Load hanya 20 order terbaru untuk efisiensi
             db.ref('/transactions/' + currentUser.phone)
                 .orderByChild('timestamp')
                 .limitToLast(20)
@@ -2259,7 +2372,6 @@
                         });
                     }
                     
-                    // Sort by timestamp descending (terbaru dulu)
                     userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                     
                     displayRecentOrders();
@@ -2461,11 +2573,15 @@
                             <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; background: #e8f8f5; padding: 8px; border-radius: 8px;">
                                 <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${order.delivery.address}
                                 ${order.delivery.distance ? `<br><small>Jarak: ${order.delivery.distance} km</small>` : ''}
+                                ${order.delivery.google_maps_link ? `
+                                    <br><a href="${order.delivery.google_maps_link}" target="_blank" class="btn-maps" style="margin-top: 5px;">
+                                        <i class="fas fa-map-marked-alt"></i> Buka Google Maps
+                                    </a>
+                                ` : ''}
                             </div>
                         `;
                     }
                     
-                    // ===== TOMBOL KONFIRMASI TERIMA PESANAN =====
                     if (status === 'dikirim') {
                         html += `
                             <div class="konfirmasi-button">
@@ -2509,17 +2625,14 @@
             
             console.log('Memulai listener untuk user:', currentUser.phone);
             
-            // Hapus listener lama jika ada
             db.ref('/transactions/' + currentUser.phone).off();
             
-            // Listen untuk perubahan di transaksi user
             db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
                 const updatedOrder = snap.val();
                 const orderId = snap.key;
                 
                 console.log('🔥 ORDER BERUBAH:', orderId, updatedOrder);
                 
-                // Update di array local
                 const index = userOrders.findIndex(o => o.id === orderId);
                 if (index !== -1) {
                     userOrders[index] = {
@@ -2533,17 +2646,13 @@
                     });
                 }
                 
-                // Urutkan ulang
                 userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
-                // Update tampilan
                 displayRecentOrders();
                 
-                // Jika di halaman orders, update juga
                 if (!document.getElementById('orders-page').classList.contains('hidden')) {
                     displayAllOrders();
                 } else {
-                    // Kasih efek highlight di dashboard
                     const recentContainer = document.getElementById('recent-orders');
                     if (recentContainer) {
                         recentContainer.style.backgroundColor = '#fff3cd';
@@ -2554,11 +2663,9 @@
                     }
                 }
                 
-                // Notifikasi berdasarkan status
                 if (updatedOrder.status === 'dikirim') {
                     showNotification('📦 Pesanan #' + orderId.slice(-8) + ' sudah dikirim! Silakan cek dan konfirmasi.', 'info');
                     
-                    // Play sound notifikasi
                     try {
                         const audio = new Audio('data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==');
                         audio.play().catch(e => console.log('Audio play failed:', e));
@@ -2569,14 +2676,12 @@
                 }
             });
             
-            // Listen untuk order baru
             db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
                 const newOrder = snap.val();
                 const orderId = snap.key;
                 
                 console.log('🔥 ORDER BARU:', orderId, newOrder);
                 
-                // Cek apakah sudah ada
                 if (!userOrders.some(o => o.id === orderId)) {
                     userOrders.push({
                         id: orderId,
@@ -2606,7 +2711,7 @@
         }
         
         // ===========================================
-        // KONFIRMASI PESANAN SELESAI - AUTO SALDO MERCHANT
+        // KONFIRMASI PESANAN SELESAI
         // ===========================================
         function konfirmasiPesananSelesai(orderId) {
             if (!orderId) return;
@@ -2637,7 +2742,6 @@
             let totalProcessed = 0;
             let totalMerchants = 0;
             
-            // Hitung jumlah merchant
             if (order.items_by_merchant) {
                 totalMerchants = Object.keys(order.items_by_merchant).length;
             } else if (order.items) {
@@ -2648,15 +2752,11 @@
                 totalMerchants = uniqueMerchants.size;
             }
             
-            // 1. Update status order user
             updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
             
-            // 2. Proses per merchant
             const processMerchant = (merchantId, merchantItems, merchantTotal) => {
-                // Update status di merchant_orders
                 updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
                 
-                // Ambil saldo merchant saat ini dan update
                 db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
                     const saldoSekarang = snap.val() || 0;
                     const saldoBaru = saldoSekarang + merchantTotal;
@@ -2665,17 +2765,14 @@
                     
                     totalProcessed++;
                     
-                    // Jika semua merchant sudah diproses, lakukan update
                     if (totalProcessed === totalMerchants) {
                         db.ref().update(updates).then(() => {
                             showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
                             
-                            // Update local orders
                             order.status = 'selesai';
                             displayAllOrders();
                             displayRecentOrders();
                             
-                            // Kirim notifikasi ke admin
                             const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
                                          `Order: #${orderId.slice(-8)}\n` +
                                          `User: ${currentUser.phone}\n` +
@@ -2695,9 +2792,7 @@
                 });
             };
             
-            // Proses berdasarkan struktur data
             if (order.items_by_merchant) {
-                // Format baru: items_by_merchant object
                 for (let merchantId in order.items_by_merchant) {
                     const merchantItems = order.items_by_merchant[merchantId];
                     const merchantTotal = merchantItems.reduce((sum, item) => {
@@ -2707,7 +2802,6 @@
                     processMerchant(merchantId, merchantItems, merchantTotal);
                 }
             } else if (order.items) {
-                // Format lama: items array, group by merchant_id
                 const itemsByMerchant = {};
                 order.items.forEach(item => {
                     if (!item.merchant_id) return;
@@ -2821,7 +2915,6 @@
             
             document.getElementById('pass-warning').classList.add('hidden');
             
-            // CEK AUTO LOGIN
             const autoLoginSuccess = checkAutoLogin();
             if (!autoLoginSuccess) {
                 document.getElementById('login-page').classList.remove('hidden');
