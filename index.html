@@ -103,7 +103,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -135,7 +135,12 @@
             color: var(--dark);
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active {
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active {
             transform: scale(0.98);
         }
         
@@ -143,6 +148,16 @@
             background: #dfe6e9;
             cursor: not-allowed;
             opacity: 0.5;
+        }
+        
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-success i {
+            margin-right: 8px;
         }
         
         .stat-card {
@@ -850,6 +865,7 @@
             padding: 15px;
             margin-bottom: 15px;
             border: 1px solid #ecf0f1;
+            position: relative;
         }
         
         .empty-state {
@@ -862,6 +878,20 @@
             font-size: 48px;
             margin-bottom: 15px;
             color: #b2bec3;
+        }
+        
+        .konfirmasi-button {
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .selesai-badge {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 15px;
         }
         
         @media (max-width: 480px) {
@@ -901,7 +931,8 @@
             <strong>📌 Informasi:</strong><br>
             • Tukar botol jadi saldo belanja<br>
             • Belanja dari berbagai merchant<br>
-            • Pengiriman GRATIS ke lokasi Anda
+            • Pengiriman GRATIS ke lokasi Anda<br>
+            • Konfirmasi pesanan untuk saldo merchant
         </div>
     </div>
 
@@ -2035,13 +2066,11 @@
             
             let html = '';
             recent.forEach(order => {
-                // Safety check
                 const status = order.status || 'diproses';
                 const statusClass = status === 'diproses' ? 'status-diproses' : 
                                    status === 'dikirim' ? 'status-dikirim' : 
                                    status === 'selesai' ? 'status-selesai' : 'status-batal';
                 
-                // Hitung jumlah merchant dengan aman
                 let merchantCount = 0;
                 if (order.items_by_merchant) {
                     merchantCount = Object.keys(order.items_by_merchant).length;
@@ -2074,10 +2103,8 @@
         }
         
         function viewOrderDetail(orderId) {
-            // Navigate ke halaman orders dan scroll ke order tersebut
             showAllOrders();
             
-            // Highlight order yang dipilih setelah render
             setTimeout(() => {
                 const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
                 if (orderElement) {
@@ -2107,7 +2134,6 @@
             const container = document.getElementById('orders-list-full');
             if (!container) return;
             
-            // Tampilkan loading
             container.innerHTML = `
                 <div class="loading-spinner">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -2115,7 +2141,6 @@
                 </div>
             `;
             
-            // Gunakan setTimeout agar tidak blocking UI
             setTimeout(() => {
                 if (userOrders.length === 0) {
                     container.innerHTML = `
@@ -2129,10 +2154,9 @@
                 }
                 
                 let html = '';
-                const ordersToShow = userOrders.slice(0, 20); // Batasi 20 order terbaru
+                const ordersToShow = userOrders.slice(0, 20);
                 
                 ordersToShow.forEach(order => {
-                    // SAFETY CHECKS
                     const status = order.status || 'diproses';
                     const statusClass = status === 'diproses' ? 'status-diproses' : 
                                        status === 'dikirim' ? 'status-dikirim' : 
@@ -2142,12 +2166,10 @@
                     const dateStr = order.timestamp ? formatDate(order.timestamp) : 'Tanggal tidak diketahui';
                     const total = order.total || 0;
                     
-                    // Handle items dengan aman
                     let items = [];
                     if (order.items && Array.isArray(order.items)) {
                         items = order.items;
                     } else if (order.items_by_merchant) {
-                        // Flatten items_by_merchant
                         for (let merchantId in order.items_by_merchant) {
                             const merchantItems = order.items_by_merchant[merchantId];
                             if (Array.isArray(merchantItems)) {
@@ -2169,9 +2191,7 @@
                             </div>
                     `;
                     
-                    // Tampilkan items per merchant
                     if (items.length > 0) {
-                        // Group by merchant_name
                         const itemsByMerchant = {};
                         items.forEach(item => {
                             if (!item) return;
@@ -2226,6 +2246,26 @@
                         `;
                     }
                     
+                    // ===== TOMBOL KONFIRMASI =====
+                    if (status === 'dikirim') {
+                        html += `
+                            <div class="konfirmasi-button">
+                                <button class="btn-success" onclick="konfirmasiPesananSelesai('${order.id}')" style="width: 100%; padding: 12px;">
+                                    <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN SELESAI
+                                </button>
+                                <p style="font-size: 11px; color: #7f8c8d; text-align: center; margin-top: 5px;">
+                                    Klik jika pesanan sudah diterima. Saldo akan otomatis masuk ke merchant.
+                                </p>
+                            </div>
+                        `;
+                    } else if (status === 'selesai') {
+                        html += `
+                            <div class="selesai-badge">
+                                <i class="fas fa-check-circle"></i> Pesanan sudah selesai. Terima kasih!
+                            </div>
+                        `;
+                    }
+                    
                     html += `</div>`;
                 });
                 
@@ -2239,7 +2279,96 @@
                 
                 container.innerHTML = html;
                 
-            }, 100); // Delay 100ms agar UI tidak freeze
+            }, 100);
+        }
+        
+        // ===========================================
+        // KONFIRMASI PESANAN SELESAI - AUTO SALDO MERCHANT
+        // ===========================================
+        function konfirmasiPesananSelesai(orderId) {
+            if (!orderId) return;
+            
+            const order = userOrders.find(o => o.id === orderId);
+            if (!order) {
+                showNotification('Pesanan tidak ditemukan', 'error');
+                return;
+            }
+            
+            if (order.status === 'selesai') {
+                showNotification('Pesanan sudah selesai sebelumnya', 'info');
+                return;
+            }
+            
+            if (order.status !== 'dikirim') {
+                showNotification('Hanya pesanan dengan status DIKIRIM yang bisa dikonfirmasi', 'warning');
+                return;
+            }
+            
+            if (!confirm('Yakin pesanan sudah diterima? Saldo akan otomatis masuk ke merchant.')) {
+                return;
+            }
+            
+            showNotification('Memproses konfirmasi...', 'info');
+            
+            const updates = {};
+            
+            // 1. Update status order user
+            updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
+            
+            // 2. Hitung total per merchant dan update saldo merchant
+            if (order.items_by_merchant) {
+                let processedMerchants = 0;
+                const totalMerchants = Object.keys(order.items_by_merchant).length;
+                
+                for (let merchantId in order.items_by_merchant) {
+                    const merchantItems = order.items_by_merchant[merchantId];
+                    const totalMerchant = merchantItems.reduce((sum, item) => {
+                        return sum + ((item.price || 0) * (item.quantity || 1));
+                    }, 0);
+                    
+                    // Update status di merchant_orders
+                    updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
+                    
+                    // Ambil saldo merchant saat ini dan update
+                    db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
+                        const saldoSekarang = snap.val() || 0;
+                        const saldoBaru = saldoSekarang + totalMerchant;
+                        
+                        updates[`/merchants/${merchantId}/saldo`] = saldoBaru;
+                        
+                        processedMerchants++;
+                        
+                        // Jika semua merchant sudah diproses, lakukan update
+                        if (processedMerchants === totalMerchants) {
+                            db.ref().update(updates).then(() => {
+                                showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
+                                
+                                // Update local orders
+                                order.status = 'selesai';
+                                displayAllOrders();
+                                displayRecentOrders();
+                                
+                                const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
+                                             `Order: #${orderId.slice(-8)}\n` +
+                                             `User: ${currentUser.phone}\n` +
+                                             `Total: Rp ${(order.total || 0).toLocaleString('id-ID')}\n` +
+                                             `Saldo otomatis masuk ke merchant.`;
+                                
+                                window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                                
+                            }).catch(error => {
+                                console.error('Error updating:', error);
+                                showNotification('Gagal update: ' + error.message, 'error');
+                            });
+                        }
+                    }).catch(error => {
+                        console.error('Error getting merchant saldo:', error);
+                        showNotification('Gagal mengambil data merchant', 'error');
+                    });
+                }
+            } else {
+                showNotification('Data pesanan tidak lengkap', 'error');
+            }
         }
         
         // ===========================================
