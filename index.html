@@ -9,10 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
-    <!-- Leaflet CSS & JS untuk Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -412,13 +408,6 @@
             cursor: pointer;
         }
         
-        #map-container {
-            height: 200px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 2px solid var(--primary);
-        }
-        
         .delivery-info {
             background: white;
             padding: 12px;
@@ -435,23 +424,6 @@
             font-weight: 700;
             color: var(--primary);
             font-size: 16px;
-        }
-        
-        .delivery-cost {
-            font-weight: 700;
-            color: var(--info);
-            font-size: 16px;
-        }
-        
-        .grand-total {
-            font-weight: 800;
-            font-size: 20px;
-            color: var(--primary);
-            margin-top: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 12px;
-            text-align: center;
         }
         
         .btn-checkout {
@@ -584,20 +556,6 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
         }
         
-        .location-loading {
-            text-align: center;
-            padding: 10px;
-            color: var(--info);
-            font-size: 14px;
-        }
-        
-        .location-error {
-            color: var(--danger);
-            text-align: center;
-            padding: 10px;
-            font-size: 14px;
-        }
-        
         .maps-link {
             display: inline-block;
             background: var(--info);
@@ -611,6 +569,17 @@
         
         .maps-link:hover {
             background: #0773c5;
+        }
+        
+        .free-delivery-badge {
+            background: var(--gold);
+            color: var(--dark);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-left: 8px;
         }
         
         @media (max-width: 480px) {
@@ -708,30 +677,26 @@
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
             
-            <!-- DELIVERY SECTION -->
+            <!-- DELIVERY SECTION - TANPA MAP -->
             <div class="delivery-section">
                 <div class="delivery-toggle">
                     <input type="checkbox" id="delivery-checkbox" onchange="toggleDelivery()">
-                    <label for="delivery-checkbox">🚚 Antar ke lokasi saya (+ Rp 5.000/km)</label>
+                    <label for="delivery-checkbox">🚚 Antar ke lokasi saya <span class="free-delivery-badge">GRATIS</span></label>
                 </div>
                 
                 <div id="delivery-options" class="hidden">
-                    <div id="map-container"></div>
-                    
                     <button class="btn-get-location" onclick="getUserLocation()">
                         📍 Gunakan Lokasi Saya
                     </button>
                     
                     <div id="delivery-info" class="delivery-info hidden">
-                        <p><strong>📍 Lokasi Tujuan:</strong> <span id="delivery-address"></span></p>
+                        <p><strong>📍 Lokasi Tujuan:</strong> <span id="delivery-address">-</span></p>
                         <p><strong>📏 Jarak:</strong> <span id="delivery-distance" class="delivery-distance">0 km</span></p>
-                        <p><strong>💰 Ongkos Kirim:</strong> <span id="delivery-cost" class="delivery-cost">Rp 0</span></p>
+                        <p><strong>💰 Ongkos Kirim:</strong> <span style="color: var(--gold); font-weight: 700;">GRATIS</span></p>
                         <a id="maps-link" class="maps-link hidden" target="_blank">🗺️ Buka di Google Maps</a>
                     </div>
                 </div>
             </div>
-            
-            <div class="grand-total" id="grand-total">Total + Ongkir: Rp 0</div>
             
             <button class="btn-checkout" onclick="checkout()" id="btn-checkout" disabled>
                 CHECKOUT
@@ -788,7 +753,6 @@
         };
         
         const HARGA_PER_BOTOL = 50;
-        const ONGKIR_PER_KM = 5000;
         const ADMIN_WA = "6289524538835";
         const STORE_LOCATION = {
             lat: -7.758517,  // Koordinat toko (contoh: Magelang)
@@ -799,8 +763,6 @@
         let cart = [];
         let products = [];
         let previousBotol = 0;
-        let map = null;
-        let marker = null;
         let userLocation = null;
         let deliveryEnabled = false;
         
@@ -916,7 +878,7 @@
         }
         
         // ===========================================
-        // DELIVERY FUNCTIONS
+        // DELIVERY FUNCTIONS - TANPA MAP
         // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
@@ -926,30 +888,14 @@
             
             if (deliveryEnabled) {
                 deliveryOptions.classList.remove('hidden');
-                initMap();
             } else {
                 deliveryOptions.classList.add('hidden');
                 userLocation = null;
                 document.getElementById('delivery-info').classList.add('hidden');
+                document.getElementById('maps-link').classList.add('hidden');
             }
             
             updateCartDisplay();
-        }
-        
-        function initMap() {
-            if (!map) {
-                map = L.map('map-container').setView([STORE_LOCATION.lat, STORE_LOCATION.lng], 13);
-                
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                
-                // Marker toko
-                L.marker([STORE_LOCATION.lat, STORE_LOCATION.lng])
-                    .addTo(map)
-                    .bindPopup('🏪 RE-COIN Store')
-                    .openPopup();
-            }
         }
         
         function getUserLocation() {
@@ -967,111 +913,100 @@
                     
                     userLocation = { lat, lng };
                     
-                    // Hapus marker sebelumnya
-                    if (marker) {
-                        map.removeLayer(marker);
-                    }
-                    
-                    // Tambah marker baru
-                    marker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup('📍 Lokasi Anda')
-                        .openPopup();
-                    
-                    // Pusatkan map ke lokasi user
-                    map.setView([lat, lng], 13);
-                    
                     // Hitung jarak
-                    calculateDistance();
+                    const distance = calculateDistance(lat, lng);
+                    document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
                     
-                    // Dapatkan alamat (reverse geocoding)
-                    getAddressFromCoordinates(lat, lng);
+                    // Dapatkan alamat (sederhana)
+                    getSimpleAddress(lat, lng);
                     
                     // Buat link Google Maps
                     createGoogleMapsLink(lat, lng);
+                    
+                    // Tampilkan info delivery
+                    document.getElementById('delivery-info').classList.remove('hidden');
+                    updateCartDisplay();
+                    
+                    showNotification('Lokasi berhasil didapatkan!', 'success');
                 },
                 (error) => {
                     let message = 'Gagal mendapatkan lokasi';
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            message = 'Akses lokasi ditolak';
+                            message = 'Akses lokasi ditolak. Izinkan akses lokasi di browser Anda.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            message = 'Lokasi tidak tersedia';
+                            message = 'Lokasi tidak tersedia. Pastikan GPS Anda aktif.';
                             break;
                         case error.TIMEOUT:
-                            message = 'Waktu permintaan lokasi habis';
+                            message = 'Waktu permintaan lokasi habis. Coba lagi.';
                             break;
                     }
                     showNotification(message, 'error');
-                    
-                    document.getElementById('delivery-info').classList.add('hidden');
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 10000,
+                    timeout: 15000,
                     maximumAge: 0
                 }
             );
         }
         
-        function createGoogleMapsLink(lat, lng) {
-            const mapsLink = document.getElementById('maps-link');
-            // Format untuk Google Maps
-            const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-            mapsLink.href = googleMapsUrl;
-            mapsLink.classList.remove('hidden');
-        }
-        
-        function calculateDistance() {
-            if (!userLocation) return 0;
-            
-            // Rumus Haversine untuk menghitung jarak antara dua koordinat
+        function calculateDistance(lat, lng) {
             const R = 6371; // Radius bumi dalam km
-            const dLat = deg2rad(userLocation.lat - STORE_LOCATION.lat);
-            const dLon = deg2rad(userLocation.lng - STORE_LOCATION.lng);
+            
+            const dLat = deg2rad(lat - STORE_LOCATION.lat);
+            const dLon = deg2rad(lng - STORE_LOCATION.lng);
             
             const a = 
                 Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(deg2rad(STORE_LOCATION.lat)) * Math.cos(deg2rad(userLocation.lat)) * 
+                Math.cos(deg2rad(STORE_LOCATION.lat)) * Math.cos(deg2rad(lat)) * 
                 Math.sin(dLon/2) * Math.sin(dLon/2);
             
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distance = R * c; // Jarak dalam km
+            const distance = R * c;
             
-            // Pembulatan ke 1 desimal
-            const roundedDistance = Math.round(distance * 10) / 10;
-            
-            return roundedDistance;
+            return Math.round(distance * 10) / 10;
         }
         
         function deg2rad(deg) {
             return deg * (Math.PI/180);
         }
         
-        function getAddressFromCoordinates(lat, lng) {
-            // Gunakan Nominatim API untuk reverse geocoding
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-                .then(response => response.json())
-                .then(data => {
-                    const address = data.display_name || 'Alamat tidak ditemukan';
+        function getSimpleAddress(lat, lng) {
+            // Format koordinat
+            const latStr = lat.toFixed(6);
+            const lngStr = lng.toFixed(6);
+            
+            // Coba gunakan API sederhana (opsional)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`, {
+                headers: {
+                    'User-Agent': 'RE-COIN-App/1.0'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    let address = data.display_name;
+                    if (address.length > 100) {
+                        address = address.substring(0, 100) + '...';
+                    }
                     document.getElementById('delivery-address').textContent = address;
-                    document.getElementById('delivery-info').classList.remove('hidden');
-                    updateCartDisplay();
-                })
-                .catch(error => {
-                    console.error('Error getting address:', error);
-                    document.getElementById('delivery-address').textContent = 'Alamat tidak dapat ditampilkan';
-                    document.getElementById('delivery-info').classList.remove('hidden');
-                });
+                } else {
+                    document.getElementById('delivery-address').textContent = `${latStr}, ${lngStr}`;
+                }
+            })
+            .catch(() => {
+                // Fallback ke koordinat jika API gagal
+                document.getElementById('delivery-address').textContent = `${latStr}, ${lngStr}`;
+            });
         }
         
-        function calculateDeliveryCost() {
-            if (!deliveryEnabled || !userLocation) return 0;
-            
-            const distance = calculateDistance();
-            const cost = Math.ceil(distance) * ONGKIR_PER_KM;
-            
-            return cost;
+        function createGoogleMapsLink(lat, lng) {
+            const mapsLink = document.getElementById('maps-link');
+            const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            mapsLink.href = googleMapsUrl;
+            mapsLink.classList.remove('hidden');
         }
         
         // ===========================================
@@ -1319,13 +1254,11 @@
             
             const itemsDiv = document.getElementById('cart-items');
             const totalSpan = document.getElementById('cart-total');
-            const grandTotalSpan = document.getElementById('grand-total');
             const checkoutBtn = document.getElementById('btn-checkout');
             
             if (cart.length === 0) {
                 itemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center;">Keranjang kosong</p>';
                 totalSpan.innerHTML = 'Total: Rp 0';
-                grandTotalSpan.innerHTML = 'Total + Ongkir: Rp 0';
                 checkoutBtn.disabled = true;
                 return;
             }
@@ -1352,25 +1285,14 @@
             itemsDiv.innerHTML = html;
             totalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
             
-            // Hitung ongkir jika delivery diaktifkan
+            // Tampilkan jarak jika delivery diaktifkan
             if (deliveryEnabled && userLocation) {
-                const distance = calculateDistance();
-                const deliveryCost = calculateDeliveryCost();
-                
+                const distance = calculateDistance(userLocation.lat, userLocation.lng);
                 document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
-                document.getElementById('delivery-cost').textContent = formatRupiah(deliveryCost);
-                
-                const grandTotal = subtotal + deliveryCost;
-                grandTotalSpan.innerHTML = `Total + Ongkir: ${formatRupiah(grandTotal)}`;
-                
-                const saldo = currentUser.botol * HARGA_PER_BOTOL;
-                checkoutBtn.disabled = grandTotal > saldo;
-            } else {
-                grandTotalSpan.innerHTML = `Total + Ongkir: ${formatRupiah(subtotal)}`;
-                
-                const saldo = currentUser.botol * HARGA_PER_BOTOL;
-                checkoutBtn.disabled = subtotal > saldo;
             }
+            
+            const saldo = currentUser.botol * HARGA_PER_BOTOL;
+            checkoutBtn.disabled = subtotal > saldo;
         }
         
         function toggleCart() {
@@ -1390,17 +1312,15 @@
         
         function checkout() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const deliveryCost = deliveryEnabled && userLocation ? calculateDeliveryCost() : 0;
-            const total = subtotal + deliveryCost;
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
-            if (total > saldo) {
+            if (subtotal > saldo) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
             
-            const botolDipakai = Math.ceil(total / HARGA_PER_BOTOL);
+            const botolDipakai = Math.ceil(subtotal / HARGA_PER_BOTOL);
             const newBotol = currentUser.botol - botolDipakai;
             
             const updates = {};
@@ -1420,21 +1340,20 @@
                     price: i.price
                 })),
                 subtotal: subtotal,
-                delivery_cost: deliveryCost,
-                total: total,
+                total: subtotal,
                 timestamp: Date.now(),
                 source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE'
             };
             
-            // Tambah info delivery jika ada
+            // Tambah info delivery GRATIS jika ada
             if (deliveryEnabled && userLocation) {
                 const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
                 
                 transactionData.delivery = {
                     store_location: STORE_LOCATION,
                     user_location: userLocation,
-                    distance: calculateDistance(),
-                    cost: deliveryCost,
+                    distance: calculateDistance(userLocation.lat, userLocation.lng),
+                    cost: 0, // GRATIS
                     address: document.getElementById('delivery-address').textContent,
                     google_maps_link: googleMapsLink
                 };
@@ -1478,8 +1397,8 @@
             pesan += `\n*Subtotal: Rp ${transactionData.subtotal.toLocaleString('id-ID')}*`;
             
             if (transactionData.delivery) {
-                pesan += `\n*Ongkos Kirim: Rp ${transactionData.delivery_cost.toLocaleString('id-ID')}*`;
-                pesan += `\n*Total + Ongkir: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
+                pesan += `\n*Ongkos Kirim: GRATIS*`;
+                pesan += `\n*Total: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
                 pesan += `\n\n*LOKASI PENGIRIMAN:*`;
                 pesan += `\nAlamat: ${transactionData.delivery.address}`;
                 pesan += `\nJarak: ${transactionData.delivery.distance.toFixed(1)} km`;
@@ -1564,12 +1483,6 @@
             }
             
             document.getElementById('pass-warning').classList.add('hidden');
-            
-            if (!window.AudioContext && !window.webkitAudioContext) {
-                console.log('Web Audio API tidak didukung, menggunakan fallback');
-            }
-            
-            // Inisialisasi map jika diperlukan nanti
         };
     </script>
 </body>
