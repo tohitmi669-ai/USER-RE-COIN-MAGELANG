@@ -894,6 +894,36 @@
             margin-top: 15px;
         }
         
+        /* Tombol Terima Pesanan */
+        .btn-terima {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-terima:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-terima i {
+            margin-right: 8px;
+        }
+        
+        .btn-terima:disabled {
+            background: #dfe6e9;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         @media (max-width: 480px) {
             .product-grid {
                 grid-template-columns: 1fr;
@@ -2246,15 +2276,15 @@
                         `;
                     }
                     
-                    // ===== TOMBOL KONFIRMASI =====
+                    // ===== TOMBOL KONFIRMASI TERIMA PESANAN =====
                     if (status === 'dikirim') {
                         html += `
                             <div class="konfirmasi-button">
-                                <button class="btn-success" onclick="konfirmasiPesananSelesai('${order.id}')" style="width: 100%; padding: 12px;">
-                                    <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN SELESAI
+                                <button class="btn-terima" onclick="konfirmasiPesananSelesai('${order.id}')">
+                                    <i class="fas fa-check-circle"></i> YA, PESANAN SUDAH DITERIMA
                                 </button>
                                 <p style="font-size: 11px; color: #7f8c8d; text-align: center; margin-top: 5px;">
-                                    Klik jika pesanan sudah diterima. Saldo akan otomatis masuk ke merchant.
+                                    Klik jika pesanan sudah sampai. Saldo akan otomatis masuk ke merchant.
                                 </p>
                             </div>
                         `;
@@ -2311,60 +2341,96 @@
             showNotification('Memproses konfirmasi...', 'info');
             
             const updates = {};
+            let totalProcessed = 0;
+            let totalMerchants = 0;
+            
+            // Hitung jumlah merchant
+            if (order.items_by_merchant) {
+                totalMerchants = Object.keys(order.items_by_merchant).length;
+            } else if (order.items) {
+                const uniqueMerchants = new Set();
+                order.items.forEach(item => {
+                    if (item.merchant_id) uniqueMerchants.add(item.merchant_id);
+                });
+                totalMerchants = uniqueMerchants.size;
+            }
             
             // 1. Update status order user
             updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
             
-            // 2. Hitung total per merchant dan update saldo merchant
-            if (order.items_by_merchant) {
-                let processedMerchants = 0;
-                const totalMerchants = Object.keys(order.items_by_merchant).length;
+            // 2. Proses per merchant
+            const processMerchant = (merchantId, merchantItems, merchantTotal) => {
+                // Update status di merchant_orders
+                updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
                 
+                // Ambil saldo merchant saat ini dan update
+                db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
+                    const saldoSekarang = snap.val() || 0;
+                    const saldoBaru = saldoSekarang + merchantTotal;
+                    
+                    updates[`/merchants/${merchantId}/saldo`] = saldoBaru;
+                    
+                    totalProcessed++;
+                    
+                    // Jika semua merchant sudah diproses, lakukan update
+                    if (totalProcessed === totalMerchants) {
+                        db.ref().update(updates).then(() => {
+                            showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
+                            
+                            // Update local orders
+                            order.status = 'selesai';
+                            displayAllOrders();
+                            displayRecentOrders();
+                            
+                            // Kirim notifikasi ke admin
+                            const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
+                                         `Order: #${orderId.slice(-8)}\n` +
+                                         `User: ${currentUser.phone}\n` +
+                                         `Total: Rp ${(order.total || 0).toLocaleString('id-ID')}\n` +
+                                         `Saldo otomatis masuk ke merchant.`;
+                            
+                            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                            
+                        }).catch(error => {
+                            console.error('Error updating:', error);
+                            showNotification('Gagal update: ' + error.message, 'error');
+                        });
+                    }
+                }).catch(error => {
+                    console.error('Error getting merchant saldo:', error);
+                    showNotification('Gagal mengambil data merchant', 'error');
+                });
+            };
+            
+            // Proses berdasarkan struktur data
+            if (order.items_by_merchant) {
+                // Format baru: items_by_merchant object
                 for (let merchantId in order.items_by_merchant) {
                     const merchantItems = order.items_by_merchant[merchantId];
-                    const totalMerchant = merchantItems.reduce((sum, item) => {
+                    const merchantTotal = merchantItems.reduce((sum, item) => {
                         return sum + ((item.price || 0) * (item.quantity || 1));
                     }, 0);
                     
-                    // Update status di merchant_orders
-                    updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
+                    processMerchant(merchantId, merchantItems, merchantTotal);
+                }
+            } else if (order.items) {
+                // Format lama: items array, group by merchant_id
+                const itemsByMerchant = {};
+                order.items.forEach(item => {
+                    if (!item.merchant_id) return;
+                    if (!itemsByMerchant[item.merchant_id]) {
+                        itemsByMerchant[item.merchant_id] = [];
+                    }
+                    itemsByMerchant[item.merchant_id].push(item);
+                });
+                
+                for (let merchantId in itemsByMerchant) {
+                    const merchantItems = itemsByMerchant[merchantId];
+                    const merchantTotal = merchantItems.reduce((sum, item) => {
+                        return sum + ((item.price || 0) * (item.quantity || 1));
+                    }, 0);
                     
-                    // Ambil saldo merchant saat ini dan update
-                    db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
-                        const saldoSekarang = snap.val() || 0;
-                        const saldoBaru = saldoSekarang + totalMerchant;
-                        
-                        updates[`/merchants/${merchantId}/saldo`] = saldoBaru;
-                        
-                        processedMerchants++;
-                        
-                        // Jika semua merchant sudah diproses, lakukan update
-                        if (processedMerchants === totalMerchants) {
-                            db.ref().update(updates).then(() => {
-                                showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
-                                
-                                // Update local orders
-                                order.status = 'selesai';
-                                displayAllOrders();
-                                displayRecentOrders();
-                                
-                                const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
-                                             `Order: #${orderId.slice(-8)}\n` +
-                                             `User: ${currentUser.phone}\n` +
-                                             `Total: Rp ${(order.total || 0).toLocaleString('id-ID')}\n` +
-                                             `Saldo otomatis masuk ke merchant.`;
-                                
-                                window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
-                                
-                            }).catch(error => {
-                                console.error('Error updating:', error);
-                                showNotification('Gagal update: ' + error.message, 'error');
-                            });
-                        }
-                    }).catch(error => {
-                        console.error('Error getting merchant saldo:', error);
-                        showNotification('Gagal mengambil data merchant', 'error');
-                    });
+                    processMerchant(merchantId, merchantItems, merchantTotal);
                 }
             } else {
                 showNotification('Data pesanan tidak lengkap', 'error');
