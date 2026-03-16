@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -24,6 +27,9 @@
             --gold: #fdcb6e;
             --danger: #ff7675;
             --info: #0984e3;
+            --warning: #f39c12;
+            --success: #27ae60;
+            --gray: #95a5a6;
         }
         
         body {
@@ -274,60 +280,130 @@
             color: var(--danger);
         }
         
+        /* MERCHANT SECTION */
+        .merchant-section {
+            margin-bottom: 30px;
+        }
+        
+        .merchant-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .merchant-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .merchant-info {
+            flex: 1;
+        }
+        
+        .merchant-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+        }
+        
+        .merchant-address {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
         .product-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            margin: 20px 0;
         }
         
         .product-card {
             background: #f8f9fa;
             border-radius: 20px;
             padding: 12px;
+            transition: transform 0.3s ease;
         }
         
-        .product-card img {
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .product-image {
             width: 100%;
-            height: 100px;
-            object-fit: cover;
+            height: 120px;
             border-radius: 12px;
+            overflow: hidden;
             margin-bottom: 8px;
+            background: #ecf0f1;
+        }
+        
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .product-name {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 4px;
+            color: var(--dark);
         }
         
         .product-price {
             font-weight: 800;
-            font-size: 14px;
+            font-size: 16px;
             color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .product-stock {
+            font-size: 12px;
+            color: #7f8c8d;
             margin-bottom: 8px;
+        }
+        
+        .stock-low {
+            color: var(--danger);
+            font-weight: 600;
         }
         
         .btn-beli {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 8px;
+            padding: 10px;
             border-radius: 10px;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             width: 100%;
             cursor: pointer;
             transition: 0.3s;
         }
         
-        .btn-beli:active {
-            transform: scale(0.95);
+        .btn-beli:hover {
+            background: #00a187;
         }
         
         .btn-beli:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
+        }
+        
+        .btn-beli:disabled:hover {
+            transform: none;
         }
         
         .cart-icon {
@@ -343,8 +419,8 @@
             background: var(--danger);
             color: white;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             font-size: 12px;
             display: flex;
             align-items: center;
@@ -359,18 +435,66 @@
             margin: 16px 0;
             max-height: 400px;
             overflow-y: auto;
+            border: 2px solid var(--primary);
         }
         
         .cart-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #dfe6e9;
         }
         
         .cart-item:last-child {
             border-bottom: none;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .cart-item-merchant {
+            font-size: 11px;
+            color: var(--primary);
+        }
+        
+        .cart-item-price {
+            font-weight: 700;
+            color: var(--dark);
+            margin-top: 3px;
+        }
+        
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cart-quantity {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quantity-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        
+        .quantity-btn:hover {
+            background: var(--primary);
+            color: white;
         }
         
         .cart-total {
@@ -381,6 +505,7 @@
             border-top: 2px solid #dfe6e9;
         }
         
+        /* DELIVERY SECTION */
         .delivery-section {
             background: #e8f8f5;
             padding: 16px;
@@ -408,6 +533,29 @@
             cursor: pointer;
         }
         
+        .free-delivery-badge {
+            background: var(--gold);
+            color: var(--dark);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        .btn-get-location {
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            width: 100%;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
         .delivery-info {
             background: white;
             padding: 12px;
@@ -426,33 +574,68 @@
             font-size: 16px;
         }
         
+        .maps-link {
+            display: inline-block;
+            background: var(--info);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .maps-link:hover {
+            background: #0773c5;
+        }
+        
+        /* ORDER SUMMARY */
+        .order-summary {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        
+        .grand-total {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--primary);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #dfe6e9;
+            text-align: center;
+        }
+        
         .btn-checkout {
             background: var(--gold);
             color: var(--dark);
             border: none;
-            padding: 14px;
+            padding: 16px;
             border-radius: 16px;
             font-weight: 700;
+            font-size: 16px;
             width: 100%;
             margin-top: 16px;
             cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-checkout:hover {
+            background: #f39c12;
+            transform: translateY(-2px);
         }
         
         .btn-checkout:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
-        }
-        
-        .btn-get-location {
-            background: var(--info);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            width: 100%;
-            margin: 10px 0;
-            cursor: pointer;
+            transform: none;
         }
         
         .btn-back {
@@ -467,11 +650,20 @@
             gap: 5px;
         }
         
+        .btn-back:hover {
+            color: var(--dark);
+        }
+        
         .loading {
             text-align: center;
             padding: 30px;
             color: #b2bec3;
             grid-column: span 2;
+        }
+        
+        .loading i {
+            font-size: 30px;
+            margin-bottom: 10px;
         }
         
         #modal-overlay {
@@ -528,12 +720,6 @@
             text-align: center;
         }
         
-        .divider {
-            height: 1px;
-            background: #dfe6e9;
-            margin: 24px 0 16px 0;
-        }
-        
         .coin-animation {
             position: fixed;
             top: 50%;
@@ -556,30 +742,57 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
         }
         
-        .maps-link {
-            display: inline-block;
-            background: var(--info);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 12px;
-            margin-top: 5px;
+        /* My Orders Section */
+        .my-orders {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 16px;
         }
         
-        .maps-link:hover {
-            background: #0773c5;
-        }
-        
-        .free-delivery-badge {
-            background: var(--gold);
+        .my-orders h4 {
+            margin-bottom: 10px;
             color: var(--dark);
-            padding: 4px 8px;
-            border-radius: 12px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .order-merchant {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .order-status {
             font-size: 11px;
-            font-weight: 700;
-            display: inline-block;
-            margin-left: 8px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .status-diproses {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-dikirim {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-selesai {
+            background: #cce5ff;
+            color: #004085;
         }
         
         @media (max-width: 480px) {
@@ -617,8 +830,9 @@
         
         <div class="info-box">
             <strong>📌 Informasi:</strong><br>
-            • Semua akses (QR maupun langsung) memerlukan password<br>
-            • Belum punya akun? Login dengan nomor HP dan password baru akan mendaftar otomatis
+            • Tukar botol jadi saldo belanja<br>
+            • Belanja dari berbagai merchant<br>
+            • Pengiriman GRATIS ke lokasi Anda
         </div>
     </div>
 
@@ -639,7 +853,7 @@
         </div>
         
         <div class="stat-card">
-            <div class="stat-label">SALDO</div>
+            <div class="stat-label">SALDO BELANJA</div>
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
         
@@ -650,6 +864,17 @@
         <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
             🛒 BELANJA SEKARANG
         </button>
+        
+        <!-- My Orders Summary -->
+        <div class="my-orders" id="my-orders-summary">
+            <h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4>
+            <div id="recent-orders">
+                <p style="color: #7f8c8d; font-size: 13px;">Belum ada pesanan</p>
+            </div>
+            <button class="btn-main" style="margin-top: 10px; font-size: 13px;" onclick="showAllOrders()">
+                Lihat Semua Pesanan
+            </button>
+        </div>
         
         <div id="msg-limit" class="warning-text">
             Minimal saldo Rp 5.000 untuk tarik tunai
@@ -665,19 +890,20 @@
         </button>
         
         <div class="cart-header">
-            <h3 style="margin:0;">🛍️ Produk Tersedia</h3>
+            <h3 style="margin:0;">🛍️ Belanja</h3>
             <div class="cart-icon" onclick="toggleCart()">
                 🛒
                 <span class="cart-count" id="cart-count">0</span>
             </div>
         </div>
         
+        <!-- Cart Panel -->
         <div id="cart-panel" class="cart-panel hidden">
             <h4 style="margin:0 0 12px 0;">Keranjang Belanja</h4>
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
             
-            <!-- DELIVERY SECTION - TANPA MAP -->
+            <!-- DELIVERY SECTION - GRATIS -->
             <div class="delivery-section">
                 <div class="delivery-toggle">
                     <input type="checkbox" id="delivery-checkbox" onchange="toggleDelivery()">
@@ -698,20 +924,58 @@
                 </div>
             </div>
             
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="summary-subtotal">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Ongkos Kirim</span>
+                    <span style="color: var(--gold);">GRATIS</span>
+                </div>
+                <div class="grand-total" id="grand-total">Total: Rp 0</div>
+            </div>
+            
             <button class="btn-checkout" onclick="checkout()" id="btn-checkout" disabled>
-                CHECKOUT
+                CHECKOUT SEKARANG
             </button>
         </div>
         
-        <div class="product-grid" id="product-grid">
-            <div class="loading">Memuat produk...</div>
+        <!-- Products by Merchant -->
+        <div id="products-container">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Memuat produk...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MY ORDERS PAGE -->
+    <div id="orders-page" class="card card-full hidden">
+        <button class="btn-back" onclick="hideOrders()">
+            ← Kembali ke Dashboard
+        </button>
+        
+        <h3 style="margin-bottom: 20px;">📦 Riwayat Pesanan Saya</h3>
+        
+        <div id="orders-list-full">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Memuat pesanan...</p>
+            </div>
         </div>
     </div>
 
     <!-- WITHDRAWAL MODAL -->
     <div id="modal-overlay">
         <div class="modal">
-            <h3 style="margin:0 0 16px 0;">Metode Penarikan</h3>
+            <h3 style="margin:0 0 16px 0;">Tarik Saldo</h3>
+            
+            <div style="background: #e8f8f5; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: #7f8c8d;">Saldo Tersedia</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="modal-saldo">Rp 0</div>
+            </div>
             
             <select id="payment-method" onchange="updatePaymentPlaceholder()">
                 <option value="BANK">Transfer BANK</option>
@@ -755,19 +1019,21 @@
         const HARGA_PER_BOTOL = 50;
         const ADMIN_WA = "6289524538835";
         const STORE_LOCATION = {
-            lat: -7.758517,  // Koordinat toko (contoh: Magelang)
+            lat: -7.758517,
             lng: 110.207207,
             name: "RE-COIN Store Magelang"
         };
         
         let cart = [];
+        let merchants = [];
         let products = [];
+        let userOrders = [];
         let previousBotol = 0;
         let userLocation = null;
         let deliveryEnabled = false;
         
         // ===========================================
-        // AUDIO FUNCTIONS
+        // AUDIO & ANIMATION FUNCTIONS
         // ===========================================
         function playCoinSound() {
             try {
@@ -792,20 +1058,12 @@
                     if (audioContext.state === 'suspended') {
                         audioContext.resume();
                     }
-                } else {
-                    const audio = new Audio();
-                    audio.src = 'data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==';
-                    audio.volume = 0.3;
-                    audio.play().catch(e => console.log('Audio play failed:', e));
                 }
             } catch (e) {
                 console.log('Sound not supported:', e);
             }
         }
         
-        // ===========================================
-        // ANIMATION FUNCTIONS
-        // ===========================================
         function showCoinAnimation(botolAdded) {
             const animDiv = document.getElementById('coin-animation');
             animDiv.textContent = `+${botolAdded}`;
@@ -860,13 +1118,12 @@
             if (isBotol) {
                 notif.classList.add('notification-botol');
             }
-            notif.innerHTML = message;
-            
             if (type === 'error') {
                 notif.style.borderColor = '#ff7675';
             } else if (type === 'info') {
                 notif.style.borderColor = '#0984e3';
             }
+            notif.innerHTML = message;
             
             notifDiv.innerHTML = '';
             notifDiv.appendChild(notif);
@@ -877,8 +1134,19 @@
             }, 3000);
         }
         
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
         // ===========================================
-        // DELIVERY FUNCTIONS - TANPA MAP
+        // DELIVERY FUNCTIONS
         // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
@@ -917,13 +1185,12 @@
                     const distance = calculateDistance(lat, lng);
                     document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
                     
-                    // Dapatkan alamat (sederhana)
+                    // Dapatkan alamat sederhana
                     getSimpleAddress(lat, lng);
                     
                     // Buat link Google Maps
                     createGoogleMapsLink(lat, lng);
                     
-                    // Tampilkan info delivery
                     document.getElementById('delivery-info').classList.remove('hidden');
                     updateCartDisplay();
                     
@@ -933,13 +1200,13 @@
                     let message = 'Gagal mendapatkan lokasi';
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            message = 'Akses lokasi ditolak. Izinkan akses lokasi di browser Anda.';
+                            message = 'Akses lokasi ditolak';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            message = 'Lokasi tidak tersedia. Pastikan GPS Anda aktif.';
+                            message = 'Lokasi tidak tersedia';
                             break;
                         case error.TIMEOUT:
-                            message = 'Waktu permintaan lokasi habis. Coba lagi.';
+                            message = 'Waktu permintaan lokasi habis';
                             break;
                     }
                     showNotification(message, 'error');
@@ -953,8 +1220,7 @@
         }
         
         function calculateDistance(lat, lng) {
-            const R = 6371; // Radius bumi dalam km
-            
+            const R = 6371;
             const dLat = deg2rad(lat - STORE_LOCATION.lat);
             const dLon = deg2rad(lng - STORE_LOCATION.lng);
             
@@ -974,11 +1240,9 @@
         }
         
         function getSimpleAddress(lat, lng) {
-            // Format koordinat
             const latStr = lat.toFixed(6);
             const lngStr = lng.toFixed(6);
             
-            // Coba gunakan API sederhana (opsional)
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`, {
                 headers: {
                     'User-Agent': 'RE-COIN-App/1.0'
@@ -997,7 +1261,6 @@
                 }
             })
             .catch(() => {
-                // Fallback ke koordinat jika API gagal
                 document.getElementById('delivery-address').textContent = `${latStr}, ${lngStr}`;
             });
         }
@@ -1085,9 +1348,8 @@
                     id: currentUser.phone,
                     login_time: Date.now(),
                     expires: Date.now() + 300000
-                }).catch((error) => {
+                }).catch(error => {
                     console.error('Error setting active user:', error);
-                    showNotification('Gagal update mesin', 'error');
                 });
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -1096,7 +1358,8 @@
             }
             
             startSaldoListener();
-            loadProducts();
+            loadMerchantsAndProducts();
+            loadUserOrders();
             
             showNotification('Selamat datang di RE-COIN!');
         }
@@ -1127,6 +1390,7 @@
             
             document.getElementById('count').innerText = currentUser.botol;
             document.getElementById('rupiah').innerText = formatRupiah(saldo);
+            document.getElementById('modal-saldo').innerText = formatRupiah(saldo);
             
             const btnTarik = document.getElementById('btn-tarik');
             const msgLimit = document.getElementById('msg-limit');
@@ -1146,13 +1410,9 @@
             showNotification('Proses logout...', 'info');
             
             if (currentUser.isMachineMode && currentUser.machine) {
-                db.ref('/' + currentUser.machine + '/active_user').remove()
-                    .then(() => {
-                        console.log('✅ Active user dihapus dari Firebase');
-                    })
-                    .catch((error) => {
-                        console.error('❌ Gagal hapus active user:', error);
-                    });
+                db.ref('/' + currentUser.machine + '/active_user').remove().catch(error => {
+                    console.error('Error removing active user:', error);
+                });
             }
             
             if (currentUser.phone) {
@@ -1161,6 +1421,7 @@
             
             document.getElementById('dashboard-page').classList.add('hidden');
             document.getElementById('shop-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.add('hidden');
             document.getElementById('login-page').classList.remove('hidden');
             
             document.getElementById('phone-input').value = '';
@@ -1177,76 +1438,230 @@
             cart = [];
             deliveryEnabled = false;
             userLocation = null;
-            document.getElementById('delivery-checkbox').checked = false;
-            document.getElementById('delivery-options').classList.add('hidden');
-            document.getElementById('maps-link').classList.add('hidden');
             
-            updateCartDisplay();
             showNotification('Anda telah logout', 'info');
         }
         
         // ===========================================
-        // SHOP & PRODUCTS
+        // MERCHANTS & PRODUCTS
         // ===========================================
-        function loadProducts() {
-            db.ref('/products').once('value', (snap) => {
-                products = [];
-                const data = snap.val() || {};
-                for (let id in data) products.push({ id, ...data[id] });
-                displayProducts();
-            }).catch((error) => {
-                console.error('Error loading products:', error);
-                showNotification('Gagal memuat produk', 'error');
+        function loadMerchantsAndProducts() {
+            // Load merchants
+            db.ref('/merchants').once('value', (snap) => {
+                merchants = [];
+                const merchantData = snap.val() || {};
+                
+                for (let id in merchantData) {
+                    if (merchantData[id].status === 'active') {
+                        merchants.push({
+                            id: id,
+                            ...merchantData[id]
+                        });
+                    }
+                }
+                
+                // Load products
+                db.ref('/products').once('value', (productSnap) => {
+                    products = [];
+                    const productData = productSnap.val() || {};
+                    
+                    for (let id in productData) {
+                        products.push({
+                            id: id,
+                            ...productData[id]
+                        });
+                    }
+                    
+                    displayProductsByMerchant();
+                }).catch(error => {
+                    console.error('Error loading products:', error);
+                    showNotification('Gagal memuat produk', 'error');
+                });
+            }).catch(error => {
+                console.error('Error loading merchants:', error);
+                showNotification('Gagal memuat merchant', 'error');
             });
         }
         
-        function displayProducts() {
-            const grid = document.getElementById('product-grid');
+        function displayProductsByMerchant() {
+            const container = document.getElementById('products-container');
             
-            if (products.length === 0) {
-                grid.innerHTML = '<div class="loading">Belum ada produk</div>';
+            if (merchants.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-store" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
+                        <p style="color: #7f8c8d;">Belum ada merchant yang tersedia</p>
+                    </div>
+                `;
                 return;
             }
             
             let html = '';
-            products.forEach(p => {
-                const stock = p.stock || 0;
+            
+            merchants.forEach(merchant => {
+                const merchantProducts = products.filter(p => p.merchant_id === merchant.id && p.stock > 0);
+                
+                if (merchantProducts.length === 0) return;
+                
+                html += `
+                    <div class="merchant-section">
+                        <div class="merchant-header">
+                            <div class="merchant-avatar">
+                                ${merchant.nama_toko.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="merchant-info">
+                                <div class="merchant-name">${merchant.nama_toko}</div>
+                                <div class="merchant-address">
+                                    <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="product-grid">
+                `;
+                
+                merchantProducts.slice(0, 4).forEach(product => {
+                    const stockClass = product.stock <= 5 ? 'stock-low' : '';
+                    html += `
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
+                                     onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
+                            </div>
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-price">${formatRupiah(product.price)}</div>
+                            <div class="product-stock ${stockClass}">
+                                <i class="fas fa-box"></i> Stok: ${product.stock}
+                            </div>
+                            <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
+                                ${product.stock <= 0 ? 'Stok Habis' : 'Tambah ke Keranjang'}
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                        ${merchantProducts.length > 4 ? 
+                            `<button class="btn-main" style="margin-top: 10px; font-size: 13px;" 
+                                     onclick="showAllMerchantProducts('${merchant.id}')">
+                                Lihat Semua Produk (${merchantProducts.length})
+                            </button>` : ''}
+                    </div>
+                `;
+            });
+            
+            if (html === '') {
+                html = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-box-open" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
+                        <p style="color: #7f8c8d;">Belum ada produk yang tersedia</p>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function showAllMerchantProducts(merchantId) {
+            const merchant = merchants.find(m => m.id === merchantId);
+            const merchantProducts = products.filter(p => p.merchant_id === merchantId && p.stock > 0);
+            
+            const container = document.getElementById('products-container');
+            
+            let html = `
+                <button class="btn-back" onclick="loadMerchantsAndProducts()">
+                    ← Kembali ke Semua Merchant
+                </button>
+                
+                <div class="merchant-section">
+                    <div class="merchant-header">
+                        <div class="merchant-avatar">${merchant.nama_toko.charAt(0).toUpperCase()}</div>
+                        <div class="merchant-info">
+                            <div class="merchant-name">${merchant.nama_toko}</div>
+                            <div class="merchant-address">
+                                <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-grid">
+            `;
+            
+            merchantProducts.forEach(product => {
+                const stockClass = product.stock <= 5 ? 'stock-low' : '';
                 html += `
                     <div class="product-card">
-                        <img src="${p.image || 'https://via.placeholder.com/200x200/00b894/ffffff?text=Produk'}" alt="${p.name}">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-price">${formatRupiah(p.price || 0)}</div>
-                        <button class="btn-beli" onclick="addToCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''}>
-                            ${stock <= 0 ? 'Stok Habis' : 'Beli'}
+                        <div class="product-image">
+                            <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
+                        </div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${formatRupiah(product.price)}</div>
+                        <div class="product-stock ${stockClass}">
+                            <i class="fas fa-box"></i> Stok: ${product.stock}
+                        </div>
+                        <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
+                            Tambah ke Keranjang
                         </button>
                     </div>
                 `;
             });
-            grid.innerHTML = html;
+            
+            html += `</div></div>`;
+            container.innerHTML = html;
         }
         
+        // ===========================================
+        // CART FUNCTIONS
+        // ===========================================
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
             if (!product) return;
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            if (saldo < product.price) return showNotification('Saldo tidak cukup', 'error');
+            if (saldo < product.price) {
+                showNotification('Saldo tidak cukup! Tukar botol dulu yuk', 'error');
+                return;
+            }
             
             const existing = cart.find(i => i.id === productId);
-            existing ? existing.quantity++ : cart.push({ ...product, quantity: 1 });
+            if (existing) {
+                existing.quantity++;
+            } else {
+                // Cari merchant
+                const merchant = merchants.find(m => m.id === product.merchant_id);
+                cart.push({ 
+                    ...product, 
+                    quantity: 1,
+                    merchant_name: merchant ? merchant.nama_toko : 'Unknown'
+                });
+            }
             
             updateCartDisplay();
-            showNotification(`${product.name} ditambahkan`);
+            showNotification(`${product.name} ditambahkan ke keranjang`, 'success');
+        }
+        
+        function updateQuantity(productId, change) {
+            const index = cart.findIndex(i => i.id === productId);
+            if (index === -1) return;
+            
+            const newQuantity = cart[index].quantity + change;
+            
+            if (newQuantity <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].quantity = newQuantity;
+            }
+            
+            updateCartDisplay();
         }
         
         function removeFromCart(productId) {
             const index = cart.findIndex(i => i.id === productId);
-            if (index === -1) return;
-            
-            if (cart[index].quantity > 1) cart[index].quantity--;
-            else cart.splice(index, 1);
-            
-            updateCartDisplay();
+            if (index !== -1) {
+                cart.splice(index, 1);
+                updateCartDisplay();
+            }
         }
         
         function updateCartDisplay() {
@@ -1254,11 +1669,15 @@
             
             const itemsDiv = document.getElementById('cart-items');
             const totalSpan = document.getElementById('cart-total');
+            const subtotalSpan = document.getElementById('summary-subtotal');
+            const grandTotalSpan = document.getElementById('grand-total');
             const checkoutBtn = document.getElementById('btn-checkout');
             
             if (cart.length === 0) {
-                itemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center;">Keranjang kosong</p>';
+                itemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center; padding: 20px;">Keranjang belanja kosong</p>';
                 totalSpan.innerHTML = 'Total: Rp 0';
+                subtotalSpan.innerHTML = 'Rp 0';
+                grandTotalSpan.innerHTML = 'Total: Rp 0';
                 checkoutBtn.disabled = true;
                 return;
             }
@@ -1266,31 +1685,60 @@
             let html = '';
             let subtotal = 0;
             
+            // Group by merchant
+            const cartByMerchant = {};
             cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
-                html += `
-                    <div class="cart-item">
-                        <div>
-                            <div>${item.name} x${item.quantity}</div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span>${formatRupiah(itemTotal)}</span>
-                            <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">✕</button>
-                        </div>
-                    </div>
-                `;
+                if (!cartByMerchant[item.merchant_id]) {
+                    cartByMerchant[item.merchant_id] = {
+                        merchant_name: item.merchant_name,
+                        items: []
+                    };
+                }
+                cartByMerchant[item.merchant_id].items.push(item);
             });
+            
+            for (let merchantId in cartByMerchant) {
+                const group = cartByMerchant[merchantId];
+                html += `<div style="margin-bottom: 15px;">`;
+                html += `<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 5px;">
+                            <i class="fas fa-store"></i> ${group.merchant_name}
+                        </div>`;
+                
+                group.items.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    html += `
+                        <div class="cart-item">
+                            <div class="cart-item-info">
+                                <div class="cart-item-name">${item.name}</div>
+                                <div class="cart-item-price">${formatRupiah(item.price)}</div>
+                            </div>
+                            <div class="cart-item-actions">
+                                <div class="cart-quantity">
+                                    <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                                    <span style="min-width: 25px; text-align: center;">${item.quantity}</span>
+                                    <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+                                </div>
+                                <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
             
             itemsDiv.innerHTML = html;
             totalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
+            subtotalSpan.innerHTML = formatRupiah(subtotal);
             
-            // Tampilkan jarak jika delivery diaktifkan
-            if (deliveryEnabled && userLocation) {
-                const distance = calculateDistance(userLocation.lat, userLocation.lng);
-                document.getElementById('delivery-distance').textContent = distance.toFixed(1) + ' km';
-            }
+            // Grand total (gratis ongkir)
+            grandTotalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
             
+            // Check if sufficient balance
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             checkoutBtn.disabled = subtotal > saldo;
         }
@@ -1299,24 +1747,20 @@
             document.getElementById('cart-panel').classList.toggle('hidden');
         }
         
-        function showShop() {
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.remove('hidden');
-            loadProducts();
-        }
-        
-        function hideShop() {
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
-        }
-        
+        // ===========================================
+        // CHECKOUT
+        // ===========================================
         function checkout() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
             if (subtotal > saldo) {
                 showNotification('Saldo tidak cukup!', 'error');
+                return;
+            }
+            
+            if (cart.length === 0) {
+                showNotification('Keranjang belanja kosong!', 'error');
                 return;
             }
             
@@ -1326,34 +1770,56 @@
             const updates = {};
             updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
             
+            // Update stok produk
             cart.forEach(item => {
                 updates[`/products/${item.id}/stock`] = firebase.database.ServerValue.increment(-item.quantity);
             });
             
             const transId = Date.now().toString();
+            
+            // Group items by merchant
+            const itemsByMerchant = {};
+            cart.forEach(item => {
+                if (!itemsByMerchant[item.merchant_id]) {
+                    itemsByMerchant[item.merchant_id] = [];
+                }
+                itemsByMerchant[item.merchant_id].push({
+                    id: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    merchant_id: item.merchant_id,
+                    merchant_name: item.merchant_name
+                });
+            });
+            
             const transactionData = {
                 type: 'PEMBELIAN',
+                user_id: currentUser.phone,
                 items: cart.map(i => ({
                     id: i.id,
                     name: i.name,
                     quantity: i.quantity,
-                    price: i.price
+                    price: i.price,
+                    merchant_id: i.merchant_id,
+                    merchant_name: i.merchant_name
                 })),
+                items_by_merchant: itemsByMerchant,
                 subtotal: subtotal,
                 total: subtotal,
                 timestamp: Date.now(),
+                status: 'diproses',
                 source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE'
             };
             
-            // Tambah info delivery GRATIS jika ada
+            // Tambah info delivery jika ada
             if (deliveryEnabled && userLocation) {
                 const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
                 
                 transactionData.delivery = {
-                    store_location: STORE_LOCATION,
                     user_location: userLocation,
                     distance: calculateDistance(userLocation.lat, userLocation.lng),
-                    cost: 0, // GRATIS
+                    cost: 0,
                     address: document.getElementById('delivery-address').textContent,
                     google_maps_link: googleMapsLink
                 };
@@ -1361,10 +1827,23 @@
             
             updates[`/transactions/${currentUser.phone}/${transId}`] = transactionData;
             
+            // Simpan juga di per-merchant untuk notifikasi
+            for (let merchantId in itemsByMerchant) {
+                updates[`/merchant_orders/${merchantId}/${transId}`] = {
+                    user_id: currentUser.phone,
+                    items: itemsByMerchant[merchantId],
+                    total: itemsByMerchant[merchantId].reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    timestamp: Date.now(),
+                    status: 'diproses',
+                    delivery: transactionData.delivery || null
+                };
+            }
+            
             db.ref().update(updates).then(() => {
                 // Kirim notifikasi WhatsApp ke admin
                 sendWhatsAppNotification(transactionData);
                 
+                // Reset cart
                 cart = [];
                 deliveryEnabled = false;
                 userLocation = null;
@@ -1376,40 +1855,214 @@
                 updateCartDisplay();
                 document.getElementById('cart-panel').classList.add('hidden');
                 
-                showNotification('Pembelian berhasil!');
+                showNotification('Pembelian berhasil! Pesanan sedang diproses', 'success');
+                
+                // Reload orders
+                loadUserOrders();
             }).catch((error) => {
                 console.error('Error checkout:', error);
-                showNotification('Gagal checkout', 'error');
+                showNotification('Gagal checkout: ' + error.message, 'error');
             });
         }
         
         function sendWhatsAppNotification(transactionData) {
             let pesan = `*PEMBELIAN RE-COIN*\n`;
-            pesan += `ID: ${currentUser.phone}\n`;
-            pesan += `Sumber: ${currentUser.isMachineMode ? 'Mesin' : 'Website'}\n`;
+            pesan += `ID User: ${currentUser.phone}\n`;
             pesan += `Waktu: ${new Date().toLocaleString('id-ID')}\n\n`;
             
             pesan += `*PRODUK:*\n`;
+            
+            // Group by merchant untuk notifikasi
+            const byMerchant = {};
             transactionData.items.forEach(item => {
-                pesan += `- ${item.name} x${item.quantity} = Rp ${(item.price * item.quantity).toLocaleString('id-ID')}\n`;
+                if (!byMerchant[item.merchant_name]) {
+                    byMerchant[item.merchant_name] = [];
+                }
+                byMerchant[item.merchant_name].push(item);
             });
             
-            pesan += `\n*Subtotal: Rp ${transactionData.subtotal.toLocaleString('id-ID')}*`;
+            for (let merchant in byMerchant) {
+                pesan += `\n🏪 *${merchant}*\n`;
+                byMerchant[merchant].forEach(item => {
+                    pesan += `- ${item.name} x${item.quantity} = Rp ${(item.price * item.quantity).toLocaleString('id-ID')}\n`;
+                });
+            }
+            
+            pesan += `\n*Total: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
             
             if (transactionData.delivery) {
-                pesan += `\n*Ongkos Kirim: GRATIS*`;
-                pesan += `\n*Total: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
                 pesan += `\n\n*LOKASI PENGIRIMAN:*`;
                 pesan += `\nAlamat: ${transactionData.delivery.address}`;
                 pesan += `\nJarak: ${transactionData.delivery.distance.toFixed(1)} km`;
                 pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link}`;
-            } else {
-                pesan += `\n*Total: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
-                pesan += `\n\n*Metode: Ambil di Toko*`;
             }
             
-            // Buka WhatsApp dengan pesan
             window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+        }
+        
+        // ===========================================
+        // USER ORDERS
+        // ===========================================
+        function loadUserOrders() {
+            if (!currentUser.phone) return;
+            
+            db.ref('/transactions/' + currentUser.phone).orderByChild('timestamp').once('value', (snap) => {
+                userOrders = [];
+                const data = snap.val() || {};
+                
+                for (let id in data) {
+                    userOrders.push({
+                        id: id,
+                        ...data[id]
+                    });
+                }
+                
+                // Sort by timestamp descending
+                userOrders.sort((a, b) => b.timestamp - a.timestamp);
+                
+                displayRecentOrders();
+            });
+        }
+        
+        function displayRecentOrders() {
+            const container = document.getElementById('recent-orders');
+            const recent = userOrders.slice(0, 3);
+            
+            if (recent.length === 0) {
+                container.innerHTML = '<p style="color: #7f8c8d; font-size: 13px;">Belum ada pesanan</p>';
+                return;
+            }
+            
+            let html = '';
+            recent.forEach(order => {
+                const statusClass = order.status === 'diproses' ? 'status-diproses' : 
+                                   order.status === 'dikirim' ? 'status-dikirim' : 
+                                   order.status === 'selesai' ? 'status-selesai' : '';
+                
+                const merchantCount = Object.keys(order.items_by_merchant || {}).length;
+                
+                html += `
+                    <div class="order-item">
+                        <div>
+                            <div style="font-weight: 600;">#${order.id.slice(-8)}</div>
+                            <div class="order-merchant">${merchantCount} merchant</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700;">${formatRupiah(order.total)}</div>
+                            <span class="order-status ${statusClass}">${order.status || 'diproses'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function showAllOrders() {
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('shop-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.remove('hidden');
+            
+            displayAllOrders();
+        }
+        
+        function hideOrders() {
+            document.getElementById('orders-page').classList.add('hidden');
+            document.getElementById('dashboard-page').classList.remove('hidden');
+        }
+        
+        function displayAllOrders() {
+            const container = document.getElementById('orders-list-full');
+            
+            if (userOrders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-shopping-bag" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
+                        <p style="color: #7f8c8d;">Belum ada pesanan</p>
+                        <button class="btn-main" onclick="showShop()" style="margin-top: 20px;">Belanja Sekarang</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            userOrders.forEach(order => {
+                const statusClass = order.status === 'diproses' ? 'status-diproses' : 
+                                   order.status === 'dikirim' ? 'status-dikirim' : 
+                                   order.status === 'selesai' ? 'status-selesai' : 'status-batal';
+                
+                // Group by merchant
+                const itemsByMerchant = {};
+                order.items.forEach(item => {
+                    if (!itemsByMerchant[item.merchant_name]) {
+                        itemsByMerchant[item.merchant_name] = [];
+                    }
+                    itemsByMerchant[item.merchant_name].push(item);
+                });
+                
+                html += `
+                    <div style="background: #f8f9fa; border-radius: 16px; padding: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div>
+                                <span style="font-weight: 700;">#${order.id.slice(-8)}</span>
+                                <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
+                                    ${formatDate(order.timestamp)}
+                                </span>
+                            </div>
+                            <span class="order-status ${statusClass}">${order.status || 'diproses'}</span>
+                        </div>
+                `;
+                
+                for (let merchant in itemsByMerchant) {
+                    html += `
+                        <div style="margin: 10px 0; padding-left: 10px; border-left: 3px solid var(--primary);">
+                            <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">
+                                🏪 ${merchant}
+                            </div>
+                    `;
+                    
+                    itemsByMerchant[merchant].forEach(item => {
+                        html += `
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px;">
+                                <span>${item.name} x${item.quantity}</span>
+                                <span>${formatRupiah(item.price * item.quantity)}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                }
+                
+                html += `
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dfe6e9;">
+                            <span style="font-weight: 600;">Total</span>
+                            <span style="font-weight: 700; color: var(--primary);">${formatRupiah(order.total)}</span>
+                        </div>
+                        ${order.delivery ? `
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${order.delivery.address || 'Lokasi user'}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // ===========================================
+        // SHOP NAVIGATION
+        // ===========================================
+        function showShop() {
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.add('hidden');
+            document.getElementById('shop-page').classList.remove('hidden');
+            loadMerchantsAndProducts();
+        }
+        
+        function hideShop() {
+            document.getElementById('shop-page').classList.add('hidden');
+            document.getElementById('dashboard-page').classList.remove('hidden');
         }
         
         // ===========================================
@@ -1442,6 +2095,11 @@
             
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
+            if (saldo < 5000) {
+                showNotification('Minimal penarikan Rp 5.000', 'error');
+                return;
+            }
+            
             const transId = Date.now().toString();
             db.ref('/transactions/' + currentUser.phone + '/' + transId).set({
                 type: 'PENARIKAN',
@@ -1453,16 +2111,15 @@
                 status: 'pending'
             }).then(() => {
                 db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
-                    const pesan = `*PENARIKAN RE-COIN*\n` +
+                    const pesan = `*PENARIKAN SALDO USER*\n` +
                                  `ID: ${currentUser.phone}\n` +
-                                 `Sumber: ${currentUser.isMachineMode ? 'Mesin' : 'Website'}\n` +
                                  `Jumlah: Rp ${saldo.toLocaleString('id-ID')}\n` +
                                  `Metode: ${method}\n` +
                                  `Detail: ${details}`;
                     
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
                     closeModal();
-                    showNotification('Permintaan penarikan dikirim');
+                    showNotification('Permintaan penarikan dikirim', 'success');
                 });
             }).catch((error) => {
                 console.error('Error withdrawal:', error);
