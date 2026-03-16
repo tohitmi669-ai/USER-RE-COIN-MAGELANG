@@ -103,7 +103,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -130,7 +130,12 @@
             color: white;
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active {
+        .btn-secondary {
+            background: #dfe6e9;
+            color: var(--dark);
+        }
+        
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active {
             transform: scale(0.98);
         }
         
@@ -280,9 +285,39 @@
             color: var(--danger);
         }
         
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            height: 20px;
+            margin: 10px 0;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: var(--primary);
+        }
+        
+        .loading-spinner i {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
         /* MERCHANT SECTION */
         .merchant-section {
             margin-bottom: 30px;
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         
         .merchant-header {
@@ -292,6 +327,11 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #ecf0f1;
+            cursor: pointer;
+        }
+        
+        .merchant-header:hover {
+            background: #f8f9fa;
         }
         
         .merchant-avatar {
@@ -330,7 +370,7 @@
         
         .product-card {
             background: #f8f9fa;
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 12px;
             transition: transform 0.3s ease;
         }
@@ -400,10 +440,6 @@
         .btn-beli:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
-        }
-        
-        .btn-beli:disabled:hover {
-            transform: none;
         }
         
         .cart-icon {
@@ -759,8 +795,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px;
             border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+        
+        .order-item:hover {
+            background: #e8f8f5;
         }
         
         .order-item:last-child {
@@ -778,6 +821,7 @@
             padding: 3px 8px;
             border-radius: 12px;
             font-weight: 600;
+            display: inline-block;
         }
         
         .status-diproses {
@@ -793,6 +837,31 @@
         .status-selesai {
             background: #cce5ff;
             color: #004085;
+        }
+        
+        .status-batal {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .order-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ecf0f1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #b2bec3;
         }
         
         @media (max-width: 480px) {
@@ -869,9 +938,9 @@
         <div class="my-orders" id="my-orders-summary">
             <h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4>
             <div id="recent-orders">
-                <p style="color: #7f8c8d; font-size: 13px;">Belum ada pesanan</p>
+                <p style="color: #7f8c8d; font-size: 13px; text-align: center;">Memuat pesanan...</p>
             </div>
-            <button class="btn-main" style="margin-top: 10px; font-size: 13px;" onclick="showAllOrders()">
+            <button class="btn-secondary" style="margin-top: 10px; font-size: 13px;" onclick="showAllOrders()">
                 Lihat Semua Pesanan
             </button>
         </div>
@@ -944,7 +1013,7 @@
         
         <!-- Products by Merchant -->
         <div id="products-container">
-            <div class="loading">
+            <div class="loading-spinner">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Memuat produk...</p>
             </div>
@@ -960,7 +1029,7 @@
         <h3 style="margin-bottom: 20px;">📦 Riwayat Pesanan Saya</h3>
         
         <div id="orders-list-full">
-            <div class="loading">
+            <div class="loading-spinner">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Memuat pesanan...</p>
             </div>
@@ -1108,6 +1177,7 @@
         }
         
         function formatRupiah(angka) {
+            if (angka === undefined || angka === null) return 'Rp 0';
             return 'Rp ' + angka.toLocaleString('id-ID');
         }
         
@@ -1135,14 +1205,19 @@
         }
         
         function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleDateString('id-ID', { 
-                day: '2-digit', 
-                month: 'short', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            if (!timestamp) return 'Tanggal tidak diketahui';
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleDateString('id-ID', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return 'Tanggal error';
+            }
         }
         
         // ===========================================
@@ -1446,6 +1521,9 @@
         // MERCHANTS & PRODUCTS
         // ===========================================
         function loadMerchantsAndProducts() {
+            const container = document.getElementById('products-container');
+            if (!container) return;
+            
             // Load merchants
             db.ref('/merchants').once('value', (snap) => {
                 merchants = [];
@@ -1475,11 +1553,11 @@
                     displayProductsByMerchant();
                 }).catch(error => {
                     console.error('Error loading products:', error);
-                    showNotification('Gagal memuat produk', 'error');
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat produk</p></div>';
                 });
             }).catch(error => {
                 console.error('Error loading merchants:', error);
-                showNotification('Gagal memuat merchant', 'error');
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat merchant</p></div>';
             });
         }
         
@@ -1488,9 +1566,9 @@
             
             if (merchants.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <i class="fas fa-store" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
-                        <p style="color: #7f8c8d;">Belum ada merchant yang tersedia</p>
+                    <div class="empty-state">
+                        <i class="fas fa-store"></i>
+                        <p>Belum ada merchant yang tersedia</p>
                     </div>
                 `;
                 return;
@@ -1505,16 +1583,17 @@
                 
                 html += `
                     <div class="merchant-section">
-                        <div class="merchant-header">
+                        <div class="merchant-header" onclick="showAllMerchantProducts('${merchant.id}')">
                             <div class="merchant-avatar">
-                                ${merchant.nama_toko.charAt(0).toUpperCase()}
+                                ${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}
                             </div>
                             <div class="merchant-info">
-                                <div class="merchant-name">${merchant.nama_toko}</div>
+                                <div class="merchant-name">${merchant.nama_toko || 'Toko'}</div>
                                 <div class="merchant-address">
                                     <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
                                 </div>
                             </div>
+                            <i class="fas fa-chevron-right" style="color: #b2bec3;"></i>
                         </div>
                         
                         <div class="product-grid">
@@ -1528,10 +1607,10 @@
                                 <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
                                      onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
                             </div>
-                            <div class="product-name">${product.name}</div>
-                            <div class="product-price">${formatRupiah(product.price)}</div>
+                            <div class="product-name">${product.name || 'Produk'}</div>
+                            <div class="product-price">${formatRupiah(product.price || 0)}</div>
                             <div class="product-stock ${stockClass}">
-                                <i class="fas fa-box"></i> Stok: ${product.stock}
+                                <i class="fas fa-box"></i> Stok: ${product.stock || 0}
                             </div>
                             <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
                                 ${product.stock <= 0 ? 'Stok Habis' : 'Tambah ke Keranjang'}
@@ -1543,7 +1622,7 @@
                 html += `
                         </div>
                         ${merchantProducts.length > 4 ? 
-                            `<button class="btn-main" style="margin-top: 10px; font-size: 13px;" 
+                            `<button class="btn-secondary" style="margin-top: 10px; font-size: 13px; width: 100%;" 
                                      onclick="showAllMerchantProducts('${merchant.id}')">
                                 Lihat Semua Produk (${merchantProducts.length})
                             </button>` : ''}
@@ -1553,9 +1632,9 @@
             
             if (html === '') {
                 html = `
-                    <div style="text-align: center; padding: 40px;">
-                        <i class="fas fa-box-open" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
-                        <p style="color: #7f8c8d;">Belum ada produk yang tersedia</p>
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>Belum ada produk yang tersedia</p>
                     </div>
                 `;
             }
@@ -1565,6 +1644,8 @@
         
         function showAllMerchantProducts(merchantId) {
             const merchant = merchants.find(m => m.id === merchantId);
+            if (!merchant) return;
+            
             const merchantProducts = products.filter(p => p.merchant_id === merchantId && p.stock > 0);
             
             const container = document.getElementById('products-container');
@@ -1576,9 +1657,9 @@
                 
                 <div class="merchant-section">
                     <div class="merchant-header">
-                        <div class="merchant-avatar">${merchant.nama_toko.charAt(0).toUpperCase()}</div>
+                        <div class="merchant-avatar">${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}</div>
                         <div class="merchant-info">
-                            <div class="merchant-name">${merchant.nama_toko}</div>
+                            <div class="merchant-name">${merchant.nama_toko || 'Toko'}</div>
                             <div class="merchant-address">
                                 <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
                             </div>
@@ -1595,10 +1676,10 @@
                         <div class="product-image">
                             <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
                         </div>
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-price">${formatRupiah(product.price)}</div>
+                        <div class="product-name">${product.name || 'Produk'}</div>
+                        <div class="product-price">${formatRupiah(product.price || 0)}</div>
                         <div class="product-stock ${stockClass}">
-                            <i class="fas fa-box"></i> Stok: ${product.stock}
+                            <i class="fas fa-box"></i> Stok: ${product.stock || 0}
                         </div>
                         <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
                             Tambah ke Keranjang
@@ -1638,7 +1719,7 @@
             }
             
             updateCartDisplay();
-            showNotification(`${product.name} ditambahkan ke keranjang`, 'success');
+            showNotification(`${product.name || 'Produk'} ditambahkan ke keranjang`, 'success');
         }
         
         function updateQuantity(productId, change) {
@@ -1701,18 +1782,18 @@
                 const group = cartByMerchant[merchantId];
                 html += `<div style="margin-bottom: 15px;">`;
                 html += `<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 5px;">
-                            <i class="fas fa-store"></i> ${group.merchant_name}
+                            <i class="fas fa-store"></i> ${group.merchant_name || 'Toko'}
                         </div>`;
                 
                 group.items.forEach(item => {
-                    const itemTotal = item.price * item.quantity;
+                    const itemTotal = (item.price || 0) * item.quantity;
                     subtotal += itemTotal;
                     
                     html += `
                         <div class="cart-item">
                             <div class="cart-item-info">
-                                <div class="cart-item-name">${item.name}</div>
-                                <div class="cart-item-price">${formatRupiah(item.price)}</div>
+                                <div class="cart-item-name">${item.name || 'Produk'}</div>
+                                <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
                             </div>
                             <div class="cart-item-actions">
                                 <div class="cart-quantity">
@@ -1751,7 +1832,7 @@
         // CHECKOUT
         // ===========================================
         function checkout() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
             if (subtotal > saldo) {
@@ -1820,7 +1901,7 @@
                     user_location: userLocation,
                     distance: calculateDistance(userLocation.lat, userLocation.lng),
                     cost: 0,
-                    address: document.getElementById('delivery-address').textContent,
+                    address: document.getElementById('delivery-address').textContent || 'Lokasi user',
                     google_maps_link: googleMapsLink
                 };
             }
@@ -1832,7 +1913,7 @@
                 updates[`/merchant_orders/${merchantId}/${transId}`] = {
                     user_id: currentUser.phone,
                     items: itemsByMerchant[merchantId],
-                    total: itemsByMerchant[merchantId].reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    total: itemsByMerchant[merchantId].reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
                     timestamp: Date.now(),
                     status: 'diproses',
                     delivery: transactionData.delivery || null
@@ -1875,87 +1956,138 @@
             // Group by merchant untuk notifikasi
             const byMerchant = {};
             transactionData.items.forEach(item => {
-                if (!byMerchant[item.merchant_name]) {
-                    byMerchant[item.merchant_name] = [];
+                if (!item) return;
+                const merchantName = item.merchant_name || 'Unknown';
+                if (!byMerchant[merchantName]) {
+                    byMerchant[merchantName] = [];
                 }
-                byMerchant[item.merchant_name].push(item);
+                byMerchant[merchantName].push(item);
             });
             
             for (let merchant in byMerchant) {
                 pesan += `\n🏪 *${merchant}*\n`;
                 byMerchant[merchant].forEach(item => {
-                    pesan += `- ${item.name} x${item.quantity} = Rp ${(item.price * item.quantity).toLocaleString('id-ID')}\n`;
+                    pesan += `- ${item.name || 'Produk'} x${item.quantity || 1} = Rp ${((item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}\n`;
                 });
             }
             
-            pesan += `\n*Total: Rp ${transactionData.total.toLocaleString('id-ID')}*`;
+            pesan += `\n*Total: Rp ${(transactionData.total || 0).toLocaleString('id-ID')}*`;
             
             if (transactionData.delivery) {
                 pesan += `\n\n*LOKASI PENGIRIMAN:*`;
-                pesan += `\nAlamat: ${transactionData.delivery.address}`;
-                pesan += `\nJarak: ${transactionData.delivery.distance.toFixed(1)} km`;
-                pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link}`;
+                pesan += `\nAlamat: ${transactionData.delivery.address || '-'}`;
+                pesan += `\nJarak: ${(transactionData.delivery.distance || 0).toFixed(1)} km`;
+                pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link || '-'}`;
             }
             
             window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
         }
         
         // ===========================================
-        // USER ORDERS
+        // USER ORDERS - OPTIMIZED VERSION
         // ===========================================
         function loadUserOrders() {
             if (!currentUser.phone) return;
             
-            db.ref('/transactions/' + currentUser.phone).orderByChild('timestamp').once('value', (snap) => {
-                userOrders = [];
-                const data = snap.val() || {};
-                
-                for (let id in data) {
-                    userOrders.push({
-                        id: id,
-                        ...data[id]
-                    });
-                }
-                
-                // Sort by timestamp descending
-                userOrders.sort((a, b) => b.timestamp - a.timestamp);
-                
-                displayRecentOrders();
-            });
+            const recentContainer = document.getElementById('recent-orders');
+            if (recentContainer) {
+                recentContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Memuat pesanan...</p>';
+            }
+            
+            // Load hanya 20 order terbaru untuk efisiensi
+            db.ref('/transactions/' + currentUser.phone)
+                .orderByChild('timestamp')
+                .limitToLast(20)
+                .once('value', (snap) => {
+                    userOrders = [];
+                    const data = snap.val() || {};
+                    
+                    for (let id in data) {
+                        userOrders.push({
+                            id: id,
+                            ...data[id]
+                        });
+                    }
+                    
+                    // Sort by timestamp descending (terbaru dulu)
+                    userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    
+                    displayRecentOrders();
+                    
+                }).catch(error => {
+                    console.error('Error loading orders:', error);
+                    if (recentContainer) {
+                        recentContainer.innerHTML = '<p style="color: var(--danger);">Gagal memuat pesanan</p>';
+                    }
+                });
         }
         
         function displayRecentOrders() {
             const container = document.getElementById('recent-orders');
+            if (!container) return;
+            
             const recent = userOrders.slice(0, 3);
             
             if (recent.length === 0) {
-                container.innerHTML = '<p style="color: #7f8c8d; font-size: 13px;">Belum ada pesanan</p>';
+                container.innerHTML = '<p style="color: #7f8c8d; font-size: 13px; text-align: center;">Belum ada pesanan</p>';
                 return;
             }
             
             let html = '';
             recent.forEach(order => {
-                const statusClass = order.status === 'diproses' ? 'status-diproses' : 
-                                   order.status === 'dikirim' ? 'status-dikirim' : 
-                                   order.status === 'selesai' ? 'status-selesai' : '';
+                // Safety check
+                const status = order.status || 'diproses';
+                const statusClass = status === 'diproses' ? 'status-diproses' : 
+                                   status === 'dikirim' ? 'status-dikirim' : 
+                                   status === 'selesai' ? 'status-selesai' : 'status-batal';
                 
-                const merchantCount = Object.keys(order.items_by_merchant || {}).length;
+                // Hitung jumlah merchant dengan aman
+                let merchantCount = 0;
+                if (order.items_by_merchant) {
+                    merchantCount = Object.keys(order.items_by_merchant).length;
+                } else if (order.items && Array.isArray(order.items)) {
+                    const uniqueMerchants = new Set();
+                    order.items.forEach(item => {
+                        if (item && item.merchant_id) uniqueMerchants.add(item.merchant_id);
+                    });
+                    merchantCount = uniqueMerchants.size;
+                }
+                
+                const shortId = order.id ? order.id.slice(-8) : 'XXXX';
+                const total = order.total || 0;
                 
                 html += `
-                    <div class="order-item">
+                    <div class="order-item" onclick="viewOrderDetail('${order.id}')">
                         <div>
-                            <div style="font-weight: 600;">#${order.id.slice(-8)}</div>
+                            <div style="font-weight: 600;">#${shortId}</div>
                             <div class="order-merchant">${merchantCount} merchant</div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-weight: 700;">${formatRupiah(order.total)}</div>
-                            <span class="order-status ${statusClass}">${order.status || 'diproses'}</span>
+                            <div style="font-weight: 700;">${formatRupiah(total)}</div>
+                            <span class="order-status ${statusClass}">${status}</span>
                         </div>
                     </div>
                 `;
             });
             
             container.innerHTML = html;
+        }
+        
+        function viewOrderDetail(orderId) {
+            // Navigate ke halaman orders dan scroll ke order tersebut
+            showAllOrders();
+            
+            // Highlight order yang dipilih setelah render
+            setTimeout(() => {
+                const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+                if (orderElement) {
+                    orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    orderElement.style.backgroundColor = '#e8f8f5';
+                    setTimeout(() => {
+                        orderElement.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }, 500);
         }
         
         function showAllOrders() {
@@ -1973,81 +2105,141 @@
         
         function displayAllOrders() {
             const container = document.getElementById('orders-list-full');
+            if (!container) return;
             
-            if (userOrders.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <i class="fas fa-shopping-bag" style="font-size: 48px; color: #b2bec3; margin-bottom: 15px;"></i>
-                        <p style="color: #7f8c8d;">Belum ada pesanan</p>
-                        <button class="btn-main" onclick="showShop()" style="margin-top: 20px;">Belanja Sekarang</button>
-                    </div>
-                `;
-                return;
-            }
+            // Tampilkan loading
+            container.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Memuat pesanan...</p>
+                </div>
+            `;
             
-            let html = '';
-            userOrders.forEach(order => {
-                const statusClass = order.status === 'diproses' ? 'status-diproses' : 
-                                   order.status === 'dikirim' ? 'status-dikirim' : 
-                                   order.status === 'selesai' ? 'status-selesai' : 'status-batal';
-                
-                // Group by merchant
-                const itemsByMerchant = {};
-                order.items.forEach(item => {
-                    if (!itemsByMerchant[item.merchant_name]) {
-                        itemsByMerchant[item.merchant_name] = [];
-                    }
-                    itemsByMerchant[item.merchant_name].push(item);
-                });
-                
-                html += `
-                    <div style="background: #f8f9fa; border-radius: 16px; padding: 15px; margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <div>
-                                <span style="font-weight: 700;">#${order.id.slice(-8)}</span>
-                                <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
-                                    ${formatDate(order.timestamp)}
-                                </span>
-                            </div>
-                            <span class="order-status ${statusClass}">${order.status || 'diproses'}</span>
+            // Gunakan setTimeout agar tidak blocking UI
+            setTimeout(() => {
+                if (userOrders.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-bag"></i>
+                            <p>Belum ada pesanan</p>
+                            <button class="btn-main" onclick="showShop()" style="margin-top: 20px;">Belanja Sekarang</button>
                         </div>
-                `;
+                    `;
+                    return;
+                }
                 
-                for (let merchant in itemsByMerchant) {
+                let html = '';
+                const ordersToShow = userOrders.slice(0, 20); // Batasi 20 order terbaru
+                
+                ordersToShow.forEach(order => {
+                    // SAFETY CHECKS
+                    const status = order.status || 'diproses';
+                    const statusClass = status === 'diproses' ? 'status-diproses' : 
+                                       status === 'dikirim' ? 'status-dikirim' : 
+                                       status === 'selesai' ? 'status-selesai' : 'status-batal';
+                    
+                    const shortId = order.id ? order.id.slice(-8) : 'XXXX';
+                    const dateStr = order.timestamp ? formatDate(order.timestamp) : 'Tanggal tidak diketahui';
+                    const total = order.total || 0;
+                    
+                    // Handle items dengan aman
+                    let items = [];
+                    if (order.items && Array.isArray(order.items)) {
+                        items = order.items;
+                    } else if (order.items_by_merchant) {
+                        // Flatten items_by_merchant
+                        for (let merchantId in order.items_by_merchant) {
+                            const merchantItems = order.items_by_merchant[merchantId];
+                            if (Array.isArray(merchantItems)) {
+                                items = items.concat(merchantItems);
+                            }
+                        }
+                    }
+                    
                     html += `
-                        <div style="margin: 10px 0; padding-left: 10px; border-left: 3px solid var(--primary);">
-                            <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">
-                                🏪 ${merchant}
+                        <div class="order-card" data-order-id="${order.id}">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <div>
+                                    <span style="font-weight: 700;">#${shortId}</span>
+                                    <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
+                                        ${dateStr}
+                                    </span>
+                                </div>
+                                <span class="order-status ${statusClass}">${status}</span>
                             </div>
                     `;
                     
-                    itemsByMerchant[merchant].forEach(item => {
+                    // Tampilkan items per merchant
+                    if (items.length > 0) {
+                        // Group by merchant_name
+                        const itemsByMerchant = {};
+                        items.forEach(item => {
+                            if (!item) return;
+                            const merchantName = item.merchant_name || 'Unknown Merchant';
+                            if (!itemsByMerchant[merchantName]) {
+                                itemsByMerchant[merchantName] = [];
+                            }
+                            itemsByMerchant[merchantName].push(item);
+                        });
+                        
+                        for (let merchant in itemsByMerchant) {
+                            html += `
+                                <div style="margin: 10px 0; padding-left: 10px; border-left: 3px solid var(--primary);">
+                                    <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">
+                                        🏪 ${merchant}
+                                    </div>
+                            `;
+                            
+                            itemsByMerchant[merchant].forEach(item => {
+                                if (!item) return;
+                                const itemName = item.name || 'Produk';
+                                const itemQty = item.quantity || 1;
+                                const itemPrice = item.price || 0;
+                                
+                                html += `
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px;">
+                                        <span>${itemName} x${itemQty}</span>
+                                        <span>${formatRupiah(itemPrice * itemQty)}</span>
+                                    </div>
+                                `;
+                            });
+                            
+                            html += `</div>`;
+                        }
+                    } else {
+                        html += `<p style="color: #7f8c8d; font-size: 13px; padding: 10px;">Tidak ada detail produk</p>`;
+                    }
+                    
+                    html += `
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dfe6e9;">
+                                <span style="font-weight: 600;">Total</span>
+                                <span style="font-weight: 700; color: var(--primary);">${formatRupiah(total)}</span>
+                            </div>
+                    `;
+                    
+                    if (order.delivery && order.delivery.address) {
                         html += `
-                            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px;">
-                                <span>${item.name} x${item.quantity}</span>
-                                <span>${formatRupiah(item.price * item.quantity)}</span>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; background: #e8f8f5; padding: 8px; border-radius: 8px;">
+                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${order.delivery.address}
+                                ${order.delivery.distance ? `<br><small>Jarak: ${order.delivery.distance} km</small>` : ''}
                             </div>
                         `;
-                    });
+                    }
                     
                     html += `</div>`;
+                });
+                
+                if (userOrders.length > 20) {
+                    html += `
+                        <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                            <i class="fas fa-info-circle"></i> Menampilkan 20 pesanan terbaru
+                        </div>
+                    `;
                 }
                 
-                html += `
-                        <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dfe6e9;">
-                            <span style="font-weight: 600;">Total</span>
-                            <span style="font-weight: 700; color: var(--primary);">${formatRupiah(order.total)}</span>
-                        </div>
-                        ${order.delivery ? `
-                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${order.delivery.address || 'Lokasi user'}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+                container.innerHTML = html;
+                
+            }, 100); // Delay 100ms agar UI tidak freeze
         }
         
         // ===========================================
