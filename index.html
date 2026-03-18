@@ -103,7 +103,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps, .btn-refresh {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -153,7 +153,18 @@
             margin-top: 5px;
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active {
+        .btn-refresh {
+            background: var(--info);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-refresh:active {
             transform: scale(0.98);
         }
         
@@ -335,6 +346,7 @@
             border-radius: 20px;
             padding: 16px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #ecf0f1;
         }
         
         .merchant-header {
@@ -344,11 +356,6 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #ecf0f1;
-            cursor: pointer;
-        }
-        
-        .merchant-header:hover {
-            background: #f8f9fa;
         }
         
         .merchant-avatar {
@@ -390,6 +397,7 @@
             border-radius: 16px;
             padding: 12px;
             transition: transform 0.3s ease;
+            border: 1px solid #ecf0f1;
         }
         
         .product-card:hover {
@@ -463,6 +471,7 @@
             position: relative;
             display: inline-block;
             cursor: pointer;
+            font-size: 24px;
         }
         
         .cart-count {
@@ -957,6 +966,28 @@
             margin-left: 5px;
         }
         
+        .debug-info {
+            background: #2d3436;
+            color: #f1f2f6;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-toggle {
+            background: #dfe6e9;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 480px) {
             .product-grid {
                 grid-template-columns: 1fr;
@@ -1012,7 +1043,7 @@
         
         <div class="info-box">
             <strong>Informasi:</strong><br>
-            • Gunakan PASWORD kombinasi Huruf dan Angka<br>
+            • Gunakan PASSWORD kombinasi Huruf dan Angka<br>
             • Tukar botol jadi saldo uang dan belanja<br>
             • Belanja dari berbagai merchant Mitra RECOIN<br>
             • Pengiriman GRATIS ke lokasi Anda<br>
@@ -1080,6 +1111,19 @@
                 🛒
                 <span class="cart-count" id="cart-count">0</span>
             </div>
+        </div>
+        
+        <!-- Refresh Button -->
+        <button class="btn-refresh" onclick="loadMerchantsAndProducts()">
+            <i class="fas fa-sync"></i> Refresh Produk
+        </button>
+        
+        <!-- Debug Info (Hidden by default) -->
+        <button class="debug-toggle" onclick="toggleDebug()">
+            <i class="fas fa-bug"></i> Toggle Debug Info
+        </button>
+        <div id="debug-info" class="debug-info hidden">
+            <div id="debug-content"></div>
         </div>
         
         <!-- Cart Panel -->
@@ -1195,8 +1239,8 @@
         // FIREBASE CONFIGURATION
         // ===========================================
         const firebaseConfig = {
-    databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app/"
-};
+            databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -1295,6 +1339,37 @@
             } catch (e) {
                 return 'Tanggal error';
             }
+        }
+
+        // ===========================================
+        // DEBUG FUNCTIONS
+        // ===========================================
+        function toggleDebug() {
+            document.getElementById('debug-info').classList.toggle('hidden');
+            updateDebugInfo();
+        }
+        
+        function updateDebugInfo() {
+            const debug = document.getElementById('debug-content');
+            if (!debug) return;
+            
+            let html = '<strong>🔍 DEBUG INFO:</strong><br>';
+            html += `Merchants: ${merchants.length}<br>`;
+            html += `Products: ${products.length}<br><br>`;
+            
+            html += '<strong>Merchants List:</strong><br>';
+            merchants.forEach(m => {
+                html += `- ${m.nama_toko} (${m.id}) status: ${m.status || 'active'}<br>`;
+            });
+            
+            html += '<br><strong>Products List:</strong><br>';
+            products.forEach(p => {
+                html += `- ${p.name} (${p.id})<br>`;
+                html += `  merchant_id: ${p.merchant_id}<br>`;
+                html += `  stock: ${p.stock}, price: ${p.price}<br>`;
+            });
+            
+            debug.innerHTML = html;
         }
 
         // ===========================================
@@ -1558,15 +1633,62 @@
         }
 
         // ===========================================
-        // LOAD DATA
+        // LOAD DATA (FIXED VERSION)
         // ===========================================
         function loadMerchantsAndProducts() {
+            // Show loading
+            document.getElementById('products-container').innerHTML = 
+                '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat produk...</p></div>';
+            
+            // Reset arrays
+            merchants = [];
+            products = [];
+            
+            // Load merchants
             db.ref('/merchants').once('value', (ms) => {
-                merchants = [];
-                ms.forEach(m => { if (m.val().status === 'active') merchants.push({ id: m.key, ...m.val() }); });
+                console.log('📦 Raw merchants data:', ms.val());
+                
+                ms.forEach(m => { 
+                    const merchantData = m.val();
+                    console.log('Merchant:', m.key, merchantData);
+                    
+                    // If no status field, assume active
+                    if (!merchantData.status || merchantData.status === 'active') {
+                        merchants.push({ 
+                            id: m.key, 
+                            nama_toko: merchantData.nama_toko || 'Toko ' + m.key.substr(0,5),
+                            ...merchantData 
+                        });
+                    }
+                });
+                
+                console.log('✅ Processed merchants:', merchants.length);
+                
+                // Load products
                 db.ref('/products').once('value', (ps) => {
-                    products = [];
-                    ps.forEach(p => products.push({ id: p.key, ...p.val() }));
+                    console.log('📦 Raw products data:', ps.val());
+                    
+                    ps.forEach(p => {
+                        const productData = p.val();
+                        console.log('Product:', p.key, productData);
+                        
+                        products.push({ 
+                            id: p.key, 
+                            name: productData.name || productData.nama || 'Produk',
+                            price: productData.price || productData.harga || 0,
+                            stock: productData.stock || productData.stok || 0,
+                            merchant_id: productData.merchant_id || productData.merchantId || productData.toko_id,
+                            image: productData.image || productData.gambar || 'https://via.placeholder.com/150',
+                            ...productData 
+                        });
+                    });
+                    
+                    console.log('✅ Processed products:', products.length);
+                    
+                    // Update debug info
+                    updateDebugInfo();
+                    
+                    // Display products
                     displayProducts();
                 });
             });
@@ -1574,20 +1696,69 @@
         
         function displayProducts() {
             let html = '';
-            merchants.forEach(m => {
-                const mp = products.filter(p => p.merchant_id === m.id && p.stock > 0);
-                if (!mp.length) return;
-                html += `<div class="merchant-section"><div class="merchant-header"><div class="merchant-avatar">${m.nama_toko?.[0]||'T'}</div>
-                    <div class="merchant-info"><div class="merchant-name">${m.nama_toko||'Toko'}</div></div></div><div class="product-grid">`;
-                mp.slice(0,4).forEach(p => {
-                    html += `<div class="product-card"><div class="product-image"><img src="${p.image||'https://via.placeholder.com/150'}" onerror="this.src='https://via.placeholder.com/150'"></div>
-                        <div class="product-name">${p.name||'Produk'}</div><div class="product-price">${formatRupiah(p.price||0)}</div>
-                        <div class="product-stock ${p.stock<=5?'stock-low':''}">Stok: ${p.stock}</div>
-                        <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock<=0?'disabled':''}>Tambah</button></div>`;
+            
+            if (merchants.length === 0) {
+                html = '<div class="empty-state"><i class="fas fa-store"></i><p>Tidak ada merchant aktif</p></div>';
+            } else if (products.length === 0) {
+                html = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Tidak ada produk</p></div>';
+            } else {
+                let totalProductsDisplayed = 0;
+                
+                merchants.forEach(m => {
+                    // Filter products for this merchant
+                    const merchantProducts = products.filter(p => {
+                        const match = p.merchant_id === m.id && p.stock > 0;
+                        console.log(`Product ${p.id}: merchant_id=${p.merchant_id}, m.id=${m.id}, stock=${p.stock}, match=${match}`);
+                        return match;
+                    });
+                    
+                    console.log(`Merchant ${m.nama_toko} (${m.id}) has ${merchantProducts.length} products`);
+                    
+                    if (merchantProducts.length === 0) return;
+                    
+                    totalProductsDisplayed += merchantProducts.length;
+                    
+                    html += `<div class="merchant-section">
+                        <div class="merchant-header">
+                            <div class="merchant-avatar">${m.nama_toko?.[0] || m.id?.[0] || 'T'}</div>
+                            <div class="merchant-info">
+                                <div class="merchant-name">${m.nama_toko || 'Toko'}</div>
+                                ${m.alamat ? `<div class="merchant-address">${m.alamat}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="product-grid">`;
+                    
+                    merchantProducts.slice(0, 4).forEach(p => {
+                        html += `<div class="product-card">
+                            <div class="product-image">
+                                <img src="${p.image}" onerror="this.src='https://via.placeholder.com/150'">
+                            </div>
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-price">${formatRupiah(p.price)}</div>
+                            <div class="product-stock ${p.stock <= 5 ? 'stock-low' : ''}">Stok: ${p.stock}</div>
+                            <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
+                                <i class="fas fa-cart-plus"></i> Tambah
+                            </button>
+                        </div>`;
+                    });
+                    
+                    html += '</div></div>';
                 });
-                html += '</div></div>';
-            });
-            document.getElementById('products-container').innerHTML = html || '<div class="empty-state">Tidak ada produk</div>';
+                
+                if (totalProductsDisplayed === 0) {
+                    html = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Tidak ada produk tersedia</p></div>';
+                }
+            }
+            
+            document.getElementById('products-container').innerHTML = html;
+            
+            // Add message if no products
+            if (html === '') {
+                document.getElementById('products-container').innerHTML = 
+                    '<div class="empty-state"><i class="fas fa-box-open"></i><p>Belum ada produk yang ditambahkan</p></div>';
+            }
+            
+            console.log('✅ Display products completed');
         }
 
         // ===========================================
@@ -1595,46 +1766,76 @@
         // ===========================================
         function addToCart(id) {
             const p = products.find(p => p.id === id);
-            if (!p) return;
+            if (!p) {
+                showNotification('Produk tidak ditemukan!', 'error');
+                return;
+            }
+            
             if (currentUser.botol * HARGA_PER_BOTOL < p.price) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
+            
             const exist = cart.find(i => i.id === id);
-            if (exist) exist.quantity++;
-            else cart.push({ ...p, quantity: 1, merchant_name: merchants.find(m => m.id === p.merchant_id)?.nama_toko });
+            if (exist) {
+                exist.quantity++;
+            } else {
+                const merchant = merchants.find(m => m.id === p.merchant_id);
+                cart.push({ 
+                    ...p, 
+                    quantity: 1, 
+                    merchant_name: merchant?.nama_toko || 'Toko'
+                });
+            }
+            
             updateCartDisplay();
+            showNotification(`${p.name} ditambahkan ke keranjang`, 'success');
         }
         
         function updateCartDisplay() {
-            let subtotal = 0, html = '';
-            cart.forEach(i => subtotal += i.price * i.quantity);
-            document.getElementById('cart-count').innerText = cart.reduce((s,i)=>s+i.quantity,0);
+            let subtotal = 0;
+            let html = '';
+            
+            cart.forEach(i => {
+                subtotal += i.price * i.quantity;
+                html += `<div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${i.name}</div>
+                        <div class="cart-item-merchant">${i.merchant_name}</div>
+                        <div class="cart-item-price">${formatRupiah(i.price * i.quantity)}</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <div class="cart-quantity">
+                            <button class="quantity-btn" onclick="updateQuantity('${i.id}', -1)">-</button>
+                            <span>${i.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity('${i.id}', 1)">+</button>
+                        </div>
+                        <button class="quantity-btn" onclick="removeFromCart('${i.id}')" style="background: var(--danger); color: white;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            });
+            
+            document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.quantity, 0);
+            document.getElementById('cart-items').innerHTML = html || '<p style="text-align:center">Keranjang kosong</p>';
             document.getElementById('cart-total').innerHTML = `Total: ${formatRupiah(subtotal)}`;
             document.getElementById('summary-subtotal').innerHTML = formatRupiah(subtotal);
             document.getElementById('grand-total').innerHTML = `Total: ${formatRupiah(subtotal)}`;
-            document.getElementById('btn-checkout').disabled = subtotal > currentUser.botol * HARGA_PER_BOTOL;
             
-            if (!cart.length) {
-                document.getElementById('cart-items').innerHTML = '<p style="text-align:center">Kosong</p>';
-                return;
-            }
-            
-            cart.forEach(i => {
-                html += `<div class="cart-item"><div>${i.name} x${i.quantity}</div>
-                    <div>${formatRupiah(i.price * i.quantity)} 
-                    <button onclick="updateQuantity('${i.id}',-1)">-</button>
-                    <button onclick="updateQuantity('${i.id}',1)">+</button>
-                    <button onclick="removeFromCart('${i.id}')"><i class="fas fa-trash"></i></button></div></div>`;
-            });
-            document.getElementById('cart-items').innerHTML = html;
+            const saldoCukup = subtotal <= currentUser.botol * HARGA_PER_BOTOL;
+            document.getElementById('btn-checkout').disabled = !saldoCukup || cart.length === 0;
         }
         
         function updateQuantity(id, d) {
-            const i = cart.findIndex(i => i.id === id);
-            if (i===-1) return;
-            cart[i].quantity += d;
-            if (cart[i].quantity <= 0) cart.splice(i,1);
+            const index = cart.findIndex(i => i.id === id);
+            if (index === -1) return;
+            
+            cart[index].quantity += d;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            
             updateCartDisplay();
         }
         
@@ -1651,52 +1852,92 @@
         // CHECKOUT
         // ===========================================
         function checkout() {
-            const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity,0);
+            const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+            
             if (subtotal > currentUser.botol * HARGA_PER_BOTOL) {
-                showNotification('Saldo tidak cukup', 'error');
-                return;
-            }
-            if (!cart.length) {
-                showNotification('Keranjang kosong', 'error');
-                return;
-            }
-            if (deliveryEnabled && !userLocation && !manualAddress) {
-                showNotification('Tentukan lokasi!', 'error');
+                showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
             
-            const transId = Date.now().toString();
-            const trans = {
+            if (cart.length === 0) {
+                showNotification('Keranjang belanja kosong!', 'error');
+                return;
+            }
+            
+            if (deliveryEnabled && !userLocation && !manualAddress) {
+                showNotification('Harap tentukan alamat pengiriman!', 'error');
+                return;
+            }
+            
+            const transId = 'TRX' + Date.now();
+            const transaction = {
                 user_id: currentUser.phone,
-                items: cart.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, price: i.price })),
-                subtotal, total: subtotal, timestamp: Date.now(), status: 'diproses'
+                items: cart.map(i => ({
+                    id: i.id,
+                    name: i.name,
+                    quantity: i.quantity,
+                    price: i.price,
+                    merchant_id: i.merchant_id,
+                    merchant_name: i.merchant_name
+                })),
+                subtotal: subtotal,
+                total: subtotal,
+                timestamp: Date.now(),
+                status: 'diproses'
             };
             
-            if (deliveryEnabled && userLocation) {
-                trans.delivery = {
-                    lat: userLocation.lat, lng: userLocation.lng, accuracy: userLocation.accuracy,
-                    maps: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}`
-                };
-            } else if (deliveryEnabled && manualAddress) {
-                trans.delivery = { address: manualAddress, maps: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}` };
+            if (deliveryEnabled) {
+                if (userLocation) {
+                    transaction.delivery = {
+                        type: 'gps',
+                        lat: userLocation.lat,
+                        lng: userLocation.lng,
+                        accuracy: userLocation.accuracy,
+                        maps_url: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}`
+                    };
+                } else if (manualAddress) {
+                    transaction.delivery = {
+                        type: 'manual',
+                        address: manualAddress,
+                        maps_url: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}`
+                    };
+                }
             }
             
+            // Update database
             const updates = {};
-            updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - Math.ceil(subtotal/HARGA_PER_BOTOL);
-            updates[`/transactions/${currentUser.phone}/${transId}`] = trans;
-            cart.forEach(i => updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity));
             
-            db.ref().update(updates).then(() => {
-                cart = [];
-                deliveryEnabled = false;
-                resetLocation();
-                document.getElementById('delivery-checkbox').checked = false;
-                document.getElementById('delivery-options').classList.add('hidden');
-                updateCartDisplay();
-                document.getElementById('cart-panel').classList.add('hidden');
-                showNotification('✅ Pesanan diproses!', 'success');
-                loadUserOrders();
-            }).catch(e => showNotification('Gagal: '+e.message, 'error'));
+            // Update user botol
+            updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - Math.ceil(subtotal / HARGA_PER_BOTOL);
+            
+            // Save transaction
+            updates[`/transactions/${currentUser.phone}/${transId}`] = transaction;
+            
+            // Update product stocks
+            cart.forEach(i => {
+                updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity);
+            });
+            
+            db.ref().update(updates)
+                .then(() => {
+                    showNotification('✅ Pesanan berhasil dibuat!', 'success');
+                    
+                    // Reset cart and delivery
+                    cart = [];
+                    deliveryEnabled = false;
+                    userLocation = null;
+                    manualAddress = "";
+                    
+                    document.getElementById('delivery-checkbox').checked = false;
+                    document.getElementById('delivery-options').classList.add('hidden');
+                    document.getElementById('cart-panel').classList.add('hidden');
+                    
+                    updateCartDisplay();
+                    loadUserOrders();
+                })
+                .catch(error => {
+                    showNotification('Error: ' + error.message, 'error');
+                });
         }
 
         // ===========================================
@@ -1705,33 +1946,74 @@
         function loadUserOrders() {
             db.ref('/transactions/' + currentUser.phone).limitToLast(5).once('value', (snap) => {
                 userOrders = [];
-                snap.forEach(o => userOrders.push({ id: o.key, ...o.val() }));
+                snap.forEach(o => {
+                    userOrders.push({ id: o.key, ...o.val() });
+                });
                 displayRecentOrders();
             });
         }
         
         function displayRecentOrders() {
             let html = '';
-            userOrders.slice(0,3).forEach(o => {
-                html += `<div class="order-item" onclick="showAllOrders()">
-                    <div>#${o.id.slice(-8)}</div>
-                    <div>${formatRupiah(o.total || 0)} <span class="order-status status-${o.status||'diproses'}">${o.status||'diproses'}</span></div>
-                </div>`;
-            });
-            document.getElementById('recent-orders').innerHTML = html || '<p style="text-align:center">Belum ada pesanan</p>';
+            
+            if (userOrders.length === 0) {
+                html = '<p style="text-align:center; color:#7f8c8d;">Belum ada pesanan</p>';
+            } else {
+                userOrders.slice(0, 3).forEach(o => {
+                    html += `<div class="order-item" onclick="showAllOrders()">
+                        <div>
+                            <div>#${o.id.slice(-8)}</div>
+                            <div class="order-merchant">${o.items?.length || 0} item</div>
+                        </div>
+                        <div>
+                            <div>${formatRupiah(o.total || 0)}</div>
+                            <span class="order-status status-${o.status || 'diproses'}">${o.status || 'diproses'}</span>
+                        </div>
+                    </div>`;
+                });
+            }
+            
+            document.getElementById('recent-orders').innerHTML = html;
         }
         
         function showAllOrders() {
             document.getElementById('dashboard-page').classList.add('hidden');
             document.getElementById('orders-page').classList.remove('hidden');
+            
             let html = '';
-            userOrders.forEach(o => {
-                html += `<div class="order-card"><div>#${o.id.slice(-8)} ${new Date(o.timestamp).toLocaleDateString()}</div>
-                    <div>Total: ${formatRupiah(o.total||0)} <span class="order-status status-${o.status||'diproses'}">${o.status||'diproses'}</span></div>`;
-                if (o.delivery) html += `<div><small>📍 ${o.delivery.address||o.delivery.lat+','+o.delivery.lng}</small></div>`;
-                html += `</div>`;
-            });
-            document.getElementById('orders-list-full').innerHTML = html || '<div class="empty-state">Tidak ada pesanan</div>';
+            
+            if (userOrders.length === 0) {
+                html = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Belum ada pesanan</p></div>';
+            } else {
+                userOrders.sort((a, b) => b.timestamp - a.timestamp).forEach(o => {
+                    html += `<div class="order-card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong>#${o.id.slice(-8)}</strong>
+                            <span class="order-status status-${o.status || 'diproses'}">${o.status || 'diproses'}</span>
+                        </div>
+                        <div style="font-size: 13px; margin-bottom: 8px;">
+                            ${formatDate(o.timestamp)}
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            ${o.items?.map(i => `${i.name} x${i.quantity}`).join(', ') || 'Tidak ada item'}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                            <span>Total</span>
+                            <span style="color: var(--primary);">${formatRupiah(o.total || 0)}</span>
+                        </div>`;
+                    
+                    if (o.delivery) {
+                        html += `<div style="margin-top: 8px; font-size: 12px; color: var(--info);">
+                            <i class="fas fa-map-marker-alt"></i> 
+                            ${o.delivery.address || `${o.delivery.lat}, ${o.delivery.lng}`}
+                        </div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+            }
+            
+            document.getElementById('orders-list-full').innerHTML = html;
         }
         
         function hideOrders() {
@@ -1740,11 +2022,9 @@
         }
         
         function startOrderListener() {
-            db.ref('/transactions/' + currentUser.phone).on('child_changed', () => loadUserOrders());
-        }
-        
-        function stopOrderListener() {
-            db.ref('/transactions/' + currentUser.phone).off();
+            db.ref('/transactions/' + currentUser.phone).on('child_changed', () => {
+                loadUserOrders();
+            });
         }
 
         // ===========================================
@@ -1759,30 +2039,59 @@
         }
         
         function updatePaymentPlaceholder() {
-            const m = document.getElementById('payment-method').value;
-            document.getElementById('payment-details').placeholder = m === 'BANK' ? 
-                'Bank, No Rekening, Nama' : `No HP ${m}, Nama`;
+            const method = document.getElementById('payment-method').value;
+            const details = document.getElementById('payment-details');
+            
+            if (method === 'BANK') {
+                details.placeholder = 'Nama Bank, No Rekening, Atas Nama';
+            } else {
+                details.placeholder = `No HP ${method}, Atas Nama`;
+            }
         }
         
         function processWithdrawal() {
             const method = document.getElementById('payment-method').value;
-            const details = document.getElementById('payment-details').value;
+            const details = document.getElementById('payment-details').value.trim();
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
             
-            if (!details || saldo < 5000) {
-                showNotification('Isi detail atau saldo minimal Rp5000', 'error');
+            if (!details) {
+                showNotification('Harap isi detail pembayaran!', 'error');
                 return;
             }
             
-            const tid = Date.now().toString();
-            db.ref('/transactions/' + currentUser.phone + '/' + tid).set({
-                type: 'PENARIKAN', method, details, amount: saldo, timestamp: Date.now(), status: 'pending'
-            }).then(() => {
-                db.ref('/accounts/' + currentUser.phone + '/botol').set(0);
-                window.open(`https://wa.me/${ADMIN_WA}?text=Penarikan ${saldo} via ${method}`, '_blank');
-                closeModal();
-                showNotification('Permintaan dikirim', 'success');
-            });
+            if (saldo < 5000) {
+                showNotification('Minimal saldo Rp 5.000 untuk tarik tunai', 'error');
+                return;
+            }
+            
+            const withdrawalId = 'WD' + Date.now();
+            const withdrawal = {
+                type: 'PENARIKAN',
+                method: method,
+                details: details,
+                amount: saldo,
+                timestamp: Date.now(),
+                status: 'pending',
+                user_id: currentUser.phone
+            };
+            
+            // Save withdrawal request
+            db.ref('/withdrawals/' + currentUser.phone + '/' + withdrawalId).set(withdrawal)
+                .then(() => {
+                    // Reset user botol to 0
+                    return db.ref('/accounts/' + currentUser.phone + '/botol').set(0);
+                })
+                .then(() => {
+                    // Open WhatsApp
+                    const message = `Halo kak, saya ${currentUser.phone} ingin menarik saldo sebesar ${formatRupiah(saldo)} melalui ${method}. Detail: ${details}`;
+                    window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(message)}`, '_blank');
+                    
+                    closeModal();
+                    showNotification('Permintaan penarikan dikirim', 'success');
+                })
+                .catch(error => {
+                    showNotification('Error: ' + error.message, 'error');
+                });
         }
 
         // ===========================================
@@ -1804,12 +2113,16 @@
         // ===========================================
         window.onload = function() {
             const mode = getModeFromUrl();
+            
             if (mode.mode === 'machine') {
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = mode.machineId;
                 document.getElementById('source-info-login').innerText = mode.loginSource === 'machine' ? 'via QR' : 'via Web';
             }
-            if (!checkAutoLogin()) showLoginPage();
+            
+            if (!checkAutoLogin()) {
+                showLoginPage();
+            }
         };
     </script>
 </body>
