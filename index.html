@@ -1383,7 +1383,7 @@
         }
         
         // ===========================================
-        // DELIVERY FUNCTIONS - OPTIMIZED FOR MOBILE
+        // DELIVERY FUNCTIONS
         // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
@@ -1543,7 +1543,7 @@
         }
         
         // ===========================================
-        // AUTO LOGIN FUNCTIONS
+        // AUTO LOGIN FUNCTIONS - DENGAN CEK MESIN
         // ===========================================
         function saveUserSession() {
             if (!currentUser.phone) return;
@@ -1585,7 +1585,19 @@
                         if (snap.exists()) {
                             const userData = snap.val();
                             currentUser.botol = userData.botol || 0;
-                            completeLogin();
+                            
+                            // CEK MESIN SEBELUM AUTO LOGIN
+                            if (currentUser.isMachineMode && currentUser.machine) {
+                                checkMachineActiveUser(currentUser.machine, currentUser.phone).then(result => {
+                                    if (!result.available) {
+                                        showNotification('⚠️ Mesin sedang digunakan, login sebagai mode online', 'warning');
+                                        currentUser.isMachineMode = false;
+                                    }
+                                    completeLogin();
+                                });
+                            } else {
+                                completeLogin();
+                            }
                         } else {
                             console.log('❌ User tidak ditemukan di Firebase');
                             clearUserSession();
@@ -1620,6 +1632,7 @@
                 modeBadge.innerText = '🏭 Mode Mesin';
                 modeBadge.className = 'mode-badge machine-mode';
                 
+                // Set active user di mesin (sudah dipastikan aman)
                 db.ref('/' + currentUser.machine + '/active_user').set({
                     id: currentUser.phone,
                     login_time: Date.now(),
@@ -1652,7 +1665,44 @@
         }
         
         // ===========================================
-        // AUTHENTICATION
+        // FUNGSI UNTUK CEK USER AKTIF DI MESIN
+        // ===========================================
+        function checkMachineActiveUser(machineId, myPhone) {
+            return new Promise((resolve) => {
+                db.ref('/' + machineId + '/active_user/id').once('value', (snap) => {
+                    const activeUserId = snap.val();
+                    
+                    if (activeUserId && activeUserId !== myPhone) {
+                        // Ada user lain yang sedang menggunakan mesin
+                        resolve({
+                            available: false,
+                            message: 'Mesin sedang digunakan oleh user lain'
+                        });
+                    } else if (activeUserId === myPhone) {
+                        // User yang sama sedang menggunakan mesin
+                        resolve({
+                            available: true,
+                            message: 'Anda masih terdaftar di mesin'
+                        });
+                    } else {
+                        // Mesin kosong
+                        resolve({
+                            available: true,
+                            message: 'Mesin tersedia'
+                        });
+                    }
+                }).catch(error => {
+                    console.error('Error checking machine:', error);
+                    resolve({
+                        available: true,
+                        message: 'Gagal cek mesin, lanjutkan'
+                    });
+                });
+            });
+        }
+        
+        // ===========================================
+        // AUTHENTICATION - DENGAN CEK MESIN
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -1678,11 +1728,22 @@
             if (mode.mode === 'machine') {
                 currentUser.machine = mode.machineId;
                 currentUser.isMachineMode = true;
+                
+                // CEK DULU SEBELUM LOGIN
+                showNotification('Memeriksa ketersediaan mesin...', 'info');
+                
+                checkMachineActiveUser(mode.machineId, phone).then(result => {
+                    if (!result.available) {
+                        showNotification('❌ ' + result.message + '. Login sebagai mode online.', 'warning');
+                        // Tetap login tapi mode online
+                        currentUser.isMachineMode = false;
+                    }
+                    processLogin(phone, password);
+                });
             } else {
                 currentUser.isMachineMode = false;
+                processLogin(phone, password);
             }
-            
-            processLogin(phone, password);
         }
         
         function processLogin(phone, password) {
@@ -1712,6 +1773,32 @@
         }
         
         function loginSuccess() {
+            // CEK DULU APAKAH ADA USER LAIN YANG SEDANG AKTIF DI MESIN
+            if (currentUser.isMachineMode) {
+                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
+                    const activeUserId = snap.val();
+                    
+                    // Jika mesin sedang dipakai oleh user LAIN
+                    if (activeUserId && activeUserId !== currentUser.phone) {
+                        showNotification('⚠️ Mesin sedang digunakan oleh user lain!', 'warning');
+                        
+                        // Tetap login tapi mode online (bukan mesin)
+                        currentUser.isMachineMode = false;
+                        proceedWithLogin();
+                    } else {
+                        // Mesin kosong atau sedang dipakai user yang sama
+                        proceedWithLogin();
+                    }
+                }).catch(error => {
+                    console.error('Error checking active user:', error);
+                    proceedWithLogin();
+                });
+            } else {
+                proceedWithLogin();
+            }
+        }
+
+        function proceedWithLogin() {
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
             
@@ -1725,12 +1812,14 @@
                 modeBadge.innerText = '🏭 Mode Mesin';
                 modeBadge.className = 'mode-badge machine-mode';
                 
+                // Set active user di mesin (sudah dipastikan aman)
                 db.ref('/' + currentUser.machine + '/active_user').set({
                     id: currentUser.phone,
                     login_time: Date.now(),
-                    expires: Date.now() + 300000
+                    expires: Date.now() + 300000 // 5 menit
                 }).catch(error => {
                     console.error('Error setting active user:', error);
+                    showNotification('Gagal mengakses mesin', 'error');
                 });
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -1795,13 +1884,21 @@
             
             stopOrderListener();
             
-            clearUserSession();
-            
+            // HAPUS ACTIVE USER DARI MESIN (HANYA JIKA INI USER YANG SAMA)
             if (currentUser.isMachineMode && currentUser.machine) {
-                db.ref('/' + currentUser.machine + '/active_user').remove().catch(error => {
-                    console.error('Error removing active user:', error);
+                // Cek dulu apakah masih user yang sama
+                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
+                    const activeId = snap.val();
+                    if (activeId === currentUser.phone) {
+                        // Hanya hapus jika ini user yang sama
+                        db.ref('/' + currentUser.machine + '/active_user').remove().catch(error => {
+                            console.error('Error removing active user:', error);
+                        });
+                    }
                 });
             }
+            
+            clearUserSession();
             
             if (currentUser.phone) {
                 db.ref('/accounts/' + currentUser.phone + '/botol').off();
