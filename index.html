@@ -1537,9 +1537,9 @@
         // ULTIMATE LOCATION FUNCTIONS
         // ===========================================
         // ===========================================
-// GPS SEDERHANA - PAKAI GPS PERANGKAT SAJA
+// GPS SEDERHANA - HANYA DIPANGGIL SAAT DIKLIK
 // ===========================================
-let userLocation = null;  // Simpan lokasi user
+let userLocation = null;
 let deliveryEnabled = false;
 let manualAddress = "";
 
@@ -1585,12 +1585,10 @@ function submitManualAddress() {
     }
     
     manualAddress = address;
-    userLocation = null; // Reset GPS karena pakai manual
+    userLocation = null;
     
-    // Update tampilan
     document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
     
-    // Buat link Google Maps
     const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     document.getElementById('maps-link').href = mapsLink;
     document.getElementById('maps-link').classList.remove('hidden');
@@ -1602,37 +1600,30 @@ function submitManualAddress() {
     showNotification('✅ Alamat manual berhasil disimpan', 'success');
 }
 
-// 🔥 FUNGSI UTAMA GPS - SEDERHANA DAN EFEKTIF
 function getUserLocation() {
     showNotification('📍 Mengakses GPS perangkat...', 'info');
     
-    // Reset data sebelumnya
     userLocation = null;
     
-    // Tampilkan loading
     const deliveryInfo = document.getElementById('delivery-info');
     const deliveryAddress = document.getElementById('delivery-address');
     deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengakses GPS...';
     deliveryInfo.classList.remove('hidden');
     document.getElementById('maps-link').classList.add('hidden');
     
-    // CEK APAKAH PERANGKAT MENDUKUNG GPS
     if (!navigator.geolocation) {
         showNotification('❌ Perangkat tidak mendukung GPS. Silakan input manual.', 'error');
         showManualAddressInput();
         return;
     }
     
-    // Opsi GPS - akurasi tinggi untuk mobile
     const options = {
-        enableHighAccuracy: true,  // Minta akurasi tinggi (pakai GPS, bukan WiFi)
-        timeout: 15000,            // Timeout 15 detik
-        maximumAge: 0              // Jangan pakai cache
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
     };
     
-    // Minta izin dan ambil lokasi
     navigator.geolocation.getCurrentPosition(
-        // SUKSES - DAPAT LOKASI
         (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
@@ -1640,7 +1631,6 @@ function getUserLocation() {
             
             console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
             
-            // Simpan data lokasi
             userLocation = {
                 lat: lat,
                 lng: lng,
@@ -1648,22 +1638,19 @@ function getUserLocation() {
                 timestamp: Date.now()
             };
             
-            // Buat link Google Maps
             const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
             document.getElementById('maps-link').href = mapsLink;
             document.getElementById('maps-link').classList.remove('hidden');
             
-            // Tampilkan koordinat dulu
             deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
             
             showNotification('📍 Lokasi GPS didapatkan!', 'success');
             
-            // OPSIONAL: Cari alamat dari koordinat (pakai API gratis)
+            // Opsional cari alamat
             cariAlamatDariKoordinat(lat, lng);
             
             updateCartDisplay();
         },
-        // GAGAL - TIDAK DAPAT LOKASI
         (error) => {
             let message = 'Gagal mendapatkan lokasi';
             
@@ -1684,26 +1671,22 @@ function getUserLocation() {
             showNotification(`❌ ${message}`, 'error');
             console.error('GPS Error:', error);
             
-            // Sembunyikan loading
             deliveryInfo.classList.add('hidden');
-            
-            // Tawarkan input manual
             showManualAddressInput();
         },
         options
     );
 }
 
-// OPSIONAL: Cari alamat dari koordinat (pakai Nominatim - gratis)
+// Opsional: cari alamat (tidak mengganggu proses utama)
 function cariAlamatDariKoordinat(lat, lng) {
-    const deliveryAddress = document.getElementById('delivery-address');
-    
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&accept-language=id`, {
         headers: { 'User-Agent': 'RE-COIN-App/1.0' }
     })
     .then(response => response.json())
     .then(data => {
         if (data && data.display_name) {
+            const deliveryAddress = document.getElementById('delivery-address');
             let address = data.display_name;
             if (address.length > 100) {
                 address = address.substring(0, 100) + '...';
@@ -1712,52 +1695,7 @@ function cariAlamatDariKoordinat(lat, lng) {
             userLocation.address = address;
         }
     })
-    .catch(error => {
-        console.log('Gagal ambil alamat:', error);
-        // Tetap pakai koordinat
-    });
-}
-
-// ===========================================
-// MODIFIKASI FUNGSI CHECKOUT
-// ===========================================
-// Di dalam fungsi checkout(), ganti bagian penyimpanan lokasi dengan ini:
-
-// SIMPAN DATA LOKASI
-if (deliveryEnabled) {
-    let googleMapsLink = '';
-    let address = '';
-    let locationDetail = {};
-    
-    if (userLocation) {
-        // Punya koordinat GPS
-        const { lat, lng, accuracy } = userLocation;
-        googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-        address = userLocation.address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        
-        locationDetail = {
-            type: 'gps',
-            lat: lat,
-            lng: lng,
-            accuracy: accuracy,
-            address: address,
-            google_maps_link: googleMapsLink
-        };
-    } else if (manualAddress) {
-        // Manual address
-        googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddress)}`;
-        
-        locationDetail = {
-            type: 'manual',
-            address: manualAddress,
-            google_maps_link: googleMapsLink
-        };
-    } else {
-        showNotification('📍 Harap tentukan lokasi pengiriman!', 'error');
-        return;
-    }
-    
-    transactionData.delivery = locationDetail;
+    .catch(error => console.log('Gagal ambil alamat:', error));
 }
         // ===========================================
         // AUTO LOGIN FUNCTIONS
