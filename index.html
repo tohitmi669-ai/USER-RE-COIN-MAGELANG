@@ -574,7 +574,7 @@
             border-top: 2px solid #dfe6e9;
         }
         
-        /* DELIVERY SECTION */
+        /* DELIVERY SECTION - ENHANCED */
         .delivery-section {
             background: #e8f8f5;
             padding: 16px;
@@ -617,41 +617,99 @@
             background: var(--info);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 12px;
             font-weight: 600;
             width: 100%;
             margin: 10px 0;
             cursor: pointer;
             font-size: 16px;
-            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-get-location i {
+            font-size: 18px;
         }
         
         .delivery-info {
             background: white;
-            padding: 12px;
+            padding: 15px;
             border-radius: 12px;
-            margin-top: 10px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary);
         }
         
         .delivery-info p {
-            margin: 5px 0;
+            margin: 8px 0;
             font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .accuracy-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        
+        .accuracy-high {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .accuracy-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .accuracy-low {
+            background: #f8d7da;
+            color: #721c24;
         }
         
         .maps-link {
             display: inline-block;
             background: var(--info);
             color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 15px;
+            border-radius: 12px;
             text-decoration: none;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 14px;
+            margin-top: 10px;
+            width: 100%;
+            text-align: center;
         }
         
         .maps-link:hover {
             background: #0773c5;
+        }
+        
+        .address-correction {
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Manual Address Input */
+        .manual-address {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 12px;
+        }
+        
+        .manual-address textarea {
+            margin-bottom: 10px;
+            resize: vertical;
         }
         
         /* ORDER SUMMARY */
@@ -918,7 +976,6 @@
             margin-top: 15px;
         }
         
-        /* Tombol Terima Pesanan */
         .btn-terima {
             background: var(--success);
             color: white;
@@ -948,7 +1005,6 @@
             transform: none;
         }
         
-        /* Status Update Badge */
         .status-update-badge {
             position: absolute;
             top: -5px;
@@ -965,7 +1021,6 @@
             animation: pulse 1s infinite;
         }
         
-        /* Remember Me Checkbox */
         .remember-me {
             display: flex;
             align-items: center;
@@ -984,7 +1039,6 @@
             cursor: pointer;
         }
         
-        /* QR Source Badge */
         .qr-badge {
             background: var(--success);
             color: white;
@@ -994,7 +1048,6 @@
             margin-left: 5px;
         }
         
-        /* Mobile Optimization */
         @media (max-width: 480px) {
             .product-grid {
                 grid-template-columns: 1fr;
@@ -1014,18 +1067,6 @@
                 padding: 14px;
             }
         }
-        
-        /* Manual Address Input */
-        .manual-address {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 12px;
-        }
-        
-        .manual-address textarea {
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -1043,7 +1084,6 @@
         <h2 id="auth-title">RECOIN</h2>
         <span id="auth-subtitle" class="subtitle">Masukkan nomor HP dan password</span>
         
-        <!-- Mode info (akan tampil jika ada QR) -->
         <div id="machine-info-login" class="machine-info hidden">
             <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
             <span id="source-info-login" class="qr-badge hidden">QR</span>
@@ -1052,7 +1092,6 @@
         <input type="number" id="phone-input" placeholder="Nomor HP" required>
         <input type="password" id="pass-input" placeholder="Password" required>
         
-        <!-- Remember Me Checkbox -->
         <div class="remember-me">
             <input type="checkbox" id="remember-me" checked>
             <label for="remember-me">Ingat saya (7 hari)</label>
@@ -1102,7 +1141,6 @@
             BUAT BELANJA
         </button>
         
-        <!-- My Orders Summary -->
         <div class="my-orders" id="my-orders-summary">
             <h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4>
             <div id="recent-orders">
@@ -1140,7 +1178,7 @@
             <div id="cart-items"></div>
             <div class="cart-total" id="cart-total">Total: Rp 0</div>
             
-            <!-- DELIVERY SECTION - GRATIS -->
+            <!-- DELIVERY SECTION - ENHANCED -->
             <div class="delivery-section">
                 <div class="delivery-toggle">
                     <input type="checkbox" id="delivery-checkbox" onchange="toggleDelivery()">
@@ -1149,22 +1187,24 @@
                 
                 <div id="delivery-options" class="hidden">
                     <button class="btn-get-location" onclick="getUserLocation()">
-                        📍 Gunakan Lokasi Saya
+                        <i class="fas fa-satellite-dish"></i> DETEKSI LOKASI OTOMATIS
                     </button>
                     
-                    <!-- Tombol Manual Input (FALLBACK) -->
                     <button class="btn-secondary" onclick="showManualAddressInput()" style="margin-top: 5px;">
-                        ✏️ Input Alamat Manual
+                        <i class="fas fa-pencil-alt"></i> Input Alamat Manual
                     </button>
                     
                     <div id="delivery-info" class="delivery-info hidden">
-                        <p><strong>📍 Lokasi Tujuan:</strong> <span id="delivery-address">-</span></p>
-                        <a id="maps-link" class="maps-link hidden" target="_blank">🗺️ Buka di Google Maps</a>
+                        <p><strong>📍 Alamat Tujuan:</strong></p>
+                        <p id="delivery-address">-</p>
+                        <div id="accuracy-indicator" class="hidden"></div>
+                        <a id="maps-link" class="maps-link hidden" target="_blank">
+                            <i class="fas fa-map-marked-alt"></i> BUKA DI GOOGLE MAPS
+                        </a>
                     </div>
                     
-                    <!-- Manual Address Input (Hidden by default) -->
                     <div id="manual-address-input" class="manual-address hidden">
-                        <textarea id="manual-address" class="form-control" rows="2" placeholder="Masukkan alamat lengkap..."></textarea>
+                        <textarea id="manual-address" class="form-control" rows="3" placeholder="Masukkan alamat lengkap (jalan, nomor, kelurahan, kecamatan, kota)..."></textarea>
                         <button class="btn-success" onclick="submitManualAddress()">
                             <i class="fas fa-check"></i> Gunakan Alamat Ini
                         </button>
@@ -1172,7 +1212,6 @@
                 </div>
             </div>
             
-            <!-- Order Summary -->
             <div class="order-summary">
                 <div class="summary-row">
                     <span>Subtotal</span>
@@ -1190,7 +1229,6 @@
             </button>
         </div>
         
-        <!-- Products by Merchant -->
         <div id="products-container">
             <div class="loading-spinner">
                 <i class="fas fa-spinner fa-spin"></i>
@@ -1262,14 +1300,12 @@
             botol: 0,
             machine: "",
             isMachineMode: false,
-            loginSource: "web", // "web" atau "machine"
+            loginSource: "web",
             rememberMe: true
         };
         
         const HARGA_PER_BOTOL = 50;
         const ADMIN_WA = "6289524538835";
-        
-        // Session duration: 7 hari dalam milidetik
         const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
         
         let cart = [];
@@ -1277,10 +1313,22 @@
         let products = [];
         let userOrders = [];
         let previousBotol = 0;
-        let userLocation = null;
+        
+        // ===========================================
+        // ULTIMATE LOCATION SYSTEM
+        // ===========================================
+        let userLocation = {
+            coordinates: null,
+            address: null,
+            method: null,
+            timestamp: null,
+            source: null,
+            accuracy: null
+        };
+        
         let deliveryEnabled = false;
         let manualAddress = "";
-        
+
         // ===========================================
         // AUDIO & ANIMATION FUNCTIONS
         // ===========================================
@@ -1341,9 +1389,9 @@
                 showNotification(`+${added} botol! Saldo bertambah Rp ${(added * HARGA_PER_BOTOL).toLocaleString('id-ID')}`, 'success', true);
             }
         }
-        
+
         // ===========================================
-        // UTILITY FUNCTIONS - DENGAN SOURCE DETECTION
+        // UTILITY FUNCTIONS
         // ===========================================
         function getModeFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1354,7 +1402,7 @@
                 return { 
                     mode: 'machine', 
                     machineId: mesin,
-                    loginSource: source || 'web' // default 'web' jika tidak ada source
+                    loginSource: source || 'web'
                 };
             } else {
                 return { mode: 'online', machineId: null, loginSource: 'web' };
@@ -1404,9 +1452,9 @@
                 return 'Tanggal error';
             }
         }
-        
+
         // ===========================================
-        // DELIVERY FUNCTIONS
+        // ULTIMATE LOCATION FUNCTIONS
         // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
@@ -1418,13 +1466,26 @@
                 deliveryOptions.classList.remove('hidden');
             } else {
                 deliveryOptions.classList.add('hidden');
-                userLocation = null;
-                document.getElementById('delivery-info').classList.add('hidden');
-                document.getElementById('maps-link').classList.add('hidden');
-                document.getElementById('manual-address-input').classList.add('hidden');
+                resetLocationData();
             }
             
             updateCartDisplay();
+        }
+        
+        function resetLocationData() {
+            userLocation = {
+                coordinates: null,
+                address: null,
+                method: null,
+                timestamp: null,
+                source: null,
+                accuracy: null
+            };
+            manualAddress = "";
+            document.getElementById('delivery-info').classList.add('hidden');
+            document.getElementById('maps-link').classList.add('hidden');
+            document.getElementById('manual-address-input').classList.add('hidden');
+            document.getElementById('accuracy-indicator').classList.add('hidden');
         }
         
         function showManualAddressInput() {
@@ -1439,123 +1500,408 @@
                 return;
             }
             
+            if (address.length < 10) {
+                showNotification('Alamat terlalu pendek. Masukkan alamat lengkap.', 'error');
+                return;
+            }
+            
             manualAddress = address;
             
-            // Simpan alamat manual
-            document.getElementById('delivery-address').textContent = address;
+            // Reset data GPS
+            userLocation = {
+                coordinates: null,
+                address: address,
+                method: 'manual',
+                timestamp: Date.now(),
+                source: 'input manual',
+                accuracy: null
+            };
             
-            // Buat link Google Maps (default ke toko)
+            // Update tampilan
+            document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
+            
+            // Buat link Google Maps
             const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
             document.getElementById('maps-link').href = mapsLink;
             document.getElementById('maps-link').classList.remove('hidden');
             
             document.getElementById('delivery-info').classList.remove('hidden');
             document.getElementById('manual-address-input').classList.add('hidden');
+            document.getElementById('accuracy-indicator').classList.add('hidden');
             
             updateCartDisplay();
-            
-            showNotification('Alamat manual berhasil digunakan', 'success');
+            showNotification('✅ Alamat manual berhasil disimpan', 'success');
         }
         
+        // MAIN FUNCTION: GET USER LOCATION (3-TIER SYSTEM)
         function getUserLocation() {
-            showNotification('Mendapatkan lokasi Anda...', 'info');
+            showNotification('📍 Mendeteksi lokasi terbaik...', 'info');
             
-            if (!navigator.geolocation) {
-                showNotification('Browser tidak mendukung geolokasi. Silakan input manual.', 'error');
-                showManualAddressInput();
-                return;
+            // Reset data sebelumnya
+            userLocation = {
+                coordinates: null,
+                address: null,
+                method: null,
+                timestamp: null,
+                source: null,
+                accuracy: null
+            };
+            
+            // Tampilkan loading
+            const deliveryInfo = document.getElementById('delivery-info');
+            const deliveryAddress = document.getElementById('delivery-address');
+            deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari lokasi terakurat...';
+            deliveryInfo.classList.remove('hidden');
+            document.getElementById('maps-link').classList.add('hidden');
+            document.getElementById('accuracy-indicator').classList.add('hidden');
+            
+            // TIER 1: Coba GPS dulu (paling akurat)
+            if (navigator.geolocation) {
+                tryGPSSmart();
+            } else {
+                // TIER 2: GPS tidak didukung, langsung fallback ke IP
+                showNotification('📡 GPS tidak tersedia, mencoba deteksi via jaringan...', 'info');
+                fallbackToNetworkLocation();
             }
+        }
+        
+        // TIER 1: GPS dengan smart timeout
+        function tryGPSSmart() {
+            showNotification('📡 Mengaktifkan GPS...', 'info');
             
-            // Cek apakah di mobile dan HTTPS
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isHttps = window.location.protocol === 'https:';
-            
-            if (isMobile && !isHttps) {
-                showNotification('Untuk menggunakan GPS di HP, akses via HTTPS. Gunakan input manual.', 'warning');
-                showManualAddressInput();
-                return;
-            }
-            
-            // Opsi untuk mobile (timeout lebih lama, enableHighAccuracy true)
             const options = {
                 enableHighAccuracy: true,
-                timeout: 30000, // 30 detik untuk mobile
+                timeout: 15000,
                 maximumAge: 0
             };
             
             navigator.geolocation.getCurrentPosition(
+                // SUCCESS GPS
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
                     
-                    userLocation = { lat, lng };
+                    console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
                     
-                    // Dapatkan alamat
-                    getAddressWithTimeout(lat, lng, 5000); // 5 detik timeout
+                    // Simpan koordinat
+                    userLocation.coordinates = { lat, lng };
+                    userLocation.method = 'gps';
+                    userLocation.timestamp = Date.now();
+                    userLocation.accuracy = accuracy;
+                    
+                    // Tentukan kualitas akurasi
+                    let accuracyClass = '';
+                    let accuracyText = '';
+                    if (accuracy <= 10) {
+                        accuracyClass = 'accuracy-high';
+                        accuracyText = '⭐ Akurasi Sangat Tinggi';
+                    } else if (accuracy <= 50) {
+                        accuracyClass = 'accuracy-high';
+                        accuracyText = '✅ Akurasi Tinggi';
+                    } else if (accuracy <= 200) {
+                        accuracyClass = 'accuracy-medium';
+                        accuracyText = '⚠️ Akurasi Sedang';
+                    } else {
+                        accuracyClass = 'accuracy-low';
+                        accuracyText = '⚠️ Akurasi Rendah';
+                    }
+                    
+                    // Tampilkan indikator akurasi
+                    const accuracyDiv = document.getElementById('accuracy-indicator');
+                    accuracyDiv.innerHTML = `<span class="accuracy-badge ${accuracyClass}">${accuracyText} (${accuracy.toFixed(0)}m)</span>`;
+                    accuracyDiv.classList.remove('hidden');
                     
                     // Buat link Google Maps
                     createGoogleMapsLink(lat, lng);
                     
-                    document.getElementById('delivery-info').classList.remove('hidden');
-                    updateCartDisplay();
-                    
-                    showNotification('Lokasi berhasil didapatkan!', 'success');
+                    // Cari alamat
+                    findAddressFromCoordinates(lat, lng, accuracy);
                 },
+                // ERROR GPS
                 (error) => {
-                    let message = 'Gagal mendapatkan lokasi';
-                    let showManual = true;
+                    console.log('GPS gagal:', error.code);
                     
+                    let errorMessage = '';
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            message = 'Akses lokasi ditolak. Silakan izinkan akses atau input manual.';
+                            errorMessage = 'Akses GPS ditolak';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            message = 'Lokasi tidak tersedia. Silakan input manual.';
+                            errorMessage = 'Sinyal GPS tidak tersedia';
                             break;
                         case error.TIMEOUT:
-                            message = 'Waktu permintaan lokasi habis. Silakan input manual.';
+                            errorMessage = 'Waktu GPS habis';
                             break;
                         default:
-                            message = 'Error tidak diketahui. Silakan input manual.';
+                            errorMessage = 'Error GPS';
                     }
                     
-                    showNotification(message, 'error');
+                    showNotification(`⚠️ ${errorMessage}, mencari alternatif...`, 'warning');
                     
-                    if (showManual) {
-                        showManualAddressInput();
-                    }
+                    // TIER 2: Fallback ke IP
+                    fallbackToNetworkLocation();
                 },
                 options
             );
         }
         
-        function getAddressWithTimeout(lat, lng, timeoutMs) {
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+        // TIER 2: Network/IP Location (gratis, multiple providers)
+        function fallbackToNetworkLocation() {
+            showNotification('📱 Mendeteksi lokasi via jaringan...', 'info');
+            
+            // Coba multiple IP services secara parallel
+            Promise.any([
+                getLocationFromIpApi(),
+                getLocationFromIpInfo(),
+                getLocationFromGeoPlugin()
+            ])
+            .then(result => {
+                const { lat, lng, city, region, country, source } = result;
+                
+                console.log(`📍 IP Location: ${city}, ${region} (${lat},${lng}) dari ${source}`);
+                
+                userLocation.coordinates = { lat, lng };
+                userLocation.method = 'network';
+                userLocation.timestamp = Date.now();
+                userLocation.source = source;
+                userLocation.accuracy = 5000; // IP accuracy sekitar 5km
+                
+                // Tampilkan indikator akurasi
+                const accuracyDiv = document.getElementById('accuracy-indicator');
+                accuracyDiv.innerHTML = `<span class="accuracy-badge accuracy-low">⚠️ Akurasi Rendah (perkiraan dari IP)</span>`;
+                accuracyDiv.classList.remove('hidden');
+                
+                // Buat link Google Maps
+                createGoogleMapsLink(lat, lng);
+                
+                // Format alamat dari data IP
+                const addressFromIP = `${city || 'Kota'}, ${region || ''}, ${country || 'Indonesia'}`
+                    .replace(/, ,/g, ',')
+                    .replace(/,$/, '')
+                    .trim();
+                
+                document.getElementById('delivery-address').innerHTML = 
+                    `<strong>${addressFromIP}</strong><br><small style="color:#666;">(perkiraan dari jaringan)</small>`;
+                
+                userLocation.address = addressFromIP;
+                
+                showNotification(`📍 Lokasi: ${addressFromIP}`, 'success');
+                
+                // Tawarkan koreksi alamat
+                showAddressCorrectionOption(addressFromIP);
+            })
+            .catch(error => {
+                console.log('Semua IP service gagal:', error);
+                
+                // TIER 3: Fallback ke input manual
+                showNotification('⚠️ Tidak bisa deteksi otomatis. Silakan input manual.', 'warning');
+                document.getElementById('delivery-info').classList.add('hidden');
+                showManualAddressInput();
             });
-            
-            const fetchPromise = fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`, {
-                headers: {
-                    'User-Agent': 'RE-COIN-App/1.0'
-                }
-            }).then(response => response.json());
-            
-            Promise.race([fetchPromise, timeoutPromise])
+        }
+        
+        // IP Geolocation Services (GRATIS)
+        function getLocationFromIpApi() {
+            return new Promise((resolve, reject) => {
+                fetch('https://ipapi.co/json/', {
+                    headers: { 'User-Agent': 'RE-COIN-App/1.0' }
+                })
+                .then(response => response.json())
                 .then(data => {
-                    if (data && data.display_name) {
-                        let address = data.display_name;
-                        if (address.length > 100) {
-                            address = address.substring(0, 100) + '...';
-                        }
-                        document.getElementById('delivery-address').textContent = address;
+                    if (data && data.latitude && data.longitude) {
+                        resolve({
+                            lat: data.latitude,
+                            lng: data.longitude,
+                            city: data.city,
+                            region: data.region,
+                            country: data.country_name,
+                            source: 'ipapi.co'
+                        });
                     } else {
-                        document.getElementById('delivery-address').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        reject(new Error('IPAPI gagal'));
                     }
                 })
                 .catch(() => {
-                    // Fallback ke koordinat
-                    document.getElementById('delivery-address').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)} (alamat tidak tersedia)`;
+                    // Fallback ke API kedua
+                    getLocationFromIpApiFallback().then(resolve).catch(reject);
                 });
+            });
+        }
+        
+        function getLocationFromIpApiFallback() {
+            return new Promise((resolve, reject) => {
+                fetch('http://ip-api.com/json/?fields=status,lat,lon,city,regionName,country', {
+                    headers: { 'User-Agent': 'RE-COIN-App/1.0' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        resolve({
+                            lat: data.lat,
+                            lng: data.lon,
+                            city: data.city,
+                            region: data.regionName,
+                            country: data.country,
+                            source: 'ip-api.com'
+                        });
+                    } else {
+                        reject(new Error('IP-API gagal'));
+                    }
+                })
+                .catch(reject);
+            });
+        }
+        
+        function getLocationFromIpInfo() {
+            return new Promise((resolve, reject) => {
+                fetch('https://ipinfo.io/json?token=') // Token kosong = limited free
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.loc) {
+                        const [lat, lng] = data.loc.split(',');
+                        resolve({
+                            lat: parseFloat(lat),
+                            lng: parseFloat(lng),
+                            city: data.city,
+                            region: data.region,
+                            country: data.country,
+                            source: 'ipinfo.io'
+                        });
+                    } else {
+                        reject(new Error('IPInfo gagal'));
+                    }
+                })
+                .catch(reject);
+            });
+        }
+        
+        function getLocationFromGeoPlugin() {
+            return new Promise((resolve, reject) => {
+                fetch('http://www.geoplugin.net/json.gp')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.geoplugin_status === 200) {
+                        resolve({
+                            lat: parseFloat(data.geoplugin_latitude),
+                            lng: parseFloat(data.geoplugin_longitude),
+                            city: data.geoplugin_city,
+                            region: data.geoplugin_region,
+                            country: data.geoplugin_countryName,
+                            source: 'geoplugin.net'
+                        });
+                    } else {
+                        reject(new Error('GeoPlugin gagal'));
+                    }
+                })
+                .catch(reject);
+            });
+        }
+        
+        // Reverse Geocoding (Koordinat -> Alamat)
+        function findAddressFromCoordinates(lat, lng, accuracy) {
+            showNotification('🔍 Mencari alamat...', 'info');
+            
+            const deliveryAddress = document.getElementById('delivery-address');
+            deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari alamat...';
+            
+            // Coba multiple reverse geocoding services
+            Promise.any([
+                getAddressFromNominatim(lat, lng),
+                getAddressFromBigDataCloud(lat, lng)
+            ])
+            .then(address => {
+                userLocation.address = address;
+                
+                // Tampilkan dengan info akurasi
+                let accuracyText = '';
+                if (accuracy <= 10) accuracyText = '⭐ Akurasi sangat tinggi';
+                else if (accuracy <= 50) accuracyText = '✅ Akurasi tinggi';
+                else if (accuracy <= 200) accuracyText = '⚠️ Akurasi sedang';
+                else accuracyText = '⚠️ Akurasi rendah';
+                
+                deliveryAddress.innerHTML = `
+                    <strong>${address}</strong><br>
+                    <small style="color: #666;">${accuracyText} (${accuracy.toFixed(0)}m)</small>
+                `;
+                
+                showNotification(`📍 Alamat ditemukan`, 'success');
+            })
+            .catch(error => {
+                console.log('Reverse geocoding gagal:', error);
+                
+                // Fallback: tampilkan koordinat
+                deliveryAddress.innerHTML = `
+                    ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>
+                    <small style="color: #999;">Klik link Maps untuk lihat peta</small>
+                `;
+                
+                showNotification('📍 Koordinat tersedia, klik link Google Maps', 'info');
+            });
+        }
+        
+        function getAddressFromNominatim(lat, lng) {
+            return new Promise((resolve, reject) => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=id`, {
+                    headers: { 
+                        'User-Agent': 'RE-COIN-App/1.0',
+                        'Accept-Language': 'id'
+                    },
+                    signal: controller.signal
+                })
+                .then(response => response.json())
+                .then(data => {
+                    clearTimeout(timeoutId);
+                    if (data && data.display_name) {
+                        resolve(formatAddressIndonesia(data));
+                    } else {
+                        reject(new Error('No address'));
+                    }
+                })
+                .catch(reject);
+            });
+        }
+        
+        function getAddressFromBigDataCloud(lat, lng) {
+            return new Promise((resolve, reject) => {
+                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && (data.locality || data.city || data.principalSubdivision)) {
+                        const parts = [];
+                        if (data.locality) parts.push(data.locality);
+                        if (data.city) parts.push(data.city);
+                        if (data.principalSubdivision) parts.push(data.principalSubdivision);
+                        if (data.postcode) parts.push(data.postcode);
+                        
+                        resolve(parts.join(', ') || 'Alamat tidak ditemukan');
+                    } else {
+                        reject(new Error('No address'));
+                    }
+                })
+                .catch(reject);
+            });
+        }
+        
+        function formatAddressIndonesia(data) {
+            if (!data || !data.address) return data?.display_name || 'Alamat tidak diketahui';
+            
+            const addr = data.address;
+            const parts = [];
+            
+            if (addr.road) parts.push(addr.road);
+            if (addr.suburb) parts.push(addr.suburb);
+            if (addr.city || addr.town || addr.village) {
+                parts.push(addr.city || addr.town || addr.village);
+            }
+            if (addr.county) parts.push(addr.county);
+            if (addr.state) parts.push(addr.state);
+            if (addr.postcode) parts.push(addr.postcode);
+            
+            return parts.join(', ') || data.display_name;
         }
         
         function createGoogleMapsLink(lat, lng) {
@@ -1565,45 +1911,44 @@
             mapsLink.classList.remove('hidden');
         }
         
-        // ===========================================
-        // FUNGSI UNTUK CEK USER AKTIF DI MESIN
-        // ===========================================
-        function checkMachineActiveUser(machineId, myPhone) {
-            return new Promise((resolve) => {
-                db.ref('/' + machineId + '/active_user/id').once('value', (snap) => {
-                    const activeUserId = snap.val();
-                    
-                    if (activeUserId && activeUserId !== myPhone) {
-                        // Ada user lain yang sedang menggunakan mesin
-                        resolve({
-                            available: false,
-                            message: 'Mesin sedang digunakan oleh user lain'
-                        });
-                    } else if (activeUserId === myPhone) {
-                        // User yang sama sedang menggunakan mesin
-                        resolve({
-                            available: true,
-                            message: 'Anda masih terdaftar di mesin'
-                        });
-                    } else {
-                        // Mesin kosong
-                        resolve({
-                            available: true,
-                            message: 'Mesin tersedia'
-                        });
-                    }
-                }).catch(error => {
-                    console.error('Error checking machine:', error);
-                    resolve({
-                        available: true,
-                        message: 'Gagal cek mesin, lanjutkan'
-                    });
-                });
-            });
+        function showAddressCorrectionOption(estimatedAddress) {
+            const deliveryInfo = document.getElementById('delivery-info');
+            
+            // Hapus tombol sebelumnya jika ada
+            const existing = deliveryInfo.querySelector('.address-correction');
+            if (existing) existing.remove();
+            
+            const correctionDiv = document.createElement('div');
+            correctionDiv.className = 'address-correction';
+            correctionDiv.innerHTML = `
+                <button class="btn-secondary" onclick="showManualAddressInput()" style="width:100%; margin-bottom:5px;">
+                    <i class="fas fa-pencil-alt"></i> Perbaiki Alamat
+                </button>
+                <button class="btn-success" onclick="confirmEstimatedAddress()" style="width:100%;">
+                    <i class="fas fa-check"></i> Gunakan Alamat Ini
+                </button>
+            `;
+            
+            deliveryInfo.appendChild(correctionDiv);
         }
         
+        function confirmEstimatedAddress() {
+            const addressElement = document.getElementById('delivery-address');
+            const addressText = addressElement.innerText || addressElement.textContent;
+            const cleanAddress = addressText.split('\n')[0].trim();
+            
+            userLocation.address = cleanAddress;
+            
+            // Hapus tombol koreksi
+            const correctionDiv = document.querySelector('.address-correction');
+            if (correctionDiv) correctionDiv.remove();
+            
+            showNotification('✅ Alamat dikonfirmasi', 'success');
+            updateCartDisplay();
+        }
+
         // ===========================================
-        // AUTO LOGIN FUNCTIONS - DENGAN SOURCE
+        // AUTO LOGIN FUNCTIONS
         // ===========================================
         function saveUserSession() {
             if (!currentUser.phone) return;
@@ -1615,16 +1960,14 @@
                 expiresAt: Date.now() + SESSION_DURATION,
                 machine: currentUser.machine,
                 isMachineMode: currentUser.isMachineMode,
-                loginSource: currentUser.loginSource // SIMPAN SOURCE
+                loginSource: currentUser.loginSource
             };
             
             localStorage.setItem('recoin_user_session', JSON.stringify(sessionData));
-            console.log('✅ Session saved:', sessionData);
         }
 
         function clearUserSession() {
             localStorage.removeItem('recoin_user_session');
-            console.log('🗑️ Session cleared');
         }
 
         function checkAutoLogin() {
@@ -1635,8 +1978,6 @@
                 const session = JSON.parse(sessionJson);
                 
                 if (session.expiresAt && session.expiresAt > Date.now()) {
-                    console.log('🔄 Auto login dengan session:', session);
-                    
                     currentUser.phone = session.phone;
                     currentUser.machine = session.machine || "";
                     currentUser.isMachineMode = session.isMachineMode || false;
@@ -1647,37 +1988,19 @@
                         if (snap.exists()) {
                             const userData = snap.val();
                             currentUser.botol = userData.botol || 0;
-                            
-                            // CEK MESIN SEBELUM AUTO LOGIN
-                            if (currentUser.isMachineMode && currentUser.machine) {
-                                checkMachineActiveUser(currentUser.machine, currentUser.phone).then(result => {
-                                    if (!result.available) {
-                                        showNotification('⚠️ Mesin sedang digunakan, login sebagai mode online', 'warning');
-                                        currentUser.isMachineMode = false;
-                                    }
-                                    completeLogin();
-                                });
-                            } else {
-                                completeLogin();
-                            }
+                            completeLogin();
                         } else {
-                            console.log('❌ User tidak ditemukan di Firebase');
                             clearUserSession();
                             showLoginPage();
                         }
-                    }).catch(error => {
-                        console.error('Error verifying user:', error);
-                        showLoginPage();
                     });
                     
                     return true;
                 } else {
-                    console.log('⏰ Session expired');
                     clearUserSession();
                     return false;
                 }
             } catch (e) {
-                console.error('Error parsing session:', e);
                 clearUserSession();
                 return false;
             }
@@ -1692,18 +2015,12 @@
                 document.getElementById('active-machine').innerText = currentUser.machine;
                 document.getElementById('machine-info-dashboard').classList.remove('hidden');
                 
-                // Tampilkan source di dashboard
-                const sourceInfo = document.getElementById('source-info-dashboard');
                 if (currentUser.loginSource === 'machine') {
                     modeBadge.innerText = '🏭 Mode Mesin (QR)';
                     modeBadge.className = 'mode-badge qr-mode';
-                    sourceInfo.innerText = 'via QR';
-                    sourceInfo.classList.remove('hidden');
                 } else {
                     modeBadge.innerText = '🏭 Mode Mesin (Web)';
                     modeBadge.className = 'mode-badge machine-mode';
-                    sourceInfo.innerText = 'via Web';
-                    sourceInfo.classList.remove('hidden');
                 }
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -1728,9 +2045,9 @@
             document.getElementById('shop-page').classList.add('hidden');
             document.getElementById('orders-page').classList.add('hidden');
         }
-        
+
         // ===========================================
-        // AUTHENTICATION - DENGAN SOURCE
+        // AUTHENTICATION
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -1752,39 +2069,26 @@
             document.getElementById('pass-warning').classList.add('hidden');
             currentUser.phone = phone;
             currentUser.rememberMe = rememberMe;
-            currentUser.loginSource = mode.loginSource; // SIMPAN SOURCE DARI URL
+            currentUser.loginSource = mode.loginSource;
             
             if (mode.mode === 'machine') {
                 currentUser.machine = mode.machineId;
                 currentUser.isMachineMode = true;
                 
-                // Tampilkan info source di login page
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = mode.machineId;
                 
-                const sourceInfo = document.getElementById('source-info-login');
                 if (mode.loginSource === 'machine') {
-                    sourceInfo.innerText = 'via QR';
-                    sourceInfo.classList.remove('hidden');
+                    document.getElementById('source-info-login').innerText = 'via QR';
                 } else {
-                    sourceInfo.innerText = 'via Web';
-                    sourceInfo.classList.remove('hidden');
+                    document.getElementById('source-info-login').innerText = 'via Web';
                 }
-                
-                showNotification('Memeriksa ketersediaan mesin...', 'info');
-                
-                checkMachineActiveUser(mode.machineId, phone).then(result => {
-                    if (!result.available) {
-                        showNotification('❌ ' + result.message + '. Login sebagai mode online.', 'warning');
-                        // Tetap login tapi mode online
-                        currentUser.isMachineMode = false;
-                    }
-                    processLogin(phone, password);
-                });
+                document.getElementById('source-info-login').classList.remove('hidden');
             } else {
                 currentUser.isMachineMode = false;
-                processLogin(phone, password);
             }
+            
+            processLogin(phone, password);
         }
         
         function processLogin(phone, password) {
@@ -1814,32 +2118,6 @@
         }
         
         function loginSuccess() {
-            // CEK DULU APAKAH ADA USER LAIN YANG SEDANG AKTIF DI MESIN
-            if (currentUser.isMachineMode) {
-                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
-                    const activeUserId = snap.val();
-                    
-                    // Jika mesin sedang dipakai oleh user LAIN
-                    if (activeUserId && activeUserId !== currentUser.phone) {
-                        showNotification('⚠️ Mesin sedang digunakan oleh user lain!', 'warning');
-                        
-                        // Tetap login tapi mode online (bukan mesin)
-                        currentUser.isMachineMode = false;
-                        proceedWithLogin();
-                    } else {
-                        // Mesin kosong atau sedang dipakai user yang sama
-                        proceedWithLogin();
-                    }
-                }).catch(error => {
-                    console.error('Error checking active user:', error);
-                    proceedWithLogin();
-                });
-            } else {
-                proceedWithLogin();
-            }
-        }
-
-        function proceedWithLogin() {
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
             
@@ -1851,32 +2129,12 @@
                 document.getElementById('active-machine').innerText = currentUser.machine;
                 document.getElementById('machine-info-dashboard').classList.remove('hidden');
                 
-                // SET ACTIVE USER DI MESIN DENGAN SOURCE
-                db.ref('/' + currentUser.machine + '/active_user').set({
-                    id: currentUser.phone,
-                    login_time: Date.now(),
-                    expires: Date.now() + 300000, // 5 menit
-                    source: currentUser.loginSource || 'web' // PENTING: source disimpan
-                }).catch(error => {
-                    console.error('Error setting active user:', error);
-                    showNotification('Gagal mengakses mesin', 'error');
-                });
-                
-                // Tampilkan source di dashboard
-                const sourceInfo = document.getElementById('source-info-dashboard');
                 if (currentUser.loginSource === 'machine') {
                     modeBadge.innerText = '🏭 Mode Mesin (QR)';
                     modeBadge.className = 'mode-badge qr-mode';
-                    sourceInfo.innerText = 'via QR';
-                    sourceInfo.classList.remove('hidden');
                 } else {
                     modeBadge.innerText = '🏭 Mode Mesin (Web)';
                     modeBadge.className = 'mode-badge machine-mode';
-                    sourceInfo.innerText = 'via Web';
-                    sourceInfo.classList.remove('hidden');
-                    
-                    // Tampilkan peringatan jika login via web di mesin
-                    showNotification('⚠️ Anda login via web di mesin. Mesin mungkin tidak merespon.', 'warning');
                 }
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -1941,18 +2199,8 @@
             
             stopOrderListener();
             
-            // HAPUS ACTIVE USER DARI MESIN (HANYA JIKA INI USER YANG SAMA)
             if (currentUser.isMachineMode && currentUser.machine) {
-                // Cek dulu apakah masih user yang sama
-                db.ref('/' + currentUser.machine + '/active_user/id').once('value', (snap) => {
-                    const activeId = snap.val();
-                    if (activeId === currentUser.phone) {
-                        // Hanya hapus jika ini user yang sama
-                        db.ref('/' + currentUser.machine + '/active_user').remove().catch(error => {
-                            console.error('Error removing active user:', error);
-                        });
-                    }
-                });
+                db.ref('/' + currentUser.machine + '/active_user').remove().catch(e => console.log(e));
             }
             
             clearUserSession();
@@ -1982,11 +2230,11 @@
             
             cart = [];
             deliveryEnabled = false;
-            userLocation = null;
+            resetLocationData();
             
             showNotification('Anda telah logout', 'info');
         }
-        
+
         // ===========================================
         // MERCHANTS & PRODUCTS
         // ===========================================
@@ -2069,7 +2317,6 @@
                 
                 merchantProducts.slice(0, 4).forEach(product => {
                     const stockClass = product.stock <= 5 ? 'stock-low' : '';
-                    const deliveryIcon = product.delivery_antar ? '<i class="fas fa-truck" style="color: var(--info); margin-left: 5px;"></i>' : '';
                     
                     html += `
                         <div class="product-card">
@@ -2077,7 +2324,7 @@
                                 <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
                                      onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
                             </div>
-                            <div class="product-name">${product.name || 'Produk'} ${deliveryIcon}</div>
+                            <div class="product-name">${product.name || 'Produk'}</div>
                             <div class="product-price">${formatRupiah(product.price || 0)}</div>
                             <div class="product-stock ${stockClass}">
                                 <i class="fas fa-box"></i> Stok: ${product.stock || 0}
@@ -2141,14 +2388,13 @@
             
             merchantProducts.forEach(product => {
                 const stockClass = product.stock <= 5 ? 'stock-low' : '';
-                const deliveryIcon = product.delivery_antar ? '<i class="fas fa-truck" style="color: var(--info); margin-left: 5px;"></i>' : '';
                 
                 html += `
                     <div class="product-card">
                         <div class="product-image">
                             <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
                         </div>
-                        <div class="product-name">${product.name || 'Produk'} ${deliveryIcon}</div>
+                        <div class="product-name">${product.name || 'Produk'}</div>
                         <div class="product-price">${formatRupiah(product.price || 0)}</div>
                         <div class="product-stock ${stockClass}">
                             <i class="fas fa-box"></i> Stok: ${product.stock || 0}
@@ -2163,7 +2409,7 @@
             html += `</div></div>`;
             container.innerHTML = html;
         }
-        
+
         // ===========================================
         // CART FUNCTIONS
         // ===========================================
@@ -2264,7 +2510,6 @@
                             <div class="cart-item-info">
                                 <div class="cart-item-name">${item.name || 'Produk'}</div>
                                 <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
-                                ${item.delivery_antar ? '<div style="font-size: 10px; color: var(--info);"><i class="fas fa-truck"></i> Bisa diantar</div>' : ''}
                             </div>
                             <div class="cart-item-actions">
                                 <div class="cart-quantity">
@@ -2295,9 +2540,9 @@
         function toggleCart() {
             document.getElementById('cart-panel').classList.toggle('hidden');
         }
-        
+
         // ===========================================
-        // CHECKOUT
+        // CHECKOUT - WITH ENHANCED LOCATION DATA
         // ===========================================
         function checkout() {
             const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
@@ -2311,6 +2556,14 @@
             if (cart.length === 0) {
                 showNotification('Keranjang belanja kosong!', 'error');
                 return;
+            }
+            
+            // VALIDASI LOKASI JIKA DELIVERY DIPILIH
+            if (deliveryEnabled) {
+                if (!userLocation.address && !manualAddress) {
+                    showNotification('📍 Harap tentukan lokasi pengiriman!', 'error');
+                    return;
+                }
             }
             
             const botolDipakai = Math.ceil(subtotal / HARGA_PER_BOTOL);
@@ -2359,22 +2612,42 @@
                 source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'
             };
             
-            if (deliveryEnabled && (userLocation || manualAddress)) {
+            // SIMPAN DATA LOKASI SUPER LENGKAP
+            if (deliveryEnabled) {
                 let googleMapsLink = '';
                 let address = '';
+                let locationDetail = {};
                 
-                if (userLocation) {
-                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`;
-                    address = document.getElementById('delivery-address').textContent || 'Lokasi user';
+                if (userLocation.coordinates) {
+                    // Punya koordinat GPS/IP
+                    const { lat, lng } = userLocation.coordinates;
+                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                    address = userLocation.address || document.getElementById('delivery-address').innerText.split('\n')[0];
+                    
+                    locationDetail = {
+                        type: userLocation.method || 'gps',
+                        lat: lat,
+                        lng: lng,
+                        accuracy: userLocation.accuracy,
+                        source: userLocation.source || 'gps',
+                        timestamp: userLocation.timestamp,
+                        address: address,
+                        google_maps_link: googleMapsLink
+                    };
                 } else {
-                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddress)}`;
-                    address = manualAddress;
+                    // Manual address
+                    const manualAddr = manualAddress || document.getElementById('delivery-address').innerText.split('\n')[0];
+                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddr)}`;
+                    
+                    locationDetail = {
+                        type: 'manual',
+                        address: manualAddr,
+                        google_maps_link: googleMapsLink,
+                        timestamp: Date.now()
+                    };
                 }
                 
-                transactionData.delivery = {
-                    address: address,
-                    google_maps_link: googleMapsLink
-                };
+                transactionData.delivery = locationDetail;
             }
             
             updates[`/transactions/${currentUser.phone}/${transId}`] = transactionData;
@@ -2396,23 +2669,20 @@
                 
                 cart = [];
                 deliveryEnabled = false;
-                userLocation = null;
-                manualAddress = "";
+                resetLocationData();
+                
                 document.getElementById('delivery-checkbox').checked = false;
                 document.getElementById('delivery-options').classList.add('hidden');
-                document.getElementById('delivery-info').classList.add('hidden');
-                document.getElementById('maps-link').classList.add('hidden');
-                document.getElementById('manual-address-input').classList.add('hidden');
                 
                 updateCartDisplay();
                 document.getElementById('cart-panel').classList.add('hidden');
                 
-                showNotification('Pembelian berhasil! Pesanan sedang diproses', 'success');
+                showNotification('✅ Pembelian berhasil! Pesanan sedang diproses', 'success');
                 
                 loadUserOrders();
             }).catch((error) => {
                 console.error('Error checkout:', error);
-                showNotification('Gagal checkout: ' + error.message, 'error');
+                showNotification('❌ Gagal checkout: ' + error.message, 'error');
             });
         }
         
@@ -2446,12 +2716,15 @@
             if (transactionData.delivery) {
                 pesan += `\n\n*LOKASI PENGIRIMAN:*`;
                 pesan += `\nAlamat: ${transactionData.delivery.address || '-'}`;
+                if (transactionData.delivery.type === 'gps') {
+                    pesan += `\nAkurasi: ${transactionData.delivery.accuracy ? transactionData.delivery.accuracy.toFixed(0) + 'm' : 'Tidak diketahui'}`;
+                }
                 pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link || '-'}`;
             }
             
             window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
         }
-        
+
         // ===========================================
         // USER ORDERS
         // ===========================================
@@ -2674,9 +2947,14 @@
                     `;
                     
                     if (order.delivery && order.delivery.address) {
+                        let deliveryInfo = order.delivery.address;
+                        if (order.delivery.accuracy) {
+                            deliveryInfo += ` (akurasi ${order.delivery.accuracy.toFixed(0)}m)`;
+                        }
+                        
                         html += `
                             <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; background: #e8f8f5; padding: 8px; border-radius: 8px;">
-                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${order.delivery.address}
+                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${deliveryInfo}
                                 ${order.delivery.google_maps_link ? `
                                     <br><a href="${order.delivery.google_maps_link}" target="_blank" class="btn-maps" style="margin-top: 5px;">
                                         <i class="fas fa-map-marked-alt"></i> Buka Google Maps
@@ -2720,22 +2998,18 @@
                 
             }, 100);
         }
-        
+
         // ===========================================
         // REAL-TIME ORDER LISTENER
         // ===========================================
         function startOrderListener() {
             if (!currentUser.phone) return;
             
-            console.log('Memulai listener untuk user:', currentUser.phone);
-            
             db.ref('/transactions/' + currentUser.phone).off();
             
             db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
                 const updatedOrder = snap.val();
                 const orderId = snap.key;
-                
-                console.log('🔥 ORDER BERUBAH:', orderId, updatedOrder);
                 
                 const index = userOrders.findIndex(o => o.id === orderId);
                 if (index !== -1) {
@@ -2756,25 +3030,10 @@
                 
                 if (!document.getElementById('orders-page').classList.contains('hidden')) {
                     displayAllOrders();
-                } else {
-                    const recentContainer = document.getElementById('recent-orders');
-                    if (recentContainer) {
-                        recentContainer.style.backgroundColor = '#fff3cd';
-                        recentContainer.style.transition = 'background-color 0.5s';
-                        setTimeout(() => {
-                            recentContainer.style.backgroundColor = '';
-                        }, 2000);
-                    }
                 }
                 
                 if (updatedOrder.status === 'dikirim') {
                     showNotification('📦 Pesanan #' + orderId.slice(-8) + ' sudah dikirim! Silakan cek dan konfirmasi.', 'info');
-                    
-                    try {
-                        const audio = new Audio('data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==');
-                        audio.play().catch(e => console.log('Audio play failed:', e));
-                    } catch (e) {}
-                    
                 } else if (updatedOrder.status === 'selesai') {
                     showNotification('✅ Pesanan #' + orderId.slice(-8) + ' selesai! Terima kasih.', 'success');
                 }
@@ -2783,8 +3042,6 @@
             db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
                 const newOrder = snap.val();
                 const orderId = snap.key;
-                
-                console.log('🔥 ORDER BARU:', orderId, newOrder);
                 
                 if (!userOrders.some(o => o.id === orderId)) {
                     userOrders.push({
@@ -2803,17 +3060,14 @@
                     showNotification('📦 Ada pesanan baru!', 'success');
                 }
             });
-            
-            console.log('✅ Listener order dimulai');
         }
 
         function stopOrderListener() {
             if (currentUser.phone) {
                 db.ref('/transactions/' + currentUser.phone).off();
-                console.log('🛑 Listener order dihentikan');
             }
         }
-        
+
         // ===========================================
         // KONFIRMASI PESANAN SELESAI
         // ===========================================
@@ -2927,7 +3181,7 @@
                 showNotification('Data pesanan tidak lengkap', 'error');
             }
         }
-        
+
         // ===========================================
         // SHOP NAVIGATION
         // ===========================================
@@ -2942,7 +3196,7 @@
             document.getElementById('shop-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
         }
-        
+
         // ===========================================
         // WITHDRAWAL
         // ===========================================
@@ -3005,7 +3259,7 @@
                 showNotification('Gagal memproses penarikan', 'error');
             });
         }
-        
+
         // ===========================================
         // INITIALIZATION
         // ===========================================
@@ -3019,12 +3273,11 @@
                 if (mode.loginSource === 'machine') {
                     document.getElementById('auth-subtitle').innerText = 'Login via QR (khusus mesin)';
                     document.getElementById('source-info-login').innerText = 'via QR';
-                    document.getElementById('source-info-login').classList.remove('hidden');
                 } else {
                     document.getElementById('auth-subtitle').innerText = 'Login via web di mesin (tidak bisa menabung)';
                     document.getElementById('source-info-login').innerText = 'via Web';
-                    document.getElementById('source-info-login').classList.remove('hidden');
                 }
+                document.getElementById('source-info-login').classList.remove('hidden');
             }
             
             document.getElementById('pass-warning').classList.add('hidden');
