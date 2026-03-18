@@ -1283,20 +1283,804 @@
     </div>
 
     <script>
-        // ===========================================
-        // FIREBASE CONFIGURATION
-        // ===========================================
-        const firebaseConfig = {
-            databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app"
+        <script>
+    // ===========================================
+    // FIREBASE CONFIGURATION
+    // ===========================================
+    const firebaseConfig = {
+        databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // ===========================================
+    // GLOBAL VARIABLES
+    // ===========================================
+    let currentUser = {
+        phone: "",
+        botol: 0,
+        machine: "",
+        isMachineMode: false,
+        loginSource: "web",
+        rememberMe: true
+    };
+    
+    const HARGA_PER_BOTOL = 50;
+    const ADMIN_WA = "6289524538835";
+    const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+    
+    let cart = [];
+    let merchants = [];
+    let products = [];
+    let userOrders = [];
+    let previousBotol = 0;
+    
+    // ===========================================
+    // AUTO LOGOUT VARIABLES
+    // ===========================================
+    let autoLogoutTimer = null;
+    
+    // ===========================================
+    // GPS SEDERHANA - HANYA PAKAI GPS PERANGKAT
+    // ===========================================
+    let userLocation = null;
+    let deliveryEnabled = false;
+    let manualAddress = "";
+
+    // ===========================================
+    // AUDIO & ANIMATION FUNCTIONS
+    // ===========================================
+    function playCoinSound() {
+        try {
+            if (window.AudioContext || window.webkitAudioContext) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }
+        } catch (e) {
+            console.log('Sound not supported:', e);
+        }
+    }
+    
+    function showCoinAnimation(botolAdded) {
+        const animDiv = document.getElementById('coin-animation');
+        animDiv.textContent = `+${botolAdded}`;
+        animDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+            animDiv.classList.add('hidden');
+        }, 1000);
+    }
+    
+    function animateBotolCard() {
+        const card = document.getElementById('botol-stat-card');
+        card.classList.add('botol-added');
+        
+        setTimeout(() => {
+            card.classList.remove('botol-added');
+        }, 500);
+    }
+    
+    function showBotolNotification(oldValue, newValue) {
+        const added = newValue - oldValue;
+        if (added > 0) {
+            playCoinSound();
+            showCoinAnimation(added);
+            animateBotolCard();
+            showNotification(`+${added} botol! Saldo bertambah Rp ${(added * HARGA_PER_BOTOL).toLocaleString('id-ID')}`, 'success', true);
+            
+            // UPDATE LAST ACTIVITY KARENA ADA BOTOL MASUK
+            updateLastActivity();
+        }
+    }
+
+    // ===========================================
+    // UTILITY FUNCTIONS
+    // ===========================================
+    function getModeFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mesin = urlParams.get('mesin');
+        const source = urlParams.get('source');
+        
+        console.log('🔍 URL DIBACA:', {
+            mesin: mesin,
+            source: source,
+            fullUrl: window.location.href
+        });
+        
+        if (mesin) {
+            return { 
+                mode: 'machine', 
+                machineId: mesin,
+                loginSource: source || 'web'
+            };
+        } else {
+            return { mode: 'online', machineId: null, loginSource: 'web' };
+        }
+    }
+    
+    function formatRupiah(angka) {
+        if (angka === undefined || angka === null) return 'Rp 0';
+        return 'Rp ' + angka.toLocaleString('id-ID');
+    }
+    
+    function showNotification(message, type = 'success', isBotol = false) {
+        const notifDiv = document.getElementById('notification');
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        if (isBotol) {
+            notif.classList.add('notification-botol');
+        }
+        if (type === 'error') {
+            notif.style.borderColor = '#ff7675';
+        } else if (type === 'info') {
+            notif.style.borderColor = '#0984e3';
+        }
+        notif.innerHTML = message;
+        
+        notifDiv.innerHTML = '';
+        notifDiv.appendChild(notif);
+        
+        setTimeout(() => {
+            notif.style.animation = 'slideUp 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        }, 3000);
+    }
+    
+    function formatDate(timestamp) {
+        if (!timestamp) return 'Tanggal tidak diketahui';
+        try {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return 'Tanggal error';
+        }
+    }
+
+    // ===========================================
+    // AUTO LOGOUT FUNCTIONS
+    // ===========================================
+    function mulaiAutoLogoutTimer() {
+        if (autoLogoutTimer) {
+            clearTimeout(autoLogoutTimer);
+        }
+        
+        autoLogoutTimer = setTimeout(() => {
+            console.log('⏰ 5 MENIT TANPA AKTIVITAS! AUTO LOGOUT...');
+            
+            const machinePath = '/' + currentUser.machine + '/active_user';
+            
+            db.ref(machinePath).once('value', (snap) => {
+                const data = snap.val();
+                if (data && data.id === currentUser.phone) {
+                    
+                    db.ref(machinePath).remove().then(() => {
+                        console.log('✅ Auto logout: user dihapus dari Firebase');
+                        
+                        showNotification('⏰ Auto logout setelah 5 menit tidak aktif', 'info');
+                        
+                        currentUser.isMachineMode = false;
+                        currentUser.machine = "";
+                        
+                        document.getElementById('machine-info-dashboard').classList.add('hidden');
+                        document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                        document.getElementById('mode-badge-dashboard').className = 'mode-badge online-mode';
+                        
+                        autoLogoutTimer = null;
+                    }).catch(error => {
+                        console.error('❌ Gagal auto logout:', error);
+                    });
+                }
+            });
+            
+        }, 300000);
+    }
+
+    function updateLastActivity() {
+        if (!currentUser.isMachineMode || !currentUser.machine) return;
+        
+        const machinePath = '/' + currentUser.machine + '/active_user';
+        
+        db.ref(machinePath).update({
+            last_activity: Date.now()
+        }).then(() => {
+            console.log('⏱️ Last activity diupdate');
+            
+            if (autoLogoutTimer) {
+                clearTimeout(autoLogoutTimer);
+                mulaiAutoLogoutTimer();
+            }
+        }).catch(error => {
+            console.error('❌ Gagal update last activity:', error);
+        });
+    }
+
+    // ===========================================
+    // GPS SEDERHANA FUNCTIONS
+    // ===========================================
+    function toggleDelivery() {
+        const checkbox = document.getElementById('delivery-checkbox');
+        const deliveryOptions = document.getElementById('delivery-options');
+        
+        deliveryEnabled = checkbox.checked;
+        
+        if (deliveryEnabled) {
+            deliveryOptions.classList.remove('hidden');
+        } else {
+            deliveryOptions.classList.add('hidden');
+            resetLocation();
+        }
+        
+        updateCartDisplay();
+    }
+    
+    function resetLocation() {
+        userLocation = null;
+        manualAddress = "";
+        document.getElementById('delivery-info').classList.add('hidden');
+        document.getElementById('maps-link').classList.add('hidden');
+        document.getElementById('manual-address-input').classList.add('hidden');
+    }
+    
+    function showManualAddressInput() {
+        document.getElementById('manual-address-input').classList.remove('hidden');
+    }
+    
+    function submitManualAddress() {
+        const address = document.getElementById('manual-address').value.trim();
+        
+        if (!address) {
+            showNotification('Masukkan alamat terlebih dahulu!', 'error');
+            return;
+        }
+        
+        if (address.length < 10) {
+            showNotification('Alamat terlalu pendek. Masukkan alamat lengkap.', 'error');
+            return;
+        }
+        
+        manualAddress = address;
+        userLocation = null;
+        
+        document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
+        
+        const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+        document.getElementById('maps-link').href = mapsLink;
+        document.getElementById('maps-link').classList.remove('hidden');
+        
+        document.getElementById('delivery-info').classList.remove('hidden');
+        document.getElementById('manual-address-input').classList.add('hidden');
+        
+        updateCartDisplay();
+        showNotification('✅ Alamat manual berhasil disimpan', 'success');
+    }
+    
+    function getUserLocation() {
+        showNotification('📍 Mengakses GPS perangkat...', 'info');
+        
+        userLocation = null;
+        
+        const deliveryInfo = document.getElementById('delivery-info');
+        const deliveryAddress = document.getElementById('delivery-address');
+        deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengakses GPS...';
+        deliveryInfo.classList.remove('hidden');
+        document.getElementById('maps-link').classList.add('hidden');
+        
+        if (!navigator.geolocation) {
+            showNotification('❌ Perangkat tidak mendukung GPS. Silakan input manual.', 'error');
+            showManualAddressInput();
+            return;
+        }
+        
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
         };
         
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                
+                console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
+                
+                userLocation = {
+                    lat: lat,
+                    lng: lng,
+                    accuracy: accuracy,
+                    timestamp: Date.now()
+                };
+                
+                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                document.getElementById('maps-link').href = mapsLink;
+                document.getElementById('maps-link').classList.remove('hidden');
+                
+                deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
+                
+                showNotification('📍 Lokasi GPS didapatkan!', 'success');
+                
+                cariAlamatDariKoordinat(lat, lng);
+                
+                updateCartDisplay();
+            },
+            (error) => {
+                let message = 'Gagal mendapatkan lokasi';
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = 'Izin GPS ditolak. Silakan izinkan akses atau input manual.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = 'Sinyal GPS tidak tersedia. Coba di luar ruangan.';
+                        break;
+                    case error.TIMEOUT:
+                        message = 'Waktu GPS habis. Coba lagi atau input manual.';
+                        break;
+                    default:
+                        message = 'Error GPS tidak diketahui';
+                }
+                
+                showNotification(`❌ ${message}`, 'error');
+                console.error('GPS Error:', error);
+                
+                deliveryInfo.classList.add('hidden');
+                showManualAddressInput();
+            },
+            options
+        );
+    }
+    
+    function cariAlamatDariKoordinat(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&accept-language=id`, {
+            headers: { 'User-Agent': 'RE-COIN-App/1.0' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.display_name) {
+                const deliveryAddress = document.getElementById('delivery-address');
+                let address = data.display_name;
+                if (address.length > 100) {
+                    address = address.substring(0, 100) + '...';
+                }
+                deliveryAddress.innerHTML = `<strong>${address}</strong><br><small>Akurasi: ${userLocation.accuracy.toFixed(0)}m</small>`;
+                userLocation.address = address;
+            }
+        })
+        .catch(error => console.log('Gagal ambil alamat:', error));
+    }
+
+    // ===========================================
+    // AUTO LOGIN FUNCTIONS
+    // ===========================================
+    function saveUserSession() {
+        if (!currentUser.phone) return;
+        if (currentUser.rememberMe === false) return;
         
-        // ===========================================
-        // GLOBAL VARIABLES
-        // ===========================================
-        let currentUser = {
+        const sessionData = {
+            phone: currentUser.phone,
+            loginTime: Date.now(),
+            expiresAt: Date.now() + SESSION_DURATION,
+            machine: currentUser.machine,
+            isMachineMode: currentUser.isMachineMode,
+            loginSource: currentUser.loginSource
+        };
+        
+        localStorage.setItem('recoin_user_session', JSON.stringify(sessionData));
+    }
+
+    function clearUserSession() {
+        localStorage.removeItem('recoin_user_session');
+    }
+
+    function checkAutoLogin() {
+        const sessionJson = localStorage.getItem('recoin_user_session');
+        if (!sessionJson) return false;
+        
+        try {
+            const session = JSON.parse(sessionJson);
+            
+            if (session.expiresAt && session.expiresAt > Date.now()) {
+                currentUser.phone = session.phone;
+                currentUser.machine = session.machine || "";
+                currentUser.isMachineMode = session.isMachineMode || false;
+                currentUser.rememberMe = true;
+                currentUser.loginSource = session.loginSource || 'web';
+                
+                db.ref('/accounts/' + session.phone).once('value', (snap) => {
+                    if (snap.exists()) {
+                        const userData = snap.val();
+                        currentUser.botol = userData.botol || 0;
+                        completeLogin();
+                    } else {
+                        clearUserSession();
+                        showLoginPage();
+                    }
+                });
+                
+                return true;
+            } else {
+                clearUserSession();
+                return false;
+            }
+        } catch (e) {
+            clearUserSession();
+            return false;
+        }
+    }
+
+    function completeLogin() {
+        document.getElementById('user-display').innerText = currentUser.phone;
+        
+        const modeBadge = document.getElementById('mode-badge-dashboard');
+        
+        if (currentUser.isMachineMode) {
+            document.getElementById('active-machine').innerText = currentUser.machine;
+            document.getElementById('machine-info-dashboard').classList.remove('hidden');
+            
+            if (currentUser.loginSource === 'machine') {
+                modeBadge.innerText = '🏭 Mode Mesin (QR)';
+                modeBadge.className = 'mode-badge qr-mode';
+            } else {
+                modeBadge.innerText = '🏭 Mode Mesin (Web)';
+                modeBadge.className = 'mode-badge machine-mode';
+            }
+        } else {
+            document.getElementById('machine-info-dashboard').classList.add('hidden');
+            modeBadge.innerText = '🌐 Mode Online';
+            modeBadge.className = 'mode-badge online-mode';
+        }
+        
+        startSaldoListener();
+        loadMerchantsAndProducts();
+        loadUserOrders();
+        startOrderListener();
+        
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+        
+        showNotification('Selamat datang kembali di RE-COIN!');
+    }
+
+    function showLoginPage() {
+        document.getElementById('login-page').classList.remove('hidden');
+        document.getElementById('dashboard-page').classList.add('hidden');
+        document.getElementById('shop-page').classList.add('hidden');
+        document.getElementById('orders-page').classList.add('hidden');
+    }
+
+    // ===========================================
+    // AUTHENTICATION
+    // ===========================================
+    function handleAuth() {
+        const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
+        const password = document.getElementById('pass-input').value;
+        const mode = getModeFromUrl();
+        const rememberMe = document.getElementById('remember-me')?.checked || true;
+        
+        if (phone.length < 10) {
+            showNotification('Nomor HP minimal 10 digit', 'error');
+            return;
+        }
+        
+        if (password.length < 4) {
+            document.getElementById('pass-warning').classList.remove('hidden');
+            showNotification('Password minimal 4 karakter', 'error');
+            return;
+        }
+        
+        document.getElementById('pass-warning').classList.add('hidden');
+        currentUser.phone = phone;
+        currentUser.rememberMe = rememberMe;
+        currentUser.loginSource = mode.loginSource;
+        
+        if (mode.mode === 'machine') {
+            currentUser.machine = mode.machineId;
+            currentUser.isMachineMode = true;
+            
+            document.getElementById('machine-info-login').classList.remove('hidden');
+            document.getElementById('machine-id-display').innerText = mode.machineId;
+            
+            if (mode.loginSource === 'machine') {
+                document.getElementById('source-info-login').innerText = 'via QR';
+            } else {
+                document.getElementById('source-info-login').innerText = 'via Web';
+            }
+            document.getElementById('source-info-login').classList.remove('hidden');
+        } else {
+            currentUser.isMachineMode = false;
+        }
+        
+        processLogin(phone, password);
+    }
+    
+    function processLogin(phone, password) {
+        db.ref('/accounts/' + phone).once('value', (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                
+                if (data.password === password) {
+                    loginSuccess();
+                } else {
+                    showNotification('Password salah!', 'error');
+                }
+            } else {
+                db.ref('/accounts/' + phone).set({
+                    password: password,
+                    botol: 0,
+                    created_at: Date.now()
+                }).then(() => {
+                    showNotification('Akun berhasil dibuat!', 'success');
+                    loginSuccess();
+                }).catch((error) => {
+                    console.error('Error creating account:', error);
+                    showNotification('Gagal membuat akun', 'error');
+                });
+            }
+        });
+    }
+    
+    function loginSuccess() {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+        
+        document.getElementById('user-display').innerText = currentUser.phone;
+        
+        const modeBadge = document.getElementById('mode-badge-dashboard');
+        
+        if (currentUser.isMachineMode) {
+            document.getElementById('active-machine').innerText = currentUser.machine;
+            document.getElementById('machine-info-dashboard').classList.remove('hidden');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const sourceFromUrl = urlParams.get('source') || 'web';
+            
+            if (sourceFromUrl === 'machine') {
+                currentUser.loginSource = 'machine';
+            }
+            
+            const machinePath = '/' + currentUser.machine + '/active_user';
+            
+            showNotification('🔍 Memeriksa ketersediaan mesin...', 'info');
+            
+            db.ref(machinePath).once('value', (snap) => {
+                const data = snap.val();
+                const activeUserId = data ? data.id : null;
+                const lastActivity = data ? data.last_activity : null;
+                
+                console.log('🔍 CEK MESIN:', { activeUserId, currentUser: currentUser.phone, lastActivity });
+                
+                if (activeUserId && lastActivity) {
+                    const waktuSekarang = Date.now();
+                    const selisih = waktuSekarang - lastActivity;
+                    
+                    if (selisih > 300000) {
+                        console.log('⏰ User sebelumnya sudah tidak aktif >5 menit, auto logout');
+                        
+                        db.ref(machinePath).remove().then(() => {
+                            console.log('✅ User lama dihapus');
+                            kirimKeMesin();
+                        });
+                        return;
+                    }
+                }
+                
+                if (!activeUserId || activeUserId === "") {
+                    console.log('✅ Mesin kosong, boleh login');
+                    kirimKeMesin();
+                    return;
+                }
+                
+                if (activeUserId === currentUser.phone) {
+                    console.log('✅ User sama, refresh login');
+                    
+                    db.ref(machinePath).update({
+                        login_time: Date.now(),
+                        last_activity: Date.now(),
+                        expires: Date.now() + 300000,
+                        source: 'machine'
+                    }).then(() => {
+                        console.log('✅ Session diperpanjang');
+                        showNotification('✅ Session mesin diperpanjang', 'success');
+                        tampilkanDashboardMesin();
+                        
+                        mulaiAutoLogoutTimer();
+                    }).catch(error => {
+                        console.error('❌ Gagal update:', error);
+                    });
+                    
+                    return;
+                }
+                
+                if (activeUserId && activeUserId !== currentUser.phone) {
+                    console.log('❌❌ MESIN SEDANG DIPAKAI USER LAIN:', activeUserId);
+                    
+                    showNotification('⚠️ Mesin sedang digunakan oleh ' + activeUserId.substring(0, 5) + '...', 'error');
+                    
+                    currentUser.isMachineMode = false;
+                    currentUser.machine = "";
+                    
+                    document.getElementById('machine-info-dashboard').classList.add('hidden');
+                    modeBadge.innerText = '🌐 Mode Online';
+                    modeBadge.className = 'mode-badge online-mode';
+                    
+                    saveUserSession();
+                    startSaldoListener();
+                    loadMerchantsAndProducts();
+                    loadUserOrders();
+                    startOrderListener();
+                    
+                    showNotification('Anda login sebagai mode online', 'info');
+                    return;
+                }
+            }).catch(error => {
+                console.error('❌ Gagal cek mesin:', error);
+                kirimKeMesin();
+            });
+            
+            function kirimKeMesin() {
+                console.log('📤 MENGIRIM KE FIREBASE:', {
+                    path: '/' + currentUser.machine + '/active_user',
+                    data: {
+                        id: currentUser.phone,
+                        login_time: Date.now(),
+                        last_activity: Date.now(),
+                        expires: Date.now() + 300000,
+                        source: 'machine'
+                    }
+                });
+                
+                db.ref('/' + currentUser.machine + '/active_user').set({
+                    id: currentUser.phone,
+                    login_time: Date.now(),
+                    last_activity: Date.now(),
+                    expires: Date.now() + 300000,
+                    source: 'machine'
+                }).then(() => {
+                    console.log('✅ BERHASIL TERKIRIM KE FIREBASE!');
+                    showNotification('✅ Terhubung ke mesin', 'success');
+                    tampilkanDashboardMesin();
+                    
+                    mulaiAutoLogoutTimer();
+                }).catch((error) => {
+                    console.error('❌ GAGAL MENGIRIM:', error);
+                    showNotification('❌ Gagal terhubung ke mesin', 'error');
+                    tampilkanDashboardMesin();
+                });
+            }
+            
+            function tampilkanDashboardMesin() {
+                if (currentUser.loginSource === 'machine') {
+                    modeBadge.innerText = '🏭 Mode Mesin (QR)';
+                    modeBadge.className = 'mode-badge qr-mode';
+                    document.getElementById('source-info-dashboard').innerText = 'via QR';
+                } else {
+                    modeBadge.innerText = '🏭 Mode Mesin (Web)';
+                    modeBadge.className = 'mode-badge machine-mode';
+                    document.getElementById('source-info-dashboard').innerText = 'via Web';
+                }
+                document.getElementById('source-info-dashboard').classList.remove('hidden');
+                
+                saveUserSession();
+                startSaldoListener();
+                loadMerchantsAndProducts();
+                loadUserOrders();
+                startOrderListener();
+            }
+            
+        } else {
+            document.getElementById('machine-info-dashboard').classList.add('hidden');
+            modeBadge.innerText = '🌐 Mode Online';
+            modeBadge.className = 'mode-badge online-mode';
+            
+            saveUserSession();
+            startSaldoListener();
+            loadMerchantsAndProducts();
+            loadUserOrders();
+            startOrderListener();
+            
+            showNotification('Selamat datang di RE-COIN!');
+        }
+    }
+    
+    function startSaldoListener() {
+        db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
+            previousBotol = snap.val() || 0;
+            currentUser.botol = previousBotol;
+            updateUI();
+        });
+        
+        db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
+            const newBotol = snap.val() || 0;
+            const oldBotol = currentUser.botol;
+            
+            currentUser.botol = newBotol;
+            
+            if (newBotol > oldBotol) {
+                showBotolNotification(oldBotol, newBotol);
+            }
+            
+            updateUI();
+        });
+    }
+    
+    function updateUI() {
+        const saldo = currentUser.botol * HARGA_PER_BOTOL;
+        
+        document.getElementById('count').innerText = currentUser.botol;
+        document.getElementById('rupiah').innerText = formatRupiah(saldo);
+        document.getElementById('modal-saldo').innerText = formatRupiah(saldo);
+        
+        const btnTarik = document.getElementById('btn-tarik');
+        const msgLimit = document.getElementById('msg-limit');
+        
+        if (saldo >= 5000) {
+            btnTarik.disabled = false;
+            msgLimit.style.display = 'none';
+        } else {
+            btnTarik.disabled = true;
+            msgLimit.style.display = 'block';
+        }
+        
+        updateCartDisplay();
+    }
+    
+    function logout() {
+        showNotification('Proses logout...', 'info');
+        
+        stopOrderListener();
+        
+        if (autoLogoutTimer) {
+            clearTimeout(autoLogoutTimer);
+            autoLogoutTimer = null;
+        }
+        
+        if (currentUser.isMachineMode && currentUser.machine) {
+            db.ref('/' + currentUser.machine + '/active_user').remove().catch(e => console.log(e));
+        }
+        
+        clearUserSession();
+        
+        if (currentUser.phone) {
+            db.ref('/accounts/' + currentUser.phone + '/botol').off();
+        }
+        
+        document.getElementById('dashboard-page').classList.add('hidden');
+        document.getElementById('shop-page').classList.add('hidden');
+        document.getElementById('orders-page').classList.add('hidden');
+        document.getElementById('login-page').classList.remove('hidden');
+        
+        document.getElementById('phone-input').value = '';
+        document.getElementById('pass-input').value = '';
+        document.getElementById('machine-info-login').classList.add('hidden');
+        document.getElementById('source-info-login').classList.add('hidden');
+        
+        currentUser = {
             phone: "",
             botol: 0,
             machine: "",
@@ -1305,990 +2089,101 @@
             rememberMe: true
         };
         
-        const HARGA_PER_BOTOL = 50;
-        const ADMIN_WA = "6289524538835";
-        const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
-        
-        let cart = [];
-        let merchants = [];
-        let products = [];
-        let userOrders = [];
-        let previousBotol = 0;
-        
-        // ===========================================
-        // AUTO LOGOUT VARIABLES
-        // ===========================================
-        let autoLogoutTimer = null;
-        
-        // ===========================================
-        // ULTIMATE LOCATION SYSTEM
-        // ===========================================
-        let userLocation = {
-            coordinates: null,
-            address: null,
-            method: null,
-            timestamp: null,
-            source: null,
-            accuracy: null
-        };
-        
-        let deliveryEnabled = false;
-        let manualAddress = "";
-
-        // ===========================================
-        // AUDIO & ANIMATION FUNCTIONS
-        // ===========================================
-        function playCoinSound() {
-            try {
-                if (window.AudioContext || window.webkitAudioContext) {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
-                    
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                    
-                    oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.2);
-                    
-                    if (audioContext.state === 'suspended') {
-                        audioContext.resume();
-                    }
-                }
-            } catch (e) {
-                console.log('Sound not supported:', e);
-            }
-        }
-        
-        function showCoinAnimation(botolAdded) {
-            const animDiv = document.getElementById('coin-animation');
-            animDiv.textContent = `+${botolAdded}`;
-            animDiv.classList.remove('hidden');
-            
-            setTimeout(() => {
-                animDiv.classList.add('hidden');
-            }, 1000);
-        }
-        
-        function animateBotolCard() {
-            const card = document.getElementById('botol-stat-card');
-            card.classList.add('botol-added');
-            
-            setTimeout(() => {
-                card.classList.remove('botol-added');
-            }, 500);
-        }
-        
-        function showBotolNotification(oldValue, newValue) {
-            const added = newValue - oldValue;
-            if (added > 0) {
-                playCoinSound();
-                showCoinAnimation(added);
-                animateBotolCard();
-                showNotification(`+${added} botol! Saldo bertambah Rp ${(added * HARGA_PER_BOTOL).toLocaleString('id-ID')}`, 'success', true);
-                
-                // 🔥 UPDATE LAST ACTIVITY KARENA ADA BOTOL MASUK
-                updateLastActivity();
-            }
-        }
-
-        // ===========================================
-        // UTILITY FUNCTIONS
-        // ===========================================
-        function getModeFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mesin = urlParams.get('mesin');
-            const source = urlParams.get('source');
-            
-            console.log('🔍 URL DIBACA:', {
-                mesin: mesin,
-                source: source,
-                fullUrl: window.location.href
-            });
-            
-            if (mesin) {
-                return { 
-                    mode: 'machine', 
-                    machineId: mesin,
-                    loginSource: source || 'web'
-                };
-            } else {
-                return { mode: 'online', machineId: null, loginSource: 'web' };
-            }
-        }
-        
-        function formatRupiah(angka) {
-            if (angka === undefined || angka === null) return 'Rp 0';
-            return 'Rp ' + angka.toLocaleString('id-ID');
-        }
-        
-        function showNotification(message, type = 'success', isBotol = false) {
-            const notifDiv = document.getElementById('notification');
-            const notif = document.createElement('div');
-            notif.className = 'notification';
-            if (isBotol) {
-                notif.classList.add('notification-botol');
-            }
-            if (type === 'error') {
-                notif.style.borderColor = '#ff7675';
-            } else if (type === 'info') {
-                notif.style.borderColor = '#0984e3';
-            }
-            notif.innerHTML = message;
-            
-            notifDiv.innerHTML = '';
-            notifDiv.appendChild(notif);
-            
-            setTimeout(() => {
-                notif.style.animation = 'slideUp 0.3s ease';
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
-        }
-        
-        function formatDate(timestamp) {
-            if (!timestamp) return 'Tanggal tidak diketahui';
-            try {
-                const date = new Date(timestamp);
-                return date.toLocaleDateString('id-ID', { 
-                    day: '2-digit', 
-                    month: 'short', 
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                return 'Tanggal error';
-            }
-        }
-
-        // ===========================================
-        // AUTO LOGOUT FUNCTIONS
-        // ===========================================
-        function mulaiAutoLogoutTimer() {
-            // Hapus timer lama jika ada
-            if (autoLogoutTimer) {
-                clearTimeout(autoLogoutTimer);
-            }
-            
-            // Set timer 5 menit (300000 ms)
-            autoLogoutTimer = setTimeout(() => {
-                console.log('⏰ 5 MENIT TANPA AKTIVITAS! AUTO LOGOUT...');
-                
-                // Cek apakah masih ada aktivitas?
-                const machinePath = '/' + currentUser.machine + '/active_user';
-                
-                db.ref(machinePath).once('value', (snap) => {
-                    const data = snap.val();
-                    if (data && data.id === currentUser.phone) {
-                        
-                        // Hapus user dari Firebase
-                        db.ref(machinePath).remove().then(() => {
-                            console.log('✅ Auto logout: user dihapus dari Firebase');
-                            
-                            showNotification('⏰ Auto logout setelah 5 menit tidak aktif', 'info');
-                            
-                            // Ubah mode ke online
-                            currentUser.isMachineMode = false;
-                            currentUser.machine = "";
-                            
-                            document.getElementById('machine-info-dashboard').classList.add('hidden');
-                            document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
-                            document.getElementById('mode-badge-dashboard').className = 'mode-badge online-mode';
-                            
-                            // Reset timer
-                            autoLogoutTimer = null;
-                        }).catch(error => {
-                            console.error('❌ Gagal auto logout:', error);
-                        });
-                    }
-                });
-                
-            }, 300000); // 5 menit
-        }
-
-        function updateLastActivity() {
-            if (!currentUser.isMachineMode || !currentUser.machine) return;
-            
-            const machinePath = '/' + currentUser.machine + '/active_user';
-            
-            db.ref(machinePath).update({
-                last_activity: Date.now()
-            }).then(() => {
-                console.log('⏱️ Last activity diupdate');
-                
-                // Reset timer auto logout
-                if (autoLogoutTimer) {
-                    clearTimeout(autoLogoutTimer);
-                    mulaiAutoLogoutTimer();
-                }
-            }).catch(error => {
-                console.error('❌ Gagal update last activity:', error);
-            });
-        }
-
-        // ===========================================
-        // ULTIMATE LOCATION FUNCTIONS
-        // ===========================================
-        // ===========================================
-// GPS SEDERHANA - HANYA DIPANGGIL SAAT DIKLIK
-// ===========================================
-let userLocation = null;
-let deliveryEnabled = false;
-let manualAddress = "";
-
-function toggleDelivery() {
-    const checkbox = document.getElementById('delivery-checkbox');
-    const deliveryOptions = document.getElementById('delivery-options');
-    
-    deliveryEnabled = checkbox.checked;
-    
-    if (deliveryEnabled) {
-        deliveryOptions.classList.remove('hidden');
-    } else {
-        deliveryOptions.classList.add('hidden');
+        cart = [];
+        deliveryEnabled = false;
         resetLocation();
-    }
-    
-    updateCartDisplay();
-}
-
-function resetLocation() {
-    userLocation = null;
-    manualAddress = "";
-    document.getElementById('delivery-info').classList.add('hidden');
-    document.getElementById('maps-link').classList.add('hidden');
-    document.getElementById('manual-address-input').classList.add('hidden');
-}
-
-function showManualAddressInput() {
-    document.getElementById('manual-address-input').classList.remove('hidden');
-}
-
-function submitManualAddress() {
-    const address = document.getElementById('manual-address').value.trim();
-    
-    if (!address) {
-        showNotification('Masukkan alamat terlebih dahulu!', 'error');
-        return;
-    }
-    
-    if (address.length < 10) {
-        showNotification('Alamat terlalu pendek. Masukkan alamat lengkap.', 'error');
-        return;
-    }
-    
-    manualAddress = address;
-    userLocation = null;
-    
-    document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
-    
-    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    document.getElementById('maps-link').href = mapsLink;
-    document.getElementById('maps-link').classList.remove('hidden');
-    
-    document.getElementById('delivery-info').classList.remove('hidden');
-    document.getElementById('manual-address-input').classList.add('hidden');
-    
-    updateCartDisplay();
-    showNotification('✅ Alamat manual berhasil disimpan', 'success');
-}
-
-function getUserLocation() {
-    showNotification('📍 Mengakses GPS perangkat...', 'info');
-    
-    userLocation = null;
-    
-    const deliveryInfo = document.getElementById('delivery-info');
-    const deliveryAddress = document.getElementById('delivery-address');
-    deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengakses GPS...';
-    deliveryInfo.classList.remove('hidden');
-    document.getElementById('maps-link').classList.add('hidden');
-    
-    if (!navigator.geolocation) {
-        showNotification('❌ Perangkat tidak mendukung GPS. Silakan input manual.', 'error');
-        showManualAddressInput();
-        return;
-    }
-    
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-    };
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            
-            console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
-            
-            userLocation = {
-                lat: lat,
-                lng: lng,
-                accuracy: accuracy,
-                timestamp: Date.now()
-            };
-            
-            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-            document.getElementById('maps-link').href = mapsLink;
-            document.getElementById('maps-link').classList.remove('hidden');
-            
-            deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
-            
-            showNotification('📍 Lokasi GPS didapatkan!', 'success');
-            
-            // Opsional cari alamat
-            cariAlamatDariKoordinat(lat, lng);
-            
-            updateCartDisplay();
-        },
-        (error) => {
-            let message = 'Gagal mendapatkan lokasi';
-            
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    message = 'Izin GPS ditolak. Silakan izinkan akses atau input manual.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message = 'Sinyal GPS tidak tersedia. Coba di luar ruangan.';
-                    break;
-                case error.TIMEOUT:
-                    message = 'Waktu GPS habis. Coba lagi atau input manual.';
-                    break;
-                default:
-                    message = 'Error GPS tidak diketahui';
-            }
-            
-            showNotification(`❌ ${message}`, 'error');
-            console.error('GPS Error:', error);
-            
-            deliveryInfo.classList.add('hidden');
-            showManualAddressInput();
-        },
-        options
-    );
-}
-
-// Opsional: cari alamat (tidak mengganggu proses utama)
-function cariAlamatDariKoordinat(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&accept-language=id`, {
-        headers: { 'User-Agent': 'RE-COIN-App/1.0' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data && data.display_name) {
-            const deliveryAddress = document.getElementById('delivery-address');
-            let address = data.display_name;
-            if (address.length > 100) {
-                address = address.substring(0, 100) + '...';
-            }
-            deliveryAddress.innerHTML = `<strong>${address}</strong><br><small>Akurasi: ${userLocation.accuracy.toFixed(0)}m</small>`;
-            userLocation.address = address;
-        }
-    })
-    .catch(error => console.log('Gagal ambil alamat:', error));
-}
-        // ===========================================
-        // AUTO LOGIN FUNCTIONS
-        // ===========================================
-        function saveUserSession() {
-            if (!currentUser.phone) return;
-            if (currentUser.rememberMe === false) return;
-            
-            const sessionData = {
-                phone: currentUser.phone,
-                loginTime: Date.now(),
-                expiresAt: Date.now() + SESSION_DURATION,
-                machine: currentUser.machine,
-                isMachineMode: currentUser.isMachineMode,
-                loginSource: currentUser.loginSource
-            };
-            
-            localStorage.setItem('recoin_user_session', JSON.stringify(sessionData));
-        }
-
-        function clearUserSession() {
-            localStorage.removeItem('recoin_user_session');
-        }
-
-        function checkAutoLogin() {
-            const sessionJson = localStorage.getItem('recoin_user_session');
-            if (!sessionJson) return false;
-            
-            try {
-                const session = JSON.parse(sessionJson);
-                
-                if (session.expiresAt && session.expiresAt > Date.now()) {
-                    currentUser.phone = session.phone;
-                    currentUser.machine = session.machine || "";
-                    currentUser.isMachineMode = session.isMachineMode || false;
-                    currentUser.rememberMe = true;
-                    currentUser.loginSource = session.loginSource || 'web';
-                    
-                    db.ref('/accounts/' + session.phone).once('value', (snap) => {
-                        if (snap.exists()) {
-                            const userData = snap.val();
-                            currentUser.botol = userData.botol || 0;
-                            completeLogin();
-                        } else {
-                            clearUserSession();
-                            showLoginPage();
-                        }
-                    });
-                    
-                    return true;
-                } else {
-                    clearUserSession();
-                    return false;
-                }
-            } catch (e) {
-                clearUserSession();
-                return false;
-            }
-        }
-
-        function completeLogin() {
-            document.getElementById('user-display').innerText = currentUser.phone;
-            
-            const modeBadge = document.getElementById('mode-badge-dashboard');
-            
-            if (currentUser.isMachineMode) {
-                document.getElementById('active-machine').innerText = currentUser.machine;
-                document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                
-                if (currentUser.loginSource === 'machine') {
-                    modeBadge.innerText = '🏭 Mode Mesin (QR)';
-                    modeBadge.className = 'mode-badge qr-mode';
-                } else {
-                    modeBadge.innerText = '🏭 Mode Mesin (Web)';
-                    modeBadge.className = 'mode-badge machine-mode';
-                }
-            } else {
-                document.getElementById('machine-info-dashboard').classList.add('hidden');
-                modeBadge.innerText = '🌐 Mode Online';
-                modeBadge.className = 'mode-badge online-mode';
-            }
-            
-            startSaldoListener();
-            loadMerchantsAndProducts();
-            loadUserOrders();
-            startOrderListener();
-            
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
-            
-            showNotification('Selamat datang kembali di RE-COIN!');
-        }
-
-        function showLoginPage() {
-            document.getElementById('login-page').classList.remove('hidden');
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.add('hidden');
-        }
-
-        // ===========================================
-        // AUTHENTICATION
-        // ===========================================
-        function handleAuth() {
-            const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
-            const password = document.getElementById('pass-input').value;
-            const mode = getModeFromUrl();
-            const rememberMe = document.getElementById('remember-me')?.checked || true;
-            
-            if (phone.length < 10) {
-                showNotification('Nomor HP minimal 10 digit', 'error');
-                return;
-            }
-            
-            if (password.length < 4) {
-                document.getElementById('pass-warning').classList.remove('hidden');
-                showNotification('Password minimal 4 karakter', 'error');
-                return;
-            }
-            
-            document.getElementById('pass-warning').classList.add('hidden');
-            currentUser.phone = phone;
-            currentUser.rememberMe = rememberMe;
-            currentUser.loginSource = mode.loginSource;
-            
-            if (mode.mode === 'machine') {
-                currentUser.machine = mode.machineId;
-                currentUser.isMachineMode = true;
-                
-                document.getElementById('machine-info-login').classList.remove('hidden');
-                document.getElementById('machine-id-display').innerText = mode.machineId;
-                
-                if (mode.loginSource === 'machine') {
-                    document.getElementById('source-info-login').innerText = 'via QR';
-                } else {
-                    document.getElementById('source-info-login').innerText = 'via Web';
-                }
-                document.getElementById('source-info-login').classList.remove('hidden');
-            } else {
-                currentUser.isMachineMode = false;
-            }
-            
-            processLogin(phone, password);
-        }
         
-        function processLogin(phone, password) {
-            db.ref('/accounts/' + phone).once('value', (snap) => {
-                if (snap.exists()) {
-                    const data = snap.val();
-                    
-                    if (data.password === password) {
-                        loginSuccess();
-                    } else {
-                        showNotification('Password salah!', 'error');
-                    }
-                } else {
-                    db.ref('/accounts/' + phone).set({
-                        password: password,
-                        botol: 0,
-                        created_at: Date.now()
-                    }).then(() => {
-                        showNotification('Akun berhasil dibuat!', 'success');
-                        loginSuccess();
-                    }).catch((error) => {
-                        console.error('Error creating account:', error);
-                        showNotification('Gagal membuat akun', 'error');
-                    });
-                }
-            });
-        }
+        showNotification('Anda telah logout', 'info');
+    }
+
+    // ===========================================
+    // MERCHANTS & PRODUCTS
+    // ===========================================
+    function loadMerchantsAndProducts() {
+        const container = document.getElementById('products-container');
+        if (!container) return;
         
-        function loginSuccess() {
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
+        db.ref('/merchants').once('value', (snap) => {
+            merchants = [];
+            const merchantData = snap.val() || {};
             
-            document.getElementById('user-display').innerText = currentUser.phone;
-            
-            const modeBadge = document.getElementById('mode-badge-dashboard');
-            
-            if (currentUser.isMachineMode) {
-                document.getElementById('active-machine').innerText = currentUser.machine;
-                document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                
-                // 🔥 CEK SOURCE DARI URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const sourceFromUrl = urlParams.get('source') || 'web';
-                
-                if (sourceFromUrl === 'machine') {
-                    currentUser.loginSource = 'machine';
-                }
-                
-                // 🔥🔥 CEK DULU APAKAH MESIN SEDANG DIPAKAI USER LAIN
-                const machinePath = '/' + currentUser.machine + '/active_user';
-                
-                showNotification('🔍 Memeriksa ketersediaan mesin...', 'info');
-                
-                db.ref(machinePath).once('value', (snap) => {
-                    const data = snap.val();
-                    const activeUserId = data ? data.id : null;
-                    const lastActivity = data ? data.last_activity : null;
-                    
-                    console.log('🔍 CEK MESIN:', { activeUserId, currentUser: currentUser.phone, lastActivity });
-                    
-                    // CEK APAKAH SUDAH 5 MENIT TIDAK AKTIF?
-                    if (activeUserId && lastActivity) {
-                        const waktuSekarang = Date.now();
-                        const selisih = waktuSekarang - lastActivity;
-                        
-                        if (selisih > 300000) { // 5 menit = 300000 ms
-                            console.log('⏰ User sebelumnya sudah tidak aktif >5 menit, auto logout');
-                            
-                            // Hapus user lama
-                            db.ref(machinePath).remove().then(() => {
-                                console.log('✅ User lama dihapus');
-                                kirimKeMesin();
-                            });
-                            return;
-                        }
-                    }
-                    
-                    // KASUS 1: TIDAK ADA USER AKTIF
-                    if (!activeUserId || activeUserId === "") {
-                        console.log('✅ Mesin kosong, boleh login');
-                        kirimKeMesin();
-                        return;
-                    }
-                    
-                    // KASUS 2: USER YANG SAMA (refresh/login ulang)
-                    if (activeUserId === currentUser.phone) {
-                        console.log('✅ User sama, refresh login');
-                        
-                        // Update login_time dan last_activity
-                        db.ref(machinePath).update({
-                            login_time: Date.now(),
-                            last_activity: Date.now(),
-                            expires: Date.now() + 300000,
-                            source: 'machine'
-                        }).then(() => {
-                            console.log('✅ Session diperpanjang');
-                            showNotification('✅ Session mesin diperpanjang', 'success');
-                            tampilkanDashboardMesin();
-                            
-                            // 🔥 MULAI AUTO LOGOUT TIMER
-                            mulaiAutoLogoutTimer();
-                        }).catch(error => {
-                            console.error('❌ Gagal update:', error);
-                        });
-                        
-                        return;
-                    }
-                    
-                    // KASUS 3: USER LAIN SEDANG MENGGUNAKAN MESIN
-                    if (activeUserId && activeUserId !== currentUser.phone) {
-                        console.log('❌❌ MESIN SEDANG DIPAKAI USER LAIN:', activeUserId);
-                        
-                        showNotification('⚠️ Mesin sedang digunakan oleh ' + activeUserId.substring(0, 5) + '...', 'error');
-                        
-                        currentUser.isMachineMode = false;
-                        currentUser.machine = "";
-                        
-                        document.getElementById('machine-info-dashboard').classList.add('hidden');
-                        modeBadge.innerText = '🌐 Mode Online';
-                        modeBadge.className = 'mode-badge online-mode';
-                        
-                        saveUserSession();
-                        startSaldoListener();
-                        loadMerchantsAndProducts();
-                        loadUserOrders();
-                        startOrderListener();
-                        
-                        showNotification('Anda login sebagai mode online', 'info');
-                        return;
-                    }
-                }).catch(error => {
-                    console.error('❌ Gagal cek mesin:', error);
-                    kirimKeMesin();
-                });
-                
-                // Fungsi untuk kirim data ke mesin
-                function kirimKeMesin() {
-                    console.log('📤 MENGIRIM KE FIREBASE:', {
-                        path: '/' + currentUser.machine + '/active_user',
-                        data: {
-                            id: currentUser.phone,
-                            login_time: Date.now(),
-                            last_activity: Date.now(),
-                            expires: Date.now() + 300000,
-                            source: 'machine'
-                        }
+            for (let id in merchantData) {
+                if (merchantData[id].status === 'active') {
+                    merchants.push({
+                        id: id,
+                        ...merchantData[id]
                     });
-                    
-                    db.ref('/' + currentUser.machine + '/active_user').set({
-                        id: currentUser.phone,
-                        login_time: Date.now(),
-                        last_activity: Date.now(),
-                        expires: Date.now() + 300000,
-                        source: 'machine'
-                    }).then(() => {
-                        console.log('✅ BERHASIL TERKIRIM KE FIREBASE!');
-                        showNotification('✅ Terhubung ke mesin', 'success');
-                        tampilkanDashboardMesin();
-                        
-                        // 🔥 MULAI AUTO LOGOUT TIMER
-                        mulaiAutoLogoutTimer();
-                    }).catch((error) => {
-                        console.error('❌ GAGAL MENGIRIM:', error);
-                        showNotification('❌ Gagal terhubung ke mesin', 'error');
-                        tampilkanDashboardMesin();
+                }
+            }
+            
+            db.ref('/products').once('value', (productSnap) => {
+                products = [];
+                const productData = productSnap.val() || {};
+                
+                for (let id in productData) {
+                    products.push({
+                        id: id,
+                        ...productData[id]
                     });
                 }
                 
-                // Fungsi untuk tampilkan dashboard mesin
-                function tampilkanDashboardMesin() {
-                    if (currentUser.loginSource === 'machine') {
-                        modeBadge.innerText = '🏭 Mode Mesin (QR)';
-                        modeBadge.className = 'mode-badge qr-mode';
-                        document.getElementById('source-info-dashboard').innerText = 'via QR';
-                    } else {
-                        modeBadge.innerText = '🏭 Mode Mesin (Web)';
-                        modeBadge.className = 'mode-badge machine-mode';
-                        document.getElementById('source-info-dashboard').innerText = 'via Web';
-                    }
-                    document.getElementById('source-info-dashboard').classList.remove('hidden');
-                    
-                    saveUserSession();
-                    startSaldoListener();
-                    loadMerchantsAndProducts();
-                    loadUserOrders();
-                    startOrderListener();
-                }
-                
-            } else {
-                document.getElementById('machine-info-dashboard').classList.add('hidden');
-                modeBadge.innerText = '🌐 Mode Online';
-                modeBadge.className = 'mode-badge online-mode';
-                
-                saveUserSession();
-                startSaldoListener();
-                loadMerchantsAndProducts();
-                loadUserOrders();
-                startOrderListener();
-                
-                showNotification('Selamat datang di RE-COIN!');
-            }
-        }
-        
-        function startSaldoListener() {
-            db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
-                previousBotol = snap.val() || 0;
-                currentUser.botol = previousBotol;
-                updateUI();
-            });
-            
-            db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snap) => {
-                const newBotol = snap.val() || 0;
-                const oldBotol = currentUser.botol;
-                
-                currentUser.botol = newBotol;
-                
-                if (newBotol > oldBotol) {
-                    showBotolNotification(oldBotol, newBotol);
-                }
-                
-                updateUI();
-            });
-        }
-        
-        function updateUI() {
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            
-            document.getElementById('count').innerText = currentUser.botol;
-            document.getElementById('rupiah').innerText = formatRupiah(saldo);
-            document.getElementById('modal-saldo').innerText = formatRupiah(saldo);
-            
-            const btnTarik = document.getElementById('btn-tarik');
-            const msgLimit = document.getElementById('msg-limit');
-            
-            if (saldo >= 5000) {
-                btnTarik.disabled = false;
-                msgLimit.style.display = 'none';
-            } else {
-                btnTarik.disabled = true;
-                msgLimit.style.display = 'block';
-            }
-            
-            updateCartDisplay();
-        }
-        
-        function logout() {
-            showNotification('Proses logout...', 'info');
-            
-            stopOrderListener();
-            
-            // Hapus auto logout timer
-            if (autoLogoutTimer) {
-                clearTimeout(autoLogoutTimer);
-                autoLogoutTimer = null;
-            }
-            
-            if (currentUser.isMachineMode && currentUser.machine) {
-                db.ref('/' + currentUser.machine + '/active_user').remove().catch(e => console.log(e));
-            }
-            
-            clearUserSession();
-            
-            if (currentUser.phone) {
-                db.ref('/accounts/' + currentUser.phone + '/botol').off();
-            }
-            
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.add('hidden');
-            document.getElementById('login-page').classList.remove('hidden');
-            
-            document.getElementById('phone-input').value = '';
-            document.getElementById('pass-input').value = '';
-            document.getElementById('machine-info-login').classList.add('hidden');
-            document.getElementById('source-info-login').classList.add('hidden');
-            
-            currentUser = {
-                phone: "",
-                botol: 0,
-                machine: "",
-                isMachineMode: false,
-                loginSource: "web",
-                rememberMe: true
-            };
-            
-            cart = [];
-            deliveryEnabled = false;
-            resetLocationData();
-            
-            showNotification('Anda telah logout', 'info');
-        }
-
-        // ===========================================
-        // MERCHANTS & PRODUCTS
-        // ===========================================
-        function loadMerchantsAndProducts() {
-            const container = document.getElementById('products-container');
-            if (!container) return;
-            
-            db.ref('/merchants').once('value', (snap) => {
-                merchants = [];
-                const merchantData = snap.val() || {};
-                
-                for (let id in merchantData) {
-                    if (merchantData[id].status === 'active') {
-                        merchants.push({
-                            id: id,
-                            ...merchantData[id]
-                        });
-                    }
-                }
-                
-                db.ref('/products').once('value', (productSnap) => {
-                    products = [];
-                    const productData = productSnap.val() || {};
-                    
-                    for (let id in productData) {
-                        products.push({
-                            id: id,
-                            ...productData[id]
-                        });
-                    }
-                    
-                    displayProductsByMerchant();
-                }).catch(error => {
-                    console.error('Error loading products:', error);
-                    container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat produk</p></div>';
-                });
+                displayProductsByMerchant();
             }).catch(error => {
-                console.error('Error loading merchants:', error);
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat merchant</p></div>';
+                console.error('Error loading products:', error);
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat produk</p></div>';
             });
+        }).catch(error => {
+            console.error('Error loading merchants:', error);
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat merchant</p></div>';
+        });
+    }
+    
+    function displayProductsByMerchant() {
+        const container = document.getElementById('products-container');
+        
+        if (merchants.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-store"></i>
+                    <p>Belum ada merchant yang tersedia</p>
+                </div>
+            `;
+            return;
         }
         
-        function displayProductsByMerchant() {
-            const container = document.getElementById('products-container');
-            
-            if (merchants.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-store"></i>
-                        <p>Belum ada merchant yang tersedia</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            
-            merchants.forEach(merchant => {
-                const merchantProducts = products.filter(p => p.merchant_id === merchant.id && p.stock > 0);
-                
-                if (merchantProducts.length === 0) return;
-                
-                html += `
-                    <div class="merchant-section">
-                        <div class="merchant-header" onclick="showAllMerchantProducts('${merchant.id}')">
-                            <div class="merchant-avatar">
-                                ${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}
-                            </div>
-                            <div class="merchant-info">
-                                <div class="merchant-name">${merchant.nama_toko || 'Toko'}</div>
-                                <div class="merchant-address">
-                                    <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
-                                </div>
-                            </div>
-                            <i class="fas fa-chevron-right" style="color: #b2bec3;"></i>
-                        </div>
-                        
-                        <div class="product-grid">
-                `;
-                
-                merchantProducts.slice(0, 4).forEach(product => {
-                    const stockClass = product.stock <= 5 ? 'stock-low' : '';
-                    
-                    html += `
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
-                                     onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
-                            </div>
-                            <div class="product-name">${product.name || 'Produk'}</div>
-                            <div class="product-price">${formatRupiah(product.price || 0)}</div>
-                            <div class="product-stock ${stockClass}">
-                                <i class="fas fa-box"></i> Stok: ${product.stock || 0}
-                            </div>
-                            <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
-                                ${product.stock <= 0 ? 'Stok Habis' : 'Tambah ke Keranjang'}
-                            </button>
-                        </div>
-                    `;
-                });
-                
-                html += `
-                        </div>
-                        ${merchantProducts.length > 4 ? 
-                            `<button class="btn-secondary" style="margin-top: 10px; font-size: 13px; width: 100%;" 
-                                     onclick="showAllMerchantProducts('${merchant.id}')">
-                                Lihat Semua Produk (${merchantProducts.length})
-                            </button>` : ''}
-                    </div>
-                `;
-            });
-            
-            if (html === '') {
-                html = `
-                    <div class="empty-state">
-                        <i class="fas fa-box-open"></i>
-                        <p>Belum ada produk yang tersedia</p>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
+        let html = '';
         
-        function showAllMerchantProducts(merchantId) {
-            const merchant = merchants.find(m => m.id === merchantId);
-            if (!merchant) return;
+        merchants.forEach(merchant => {
+            const merchantProducts = products.filter(p => p.merchant_id === merchant.id && p.stock > 0);
             
-            const merchantProducts = products.filter(p => p.merchant_id === merchantId && p.stock > 0);
+            if (merchantProducts.length === 0) return;
             
-            const container = document.getElementById('products-container');
-            
-            let html = `
-                <button class="btn-back" onclick="loadMerchantsAndProducts()">
-                    ← Kembali ke Semua Merchant
-                </button>
-                
+            html += `
                 <div class="merchant-section">
-                    <div class="merchant-header">
-                        <div class="merchant-avatar">${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}</div>
+                    <div class="merchant-header" onclick="showAllMerchantProducts('${merchant.id}')">
+                        <div class="merchant-avatar">
+                            ${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}
+                        </div>
                         <div class="merchant-info">
                             <div class="merchant-name">${merchant.nama_toko || 'Toko'}</div>
                             <div class="merchant-address">
                                 <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
                             </div>
                         </div>
+                        <i class="fas fa-chevron-right" style="color: #b2bec3;"></i>
                     </div>
                     
                     <div class="product-grid">
             `;
             
-            merchantProducts.forEach(product => {
+            merchantProducts.slice(0, 4).forEach(product => {
                 const stockClass = product.stock <= 5 ? 'stock-low' : '';
                 
                 html += `
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
+                            <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}" 
+                                 onerror="this.src='https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'">
                         </div>
                         <div class="product-name">${product.name || 'Produk'}</div>
                         <div class="product-price">${formatRupiah(product.price || 0)}</div>
@@ -2296,629 +2191,717 @@ function cariAlamatDariKoordinat(lat, lng) {
                             <i class="fas fa-box"></i> Stok: ${product.stock || 0}
                         </div>
                         <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
-                            Tambah ke Keranjang
+                            ${product.stock <= 0 ? 'Stok Habis' : 'Tambah ke Keranjang'}
                         </button>
                     </div>
                 `;
             });
             
-            html += `</div></div>`;
-            container.innerHTML = html;
-        }
-
-        // ===========================================
-        // CART FUNCTIONS
-        // ===========================================
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            if (saldo < product.price) {
-                showNotification('Saldo tidak cukup! Tukar botol dulu yuk', 'error');
-                return;
-            }
-            
-            const existing = cart.find(i => i.id === productId);
-            if (existing) {
-                existing.quantity++;
-            } else {
-                const merchant = merchants.find(m => m.id === product.merchant_id);
-                cart.push({ 
-                    ...product, 
-                    quantity: 1,
-                    merchant_name: merchant ? merchant.nama_toko : 'Unknown'
-                });
-            }
-            
-            updateCartDisplay();
-            showNotification(`${product.name || 'Produk'} ditambahkan ke keranjang`, 'success');
+            html += `
+                    </div>
+                    ${merchantProducts.length > 4 ? 
+                        `<button class="btn-secondary" style="margin-top: 10px; font-size: 13px; width: 100%;" 
+                                 onclick="showAllMerchantProducts('${merchant.id}')">
+                            Lihat Semua Produk (${merchantProducts.length})
+                        </button>` : ''}
+                </div>
+            `;
+        });
+        
+        if (html === '') {
+            html = `
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <p>Belum ada produk yang tersedia</p>
+                </div>
+            `;
         }
         
-        function updateQuantity(productId, change) {
-            const index = cart.findIndex(i => i.id === productId);
-            if (index === -1) return;
-            
-            const newQuantity = cart[index].quantity + change;
-            
-            if (newQuantity <= 0) {
-                cart.splice(index, 1);
-            } else {
-                cart[index].quantity = newQuantity;
-            }
-            
-            updateCartDisplay();
-        }
+        container.innerHTML = html;
+    }
+    
+    function showAllMerchantProducts(merchantId) {
+        const merchant = merchants.find(m => m.id === merchantId);
+        if (!merchant) return;
         
-        function removeFromCart(productId) {
-            const index = cart.findIndex(i => i.id === productId);
-            if (index !== -1) {
-                cart.splice(index, 1);
-                updateCartDisplay();
-            }
-        }
+        const merchantProducts = products.filter(p => p.merchant_id === merchantId && p.stock > 0);
         
-        function updateCartDisplay() {
-            document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.quantity, 0);
+        const container = document.getElementById('products-container');
+        
+        let html = `
+            <button class="btn-back" onclick="loadMerchantsAndProducts()">
+                ← Kembali ke Semua Merchant
+            </button>
             
-            const itemsDiv = document.getElementById('cart-items');
-            const totalSpan = document.getElementById('cart-total');
-            const subtotalSpan = document.getElementById('summary-subtotal');
-            const grandTotalSpan = document.getElementById('grand-total');
-            const checkoutBtn = document.getElementById('btn-checkout');
-            
-            if (cart.length === 0) {
-                itemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center; padding: 20px;">Keranjang belanja kosong</p>';
-                totalSpan.innerHTML = 'Total: Rp 0';
-                subtotalSpan.innerHTML = 'Rp 0';
-                grandTotalSpan.innerHTML = 'Total: Rp 0';
-                checkoutBtn.disabled = true;
-                return;
-            }
-            
-            let html = '';
-            let subtotal = 0;
-            
-            const cartByMerchant = {};
-            cart.forEach(item => {
-                if (!cartByMerchant[item.merchant_id]) {
-                    cartByMerchant[item.merchant_id] = {
-                        merchant_name: item.merchant_name,
-                        items: []
-                    };
-                }
-                cartByMerchant[item.merchant_id].items.push(item);
-            });
-            
-            for (let merchantId in cartByMerchant) {
-                const group = cartByMerchant[merchantId];
-                html += `<div style="margin-bottom: 15px;">`;
-                html += `<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 5px;">
-                            <i class="fas fa-store"></i> ${group.merchant_name || 'Toko'}
-                        </div>`;
-                
-                group.items.forEach(item => {
-                    const itemTotal = (item.price || 0) * item.quantity;
-                    subtotal += itemTotal;
-                    
-                    html += `
-                        <div class="cart-item">
-                            <div class="cart-item-info">
-                                <div class="cart-item-name">${item.name || 'Produk'}</div>
-                                <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
-                            </div>
-                            <div class="cart-item-actions">
-                                <div class="cart-quantity">
-                                    <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
-                                    <span style="min-width: 25px; text-align: center;">${item.quantity}</span>
-                                    <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
-                                </div>
-                                <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+            <div class="merchant-section">
+                <div class="merchant-header">
+                    <div class="merchant-avatar">${merchant.nama_toko ? merchant.nama_toko.charAt(0).toUpperCase() : 'T'}</div>
+                    <div class="merchant-info">
+                        <div class="merchant-name">${merchant.nama_toko || 'Toko'}</div>
+                        <div class="merchant-address">
+                            <i class="fas fa-map-marker-alt"></i> ${merchant.alamat || 'Magelang'}
                         </div>
-                    `;
-                });
+                    </div>
+                </div>
                 
-                html += `</div>`;
-            }
+                <div class="product-grid">
+        `;
+        
+        merchantProducts.forEach(product => {
+            const stockClass = product.stock <= 5 ? 'stock-low' : '';
             
-            itemsDiv.innerHTML = html;
-            totalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
-            subtotalSpan.innerHTML = formatRupiah(subtotal);
-            grandTotalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
-            
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            checkoutBtn.disabled = subtotal > saldo;
+            html += `
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="${product.image || 'https://via.placeholder.com/250x150/00b894/ffffff?text=Produk'}">
+                    </div>
+                    <div class="product-name">${product.name || 'Produk'}</div>
+                    <div class="product-price">${formatRupiah(product.price || 0)}</div>
+                    <div class="product-stock ${stockClass}">
+                        <i class="fas fa-box"></i> Stok: ${product.stock || 0}
+                    </div>
+                    <button class="btn-beli" onclick="addToCart('${product.id}')" ${product.stock <= 0 ? 'disabled' : ''}>
+                        Tambah ke Keranjang
+                    </button>
+                </div>
+            `;
+        });
+        
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
+
+    // ===========================================
+    // CART FUNCTIONS
+    // ===========================================
+    function addToCart(productId) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const saldo = currentUser.botol * HARGA_PER_BOTOL;
+        if (saldo < product.price) {
+            showNotification('Saldo tidak cukup! Tukar botol dulu yuk', 'error');
+            return;
         }
         
-        function toggleCart() {
-            document.getElementById('cart-panel').classList.toggle('hidden');
+        const existing = cart.find(i => i.id === productId);
+        if (existing) {
+            existing.quantity++;
+        } else {
+            const merchant = merchants.find(m => m.id === product.merchant_id);
+            cart.push({ 
+                ...product, 
+                quantity: 1,
+                merchant_name: merchant ? merchant.nama_toko : 'Unknown'
+            });
         }
-
-        // ===========================================
-        // CHECKOUT - WITH ENHANCED LOCATION DATA
-        // ===========================================
-        function checkout() {
-            const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            
-            if (subtotal > saldo) {
-                showNotification('Saldo tidak cukup!', 'error');
-                return;
-            }
-            
-            if (cart.length === 0) {
-                showNotification('Keranjang belanja kosong!', 'error');
-                return;
-            }
-            
-            // VALIDASI LOKASI JIKA DELIVERY DIPILIH
-            if (deliveryEnabled) {
-                if (!userLocation.address && !manualAddress) {
-                    showNotification('📍 Harap tentukan lokasi pengiriman!', 'error');
-                    return;
-                }
-            }
-            
-            const botolDipakai = Math.ceil(subtotal / HARGA_PER_BOTOL);
-            const newBotol = currentUser.botol - botolDipakai;
-            
-            const updates = {};
-            updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
-            
-            cart.forEach(item => {
-                updates[`/products/${item.id}/stock`] = firebase.database.ServerValue.increment(-item.quantity);
-            });
-            
-            const transId = Date.now().toString();
-            
-            const itemsByMerchant = {};
-            cart.forEach(item => {
-                if (!itemsByMerchant[item.merchant_id]) {
-                    itemsByMerchant[item.merchant_id] = [];
-                }
-                itemsByMerchant[item.merchant_id].push({
-                    id: item.id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    merchant_id: item.merchant_id,
-                    merchant_name: item.merchant_name
-                });
-            });
-            
-            const transactionData = {
-                type: 'PEMBELIAN',
-                user_id: currentUser.phone,
-                items: cart.map(i => ({
-                    id: i.id,
-                    name: i.name,
-                    quantity: i.quantity,
-                    price: i.price,
-                    merchant_id: i.merchant_id,
-                    merchant_name: i.merchant_name
-                })),
-                items_by_merchant: itemsByMerchant,
-                subtotal: subtotal,
-                total: subtotal,
-                timestamp: Date.now(),
-                status: 'diproses',
-                source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'
-            };
-            
-            // SIMPAN DATA LOKASI SUPER LENGKAP
-            if (deliveryEnabled) {
-                let googleMapsLink = '';
-                let address = '';
-                let locationDetail = {};
-                
-                if (userLocation.coordinates) {
-                    // Punya koordinat GPS/IP
-                    const { lat, lng } = userLocation.coordinates;
-                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                    address = userLocation.address || document.getElementById('delivery-address').innerText.split('\n')[0];
-                    
-                    locationDetail = {
-                        type: userLocation.method || 'gps',
-                        lat: lat,
-                        lng: lng,
-                        accuracy: userLocation.accuracy,
-                        source: userLocation.source || 'gps',
-                        timestamp: userLocation.timestamp,
-                        address: address,
-                        google_maps_link: googleMapsLink
-                    };
-                } else {
-                    // Manual address
-                    const manualAddr = manualAddress || document.getElementById('delivery-address').innerText.split('\n')[0];
-                    googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddr)}`;
-                    
-                    locationDetail = {
-                        type: 'manual',
-                        address: manualAddr,
-                        google_maps_link: googleMapsLink,
-                        timestamp: Date.now()
-                    };
-                }
-                
-                transactionData.delivery = locationDetail;
-            }
-            
-            updates[`/transactions/${currentUser.phone}/${transId}`] = transactionData;
-            
-            for (let merchantId in itemsByMerchant) {
-                updates[`/merchant_orders/${merchantId}/${transId}`] = {
-                    user_id: currentUser.phone,
-                    items: itemsByMerchant[merchantId],
-                    total: itemsByMerchant[merchantId].reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
-                    timestamp: Date.now(),
-                    status: 'diproses',
-                    delivery: transactionData.delivery || null,
-                    source: transactionData.source
+        
+        updateCartDisplay();
+        showNotification(`${product.name || 'Produk'} ditambahkan ke keranjang`, 'success');
+    }
+    
+    function updateQuantity(productId, change) {
+        const index = cart.findIndex(i => i.id === productId);
+        if (index === -1) return;
+        
+        const newQuantity = cart[index].quantity + change;
+        
+        if (newQuantity <= 0) {
+            cart.splice(index, 1);
+        } else {
+            cart[index].quantity = newQuantity;
+        }
+        
+        updateCartDisplay();
+    }
+    
+    function removeFromCart(productId) {
+        const index = cart.findIndex(i => i.id === productId);
+        if (index !== -1) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+    }
+    
+    function updateCartDisplay() {
+        document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.quantity, 0);
+        
+        const itemsDiv = document.getElementById('cart-items');
+        const totalSpan = document.getElementById('cart-total');
+        const subtotalSpan = document.getElementById('summary-subtotal');
+        const grandTotalSpan = document.getElementById('grand-total');
+        const checkoutBtn = document.getElementById('btn-checkout');
+        
+        if (cart.length === 0) {
+            itemsDiv.innerHTML = '<p style="color:#b2bec3; text-align:center; padding: 20px;">Keranjang belanja kosong</p>';
+            totalSpan.innerHTML = 'Total: Rp 0';
+            subtotalSpan.innerHTML = 'Rp 0';
+            grandTotalSpan.innerHTML = 'Total: Rp 0';
+            checkoutBtn.disabled = true;
+            return;
+        }
+        
+        let html = '';
+        let subtotal = 0;
+        
+        const cartByMerchant = {};
+        cart.forEach(item => {
+            if (!cartByMerchant[item.merchant_id]) {
+                cartByMerchant[item.merchant_id] = {
+                    merchant_name: item.merchant_name,
+                    items: []
                 };
             }
-            
-            db.ref().update(updates).then(() => {
-                sendWhatsAppNotification(transactionData);
-                
-                cart = [];
-                deliveryEnabled = false;
-                resetLocationData();
-                
-                document.getElementById('delivery-checkbox').checked = false;
-                document.getElementById('delivery-options').classList.add('hidden');
-                
-                updateCartDisplay();
-                document.getElementById('cart-panel').classList.add('hidden');
-                
-                showNotification('✅ Pembelian berhasil! Pesanan sedang diproses', 'success');
-                
-                loadUserOrders();
-            }).catch((error) => {
-                console.error('Error checkout:', error);
-                showNotification('❌ Gagal checkout: ' + error.message, 'error');
-            });
-        }
+            cartByMerchant[item.merchant_id].items.push(item);
+        });
         
-        function sendWhatsAppNotification(transactionData) {
-            let pesan = `*PEMBELIAN RE-COIN*\n`;
-            pesan += `ID User: ${currentUser.phone}\n`;
-            pesan += `Sumber: ${transactionData.source || 'ONLINE'}\n`;
-            pesan += `Waktu: ${new Date().toLocaleString('id-ID')}\n\n`;
+        for (let merchantId in cartByMerchant) {
+            const group = cartByMerchant[merchantId];
+            html += `<div style="margin-bottom: 15px;">`;
+            html += `<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 5px;">
+                        <i class="fas fa-store"></i> ${group.merchant_name || 'Toko'}
+                    </div>`;
             
-            pesan += `*PRODUK:*\n`;
-            
-            const byMerchant = {};
-            transactionData.items.forEach(item => {
-                if (!item) return;
-                const merchantName = item.merchant_name || 'Unknown';
-                if (!byMerchant[merchantName]) {
-                    byMerchant[merchantName] = [];
-                }
-                byMerchant[merchantName].push(item);
-            });
-            
-            for (let merchant in byMerchant) {
-                pesan += `\n🏪 *${merchant}*\n`;
-                byMerchant[merchant].forEach(item => {
-                    pesan += `- ${item.name || 'Produk'} x${item.quantity || 1} = Rp ${((item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}\n`;
-                });
-            }
-            
-            pesan += `\n*Total: Rp ${(transactionData.total || 0).toLocaleString('id-ID')}*`;
-            
-            if (transactionData.delivery) {
-                pesan += `\n\n*LOKASI PENGIRIMAN:*`;
-                pesan += `\nAlamat: ${transactionData.delivery.address || '-'}`;
-                if (transactionData.delivery.type === 'gps') {
-                    pesan += `\nAkurasi: ${transactionData.delivery.accuracy ? transactionData.delivery.accuracy.toFixed(0) + 'm' : 'Tidak diketahui'}`;
-                }
-                pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link || '-'}`;
-            }
-            
-            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
-        }
-
-        // ===========================================
-        // USER ORDERS
-        // ===========================================
-        function loadUserOrders() {
-            if (!currentUser.phone) return;
-            
-            const recentContainer = document.getElementById('recent-orders');
-            if (recentContainer) {
-                recentContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Memuat pesanan...</p>';
-            }
-            
-            db.ref('/transactions/' + currentUser.phone)
-                .orderByChild('timestamp')
-                .limitToLast(20)
-                .once('value', (snap) => {
-                    userOrders = [];
-                    const data = snap.val() || {};
-                    
-                    for (let id in data) {
-                        userOrders.push({
-                            id: id,
-                            ...data[id]
-                        });
-                    }
-                    
-                    userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    
-                    displayRecentOrders();
-                    
-                }).catch(error => {
-                    console.error('Error loading orders:', error);
-                    if (recentContainer) {
-                        recentContainer.innerHTML = '<p style="color: var(--danger);">Gagal memuat pesanan</p>';
-                    }
-                });
-        }
-        
-        function displayRecentOrders() {
-            const container = document.getElementById('recent-orders');
-            if (!container) return;
-            
-            const recent = userOrders.slice(0, 3);
-            
-            if (recent.length === 0) {
-                container.innerHTML = '<p style="color: #7f8c8d; font-size: 13px; text-align: center;">Belum ada pesanan</p>';
-                return;
-            }
-            
-            let html = '';
-            recent.forEach(order => {
-                const status = order.status || 'diproses';
-                const statusClass = status === 'diproses' ? 'status-diproses' : 
-                                   status === 'dikirim' ? 'status-dikirim' : 
-                                   status === 'selesai' ? 'status-selesai' : 'status-batal';
-                
-                let merchantCount = 0;
-                if (order.items_by_merchant) {
-                    merchantCount = Object.keys(order.items_by_merchant).length;
-                } else if (order.items && Array.isArray(order.items)) {
-                    const uniqueMerchants = new Set();
-                    order.items.forEach(item => {
-                        if (item && item.merchant_id) uniqueMerchants.add(item.merchant_id);
-                    });
-                    merchantCount = uniqueMerchants.size;
-                }
-                
-                const shortId = order.id ? order.id.slice(-8) : 'XXXX';
-                const total = order.total || 0;
+            group.items.forEach(item => {
+                const itemTotal = (item.price || 0) * item.quantity;
+                subtotal += itemTotal;
                 
                 html += `
-                    <div class="order-item" onclick="viewOrderDetail('${order.id}')">
-                        <div>
-                            <div style="font-weight: 600;">#${shortId}</div>
-                            <div class="order-merchant">${merchantCount} merchant</div>
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name || 'Produk'}</div>
+                            <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 700;">${formatRupiah(total)}</div>
-                            <span class="order-status ${statusClass}">${status}</span>
+                        <div class="cart-item-actions">
+                            <div class="cart-quantity">
+                                <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                                <span style="min-width: 25px; text-align: center;">${item.quantity}</span>
+                                <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+                            </div>
+                            <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 `;
             });
             
-            container.innerHTML = html;
+            html += `</div>`;
         }
         
-        function viewOrderDetail(orderId) {
-            showAllOrders();
-            
-            setTimeout(() => {
-                const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
-                if (orderElement) {
-                    orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    orderElement.style.backgroundColor = '#e8f8f5';
-                    setTimeout(() => {
-                        orderElement.style.backgroundColor = '';
-                    }, 2000);
-                }
-            }, 500);
-        }
+        itemsDiv.innerHTML = html;
+        totalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
+        subtotalSpan.innerHTML = formatRupiah(subtotal);
+        grandTotalSpan.innerHTML = `Total: ${formatRupiah(subtotal)}`;
         
-        function showAllOrders() {
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.remove('hidden');
-            
-            displayAllOrders();
-        }
-        
-        function hideOrders() {
-            document.getElementById('orders-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
-        }
-        
-        function displayAllOrders() {
-            const container = document.getElementById('orders-list-full');
-            if (!container) return;
-            
-            container.innerHTML = `
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Memuat pesanan...</p>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                if (userOrders.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-bag"></i>
-                            <p>Belum ada pesanan</p>
-                            <button class="btn-main" onclick="showShop()" style="margin-top: 20px;">Belanja Sekarang</button>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                let html = '';
-                const ordersToShow = userOrders.slice(0, 20);
-                
-                ordersToShow.forEach(order => {
-                    const status = order.status || 'diproses';
-                    const statusClass = status === 'diproses' ? 'status-diproses' : 
-                                       status === 'dikirim' ? 'status-dikirim' : 
-                                       status === 'selesai' ? 'status-selesai' : 'status-batal';
-                    
-                    const shortId = order.id ? order.id.slice(-8) : 'XXXX';
-                    const dateStr = order.timestamp ? formatDate(order.timestamp) : 'Tanggal tidak diketahui';
-                    const total = order.total || 0;
-                    
-                    let items = [];
-                    if (order.items && Array.isArray(order.items)) {
-                        items = order.items;
-                    } else if (order.items_by_merchant) {
-                        for (let merchantId in order.items_by_merchant) {
-                            const merchantItems = order.items_by_merchant[merchantId];
-                            if (Array.isArray(merchantItems)) {
-                                items = items.concat(merchantItems);
-                            }
-                        }
-                    }
-                    
-                    html += `
-                        <div class="order-card" data-order-id="${order.id}">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <div>
-                                    <span style="font-weight: 700;">#${shortId}</span>
-                                    <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
-                                        ${dateStr}
-                                    </span>
-                                </div>
-                                <span class="order-status ${statusClass}">${status}</span>
-                            </div>
-                    `;
-                    
-                    if (items.length > 0) {
-                        const itemsByMerchant = {};
-                        items.forEach(item => {
-                            if (!item) return;
-                            const merchantName = item.merchant_name || 'Unknown Merchant';
-                            if (!itemsByMerchant[merchantName]) {
-                                itemsByMerchant[merchantName] = [];
-                            }
-                            itemsByMerchant[merchantName].push(item);
-                        });
-                        
-                        for (let merchant in itemsByMerchant) {
-                            html += `
-                                <div style="margin: 10px 0; padding-left: 10px; border-left: 3px solid var(--primary);">
-                                    <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">
-                                        🏪 ${merchant}
-                                    </div>
-                            `;
-                            
-                            itemsByMerchant[merchant].forEach(item => {
-                                if (!item) return;
-                                const itemName = item.name || 'Produk';
-                                const itemQty = item.quantity || 1;
-                                const itemPrice = item.price || 0;
-                                
-                                html += `
-                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px;">
-                                        <span>${itemName} x${itemQty}</span>
-                                        <span>${formatRupiah(itemPrice * itemQty)}</span>
-                                    </div>
-                                `;
-                            });
-                            
-                            html += `</div>`;
-                        }
-                    } else {
-                        html += `<p style="color: #7f8c8d; font-size: 13px; padding: 10px;">Tidak ada detail produk</p>`;
-                    }
-                    
-                    html += `
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dfe6e9;">
-                                <span style="font-weight: 600;">Total</span>
-                                <span style="font-weight: 700; color: var(--primary);">${formatRupiah(total)}</span>
-                            </div>
-                    `;
-                    
-                    if (order.delivery && order.delivery.address) {
-                        let deliveryInfo = order.delivery.address;
-                        if (order.delivery.accuracy) {
-                            deliveryInfo += ` (akurasi ${order.delivery.accuracy.toFixed(0)}m)`;
-                        }
-                        
-                        html += `
-                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; background: #e8f8f5; padding: 8px; border-radius: 8px;">
-                                <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${deliveryInfo}
-                                ${order.delivery.google_maps_link ? `
-                                    <br><a href="${order.delivery.google_maps_link}" target="_blank" class="btn-maps" style="margin-top: 5px;">
-                                        <i class="fas fa-map-marked-alt"></i> Buka Google Maps
-                                    </a>
-                                ` : ''}
-                            </div>
-                        `;
-                    }
-                    
-                    if (status === 'dikirim') {
-                        html += `
-                            <div class="konfirmasi-button">
-                                <button class="btn-terima" onclick="konfirmasiPesananSelesai('${order.id}')">
-                                    <i class="fas fa-check-circle"></i> YA, PESANAN SUDAH DITERIMA
-                                </button>
-                                <p style="font-size: 11px; color: #7f8c8d; text-align: center; margin-top: 5px;">
-                                    Klik jika pesanan sudah sampai. Saldo akan otomatis masuk ke merchant.
-                                </p>
-                            </div>
-                        `;
-                    } else if (status === 'selesai') {
-                        html += `
-                            <div class="selesai-badge">
-                                <i class="fas fa-check-circle"></i> Pesanan sudah selesai. Terima kasih!
-                            </div>
-                        `;
-                    }
-                    
-                    html += `</div>`;
-                });
-                
-                if (userOrders.length > 20) {
-                    html += `
-                        <div style="text-align: center; padding: 20px; color: #7f8c8d;">
-                            <i class="fas fa-info-circle"></i> Menampilkan 20 pesanan terbaru
-                        </div>
-                    `;
-                }
-                
-                container.innerHTML = html;
-                
-            }, 100);
-        }
+        const saldo = currentUser.botol * HARGA_PER_BOTOL;
+        checkoutBtn.disabled = subtotal > saldo;
+    }
+    
+    function toggleCart() {
+        document.getElementById('cart-panel').classList.toggle('hidden');
+    }
 
-        // ===========================================
-        // REAL-TIME ORDER LISTENER
-        // ===========================================
-        function startOrderListener() {
-            if (!currentUser.phone) return;
+    // ===========================================
+    // CHECKOUT
+    // ===========================================
+    function checkout() {
+        const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+        const saldo = currentUser.botol * HARGA_PER_BOTOL;
+        
+        if (subtotal > saldo) {
+            showNotification('Saldo tidak cukup!', 'error');
+            return;
+        }
+        
+        if (cart.length === 0) {
+            showNotification('Keranjang belanja kosong!', 'error');
+            return;
+        }
+        
+        if (deliveryEnabled) {
+            if (!userLocation && !manualAddress) {
+                showNotification('📍 Harap tentukan lokasi pengiriman!', 'error');
+                return;
+            }
+        }
+        
+        const botolDipakai = Math.ceil(subtotal / HARGA_PER_BOTOL);
+        const newBotol = currentUser.botol - botolDipakai;
+        
+        const updates = {};
+        updates[`/accounts/${currentUser.phone}/botol`] = newBotol;
+        
+        cart.forEach(item => {
+            updates[`/products/${item.id}/stock`] = firebase.database.ServerValue.increment(-item.quantity);
+        });
+        
+        const transId = Date.now().toString();
+        
+        const itemsByMerchant = {};
+        cart.forEach(item => {
+            if (!itemsByMerchant[item.merchant_id]) {
+                itemsByMerchant[item.merchant_id] = [];
+            }
+            itemsByMerchant[item.merchant_id].push({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                merchant_id: item.merchant_id,
+                merchant_name: item.merchant_name
+            });
+        });
+        
+        const transactionData = {
+            type: 'PEMBELIAN',
+            user_id: currentUser.phone,
+            items: cart.map(i => ({
+                id: i.id,
+                name: i.name,
+                quantity: i.quantity,
+                price: i.price,
+                merchant_id: i.merchant_id,
+                merchant_name: i.merchant_name
+            })),
+            items_by_merchant: itemsByMerchant,
+            subtotal: subtotal,
+            total: subtotal,
+            timestamp: Date.now(),
+            status: 'diproses',
+            source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'
+        };
+        
+        // SIMPAN DATA LOKASI
+        if (deliveryEnabled) {
+            let googleMapsLink = '';
+            let address = '';
+            let locationDetail = {};
             
-            db.ref('/transactions/' + currentUser.phone).off();
-            
-            db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
-                const updatedOrder = snap.val();
-                const orderId = snap.key;
+            if (userLocation) {
+                const { lat, lng, accuracy } = userLocation;
+                googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                address = userLocation.address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                 
-                const index = userOrders.findIndex(o => o.id === orderId);
-                if (index !== -1) {
-                    userOrders[index] = {
-                        id: orderId,
-                        ...updatedOrder
-                    };
-                } else {
+                locationDetail = {
+                    type: 'gps',
+                    lat: lat,
+                    lng: lng,
+                    accuracy: accuracy,
+                    address: address,
+                    google_maps_link: googleMapsLink
+                };
+            } else if (manualAddress) {
+                googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddress)}`;
+                
+                locationDetail = {
+                    type: 'manual',
+                    address: manualAddress,
+                    google_maps_link: googleMapsLink
+                };
+            }
+            
+            transactionData.delivery = locationDetail;
+        }
+        
+        updates[`/transactions/${currentUser.phone}/${transId}`] = transactionData;
+        
+        for (let merchantId in itemsByMerchant) {
+            updates[`/merchant_orders/${merchantId}/${transId}`] = {
+                user_id: currentUser.phone,
+                items: itemsByMerchant[merchantId],
+                total: itemsByMerchant[merchantId].reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
+                timestamp: Date.now(),
+                status: 'diproses',
+                delivery: transactionData.delivery || null,
+                source: transactionData.source
+            };
+        }
+        
+        db.ref().update(updates).then(() => {
+            sendWhatsAppNotification(transactionData);
+            
+            cart = [];
+            deliveryEnabled = false;
+            resetLocation();
+            
+            document.getElementById('delivery-checkbox').checked = false;
+            document.getElementById('delivery-options').classList.add('hidden');
+            
+            updateCartDisplay();
+            document.getElementById('cart-panel').classList.add('hidden');
+            
+            showNotification('✅ Pembelian berhasil! Pesanan sedang diproses', 'success');
+            
+            loadUserOrders();
+        }).catch((error) => {
+            console.error('Error checkout:', error);
+            showNotification('❌ Gagal checkout: ' + error.message, 'error');
+        });
+    }
+    
+    function sendWhatsAppNotification(transactionData) {
+        let pesan = `*PEMBELIAN RE-COIN*\n`;
+        pesan += `ID User: ${currentUser.phone}\n`;
+        pesan += `Sumber: ${transactionData.source || 'ONLINE'}\n`;
+        pesan += `Waktu: ${new Date().toLocaleString('id-ID')}\n\n`;
+        
+        pesan += `*PRODUK:*\n`;
+        
+        const byMerchant = {};
+        transactionData.items.forEach(item => {
+            if (!item) return;
+            const merchantName = item.merchant_name || 'Unknown';
+            if (!byMerchant[merchantName]) {
+                byMerchant[merchantName] = [];
+            }
+            byMerchant[merchantName].push(item);
+        });
+        
+        for (let merchant in byMerchant) {
+            pesan += `\n🏪 *${merchant}*\n`;
+            byMerchant[merchant].forEach(item => {
+                pesan += `- ${item.name || 'Produk'} x${item.quantity || 1} = Rp ${((item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}\n`;
+            });
+        }
+        
+        pesan += `\n*Total: Rp ${(transactionData.total || 0).toLocaleString('id-ID')}*`;
+        
+        if (transactionData.delivery) {
+            pesan += `\n\n*LOKASI PENGIRIMAN:*`;
+            pesan += `\nAlamat: ${transactionData.delivery.address || '-'}`;
+            if (transactionData.delivery.type === 'gps') {
+                pesan += `\nAkurasi: ${transactionData.delivery.accuracy ? transactionData.delivery.accuracy.toFixed(0) + 'm' : 'Tidak diketahui'}`;
+            }
+            pesan += `\n🗺️ *Link Google Maps:* ${transactionData.delivery.google_maps_link || '-'}`;
+        }
+        
+        window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+    }
+
+    // ===========================================
+    // USER ORDERS
+    // ===========================================
+    function loadUserOrders() {
+        if (!currentUser.phone) return;
+        
+        const recentContainer = document.getElementById('recent-orders');
+        if (recentContainer) {
+            recentContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Memuat pesanan...</p>';
+        }
+        
+        db.ref('/transactions/' + currentUser.phone)
+            .orderByChild('timestamp')
+            .limitToLast(20)
+            .once('value', (snap) => {
+                userOrders = [];
+                const data = snap.val() || {};
+                
+                for (let id in data) {
                     userOrders.push({
-                        id: orderId,
-                        ...updatedOrder
+                        id: id,
+                        ...data[id]
                     });
                 }
+                
+                userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
+                displayRecentOrders();
+                
+            }).catch(error => {
+                console.error('Error loading orders:', error);
+                if (recentContainer) {
+                    recentContainer.innerHTML = '<p style="color: var(--danger);">Gagal memuat pesanan</p>';
+                }
+            });
+    }
+    
+    function displayRecentOrders() {
+        const container = document.getElementById('recent-orders');
+        if (!container) return;
+        
+        const recent = userOrders.slice(0, 3);
+        
+        if (recent.length === 0) {
+            container.innerHTML = '<p style="color: #7f8c8d; font-size: 13px; text-align: center;">Belum ada pesanan</p>';
+            return;
+        }
+        
+        let html = '';
+        recent.forEach(order => {
+            const status = order.status || 'diproses';
+            const statusClass = status === 'diproses' ? 'status-diproses' : 
+                               status === 'dikirim' ? 'status-dikirim' : 
+                               status === 'selesai' ? 'status-selesai' : 'status-batal';
+            
+            let merchantCount = 0;
+            if (order.items_by_merchant) {
+                merchantCount = Object.keys(order.items_by_merchant).length;
+            } else if (order.items && Array.isArray(order.items)) {
+                const uniqueMerchants = new Set();
+                order.items.forEach(item => {
+                    if (item && item.merchant_id) uniqueMerchants.add(item.merchant_id);
+                });
+                merchantCount = uniqueMerchants.size;
+            }
+            
+            const shortId = order.id ? order.id.slice(-8) : 'XXXX';
+            const total = order.total || 0;
+            
+            html += `
+                <div class="order-item" onclick="viewOrderDetail('${order.id}')">
+                    <div>
+                        <div style="font-weight: 600;">#${shortId}</div>
+                        <div class="order-merchant">${merchantCount} merchant</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700;">${formatRupiah(total)}</div>
+                        <span class="order-status ${statusClass}">${status}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    function viewOrderDetail(orderId) {
+        showAllOrders();
+        
+        setTimeout(() => {
+            const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+            if (orderElement) {
+                orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                orderElement.style.backgroundColor = '#e8f8f5';
+                setTimeout(() => {
+                    orderElement.style.backgroundColor = '';
+                }, 2000);
+            }
+        }, 500);
+    }
+    
+    function showAllOrders() {
+        document.getElementById('dashboard-page').classList.add('hidden');
+        document.getElementById('shop-page').classList.add('hidden');
+        document.getElementById('orders-page').classList.remove('hidden');
+        
+        displayAllOrders();
+    }
+    
+    function hideOrders() {
+        document.getElementById('orders-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+    }
+    
+    function displayAllOrders() {
+        const container = document.getElementById('orders-list-full');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Memuat pesanan...</p>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            if (userOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>Belum ada pesanan</p>
+                        <button class="btn-main" onclick="showShop()" style="margin-top: 20px;">Belanja Sekarang</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            const ordersToShow = userOrders.slice(0, 20);
+            
+            ordersToShow.forEach(order => {
+                const status = order.status || 'diproses';
+                const statusClass = status === 'diproses' ? 'status-diproses' : 
+                                   status === 'dikirim' ? 'status-dikirim' : 
+                                   status === 'selesai' ? 'status-selesai' : 'status-batal';
+                
+                const shortId = order.id ? order.id.slice(-8) : 'XXXX';
+                const dateStr = order.timestamp ? formatDate(order.timestamp) : 'Tanggal tidak diketahui';
+                const total = order.total || 0;
+                
+                let items = [];
+                if (order.items && Array.isArray(order.items)) {
+                    items = order.items;
+                } else if (order.items_by_merchant) {
+                    for (let merchantId in order.items_by_merchant) {
+                        const merchantItems = order.items_by_merchant[merchantId];
+                        if (Array.isArray(merchantItems)) {
+                            items = items.concat(merchantItems);
+                        }
+                    }
+                }
+                
+                html += `
+                    <div class="order-card" data-order-id="${order.id}">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div>
+                                <span style="font-weight: 700;">#${shortId}</span>
+                                <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
+                                    ${dateStr}
+                                </span>
+                            </div>
+                            <span class="order-status ${statusClass}">${status}</span>
+                        </div>
+                `;
+                
+                if (items.length > 0) {
+                    const itemsByMerchant = {};
+                    items.forEach(item => {
+                        if (!item) return;
+                        const merchantName = item.merchant_name || 'Unknown Merchant';
+                        if (!itemsByMerchant[merchantName]) {
+                            itemsByMerchant[merchantName] = [];
+                        }
+                        itemsByMerchant[merchantName].push(item);
+                    });
+                    
+                    for (let merchant in itemsByMerchant) {
+                        html += `
+                            <div style="margin: 10px 0; padding-left: 10px; border-left: 3px solid var(--primary);">
+                                <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">
+                                    🏪 ${merchant}
+                                </div>
+                        `;
+                        
+                        itemsByMerchant[merchant].forEach(item => {
+                            if (!item) return;
+                            const itemName = item.name || 'Produk';
+                            const itemQty = item.quantity || 1;
+                            const itemPrice = item.price || 0;
+                            
+                            html += `
+                                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px;">
+                                    <span>${itemName} x${itemQty}</span>
+                                    <span>${formatRupiah(itemPrice * itemQty)}</span>
+                                </div>
+                            `;
+                        });
+                        
+                        html += `</div>`;
+                    }
+                } else {
+                    html += `<p style="color: #7f8c8d; font-size: 13px; padding: 10px;">Tidak ada detail produk</p>`;
+                }
+                
+                html += `
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dfe6e9;">
+                            <span style="font-weight: 600;">Total</span>
+                            <span style="font-weight: 700; color: var(--primary);">${formatRupiah(total)}</span>
+                        </div>
+                `;
+                
+                if (order.delivery && order.delivery.address) {
+                    let deliveryInfo = order.delivery.address;
+                    if (order.delivery.accuracy) {
+                        deliveryInfo += ` (akurasi ${order.delivery.accuracy.toFixed(0)}m)`;
+                    }
+                    
+                    html += `
+                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; background: #e8f8f5; padding: 8px; border-radius: 8px;">
+                            <i class="fas fa-map-marker-alt"></i> Dikirim ke: ${deliveryInfo}
+                            ${order.delivery.google_maps_link ? `
+                                <br><a href="${order.delivery.google_maps_link}" target="_blank" class="btn-maps" style="margin-top: 5px;">
+                                    <i class="fas fa-map-marked-alt"></i> Buka Google Maps
+                                </a>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                if (status === 'dikirim') {
+                    html += `
+                        <div class="konfirmasi-button">
+                            <button class="btn-terima" onclick="konfirmasiPesananSelesai('${order.id}')">
+                                <i class="fas fa-check-circle"></i> YA, PESANAN SUDAH DITERIMA
+                            </button>
+                            <p style="font-size: 11px; color: #7f8c8d; text-align: center; margin-top: 5px;">
+                                Klik jika pesanan sudah sampai. Saldo akan otomatis masuk ke merchant.
+                            </p>
+                        </div>
+                    `;
+                } else if (status === 'selesai') {
+                    html += `
+                        <div class="selesai-badge">
+                            <i class="fas fa-check-circle"></i> Pesanan sudah selesai. Terima kasih!
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+            });
+            
+            if (userOrders.length > 20) {
+                html += `
+                    <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-info-circle"></i> Menampilkan 20 pesanan terbaru
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            
+        }, 100);
+    }
+
+    // ===========================================
+    // REAL-TIME ORDER LISTENER
+    // ===========================================
+    function startOrderListener() {
+        if (!currentUser.phone) return;
+        
+        db.ref('/transactions/' + currentUser.phone).off();
+        
+        db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
+            const updatedOrder = snap.val();
+            const orderId = snap.key;
+            
+            const index = userOrders.findIndex(o => o.id === orderId);
+            if (index !== -1) {
+                userOrders[index] = {
+                    id: orderId,
+                    ...updatedOrder
+                };
+            } else {
+                userOrders.push({
+                    id: orderId,
+                    ...updatedOrder
+                });
+            }
+            
+            userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            
+            displayRecentOrders();
+            
+            if (!document.getElementById('orders-page').classList.contains('hidden')) {
+                displayAllOrders();
+            }
+            
+            if (updatedOrder.status === 'dikirim') {
+                showNotification('📦 Pesanan #' + orderId.slice(-8) + ' sudah dikirim! Silakan cek dan konfirmasi.', 'info');
+            } else if (updatedOrder.status === 'selesai') {
+                showNotification('✅ Pesanan #' + orderId.slice(-8) + ' selesai! Terima kasih.', 'success');
+            }
+        });
+        
+        db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
+            const newOrder = snap.val();
+            const orderId = snap.key;
+            
+            if (!userOrders.some(o => o.id === orderId)) {
+                userOrders.push({
+                    id: orderId,
+                    ...newOrder
+                });
                 
                 userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
@@ -2928,269 +2911,245 @@ function cariAlamatDariKoordinat(lat, lng) {
                     displayAllOrders();
                 }
                 
-                if (updatedOrder.status === 'dikirim') {
-                    showNotification('📦 Pesanan #' + orderId.slice(-8) + ' sudah dikirim! Silakan cek dan konfirmasi.', 'info');
-                } else if (updatedOrder.status === 'selesai') {
-                    showNotification('✅ Pesanan #' + orderId.slice(-8) + ' selesai! Terima kasih.', 'success');
-                }
+                showNotification('📦 Ada pesanan baru!', 'success');
+            }
+        });
+    }
+
+    function stopOrderListener() {
+        if (currentUser.phone) {
+            db.ref('/transactions/' + currentUser.phone).off();
+        }
+    }
+
+    // ===========================================
+    // KONFIRMASI PESANAN SELESAI
+    // ===========================================
+    function konfirmasiPesananSelesai(orderId) {
+        if (!orderId) return;
+        
+        const order = userOrders.find(o => o.id === orderId);
+        if (!order) {
+            showNotification('Pesanan tidak ditemukan', 'error');
+            return;
+        }
+        
+        if (order.status === 'selesai') {
+            showNotification('Pesanan sudah selesai sebelumnya', 'info');
+            return;
+        }
+        
+        if (order.status !== 'dikirim') {
+            showNotification('Hanya pesanan dengan status DIKIRIM yang bisa dikonfirmasi', 'warning');
+            return;
+        }
+        
+        if (!confirm('Yakin pesanan sudah diterima? Saldo akan otomatis masuk ke merchant.')) {
+            return;
+        }
+        
+        showNotification('Memproses konfirmasi...', 'info');
+        
+        const updates = {};
+        let totalProcessed = 0;
+        let totalMerchants = 0;
+        
+        if (order.items_by_merchant) {
+            totalMerchants = Object.keys(order.items_by_merchant).length;
+        } else if (order.items) {
+            const uniqueMerchants = new Set();
+            order.items.forEach(item => {
+                if (item.merchant_id) uniqueMerchants.add(item.merchant_id);
             });
+            totalMerchants = uniqueMerchants.size;
+        }
+        
+        updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
+        
+        const processMerchant = (merchantId, merchantItems, merchantTotal) => {
+            updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
             
-            db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
-                const newOrder = snap.val();
-                const orderId = snap.key;
+            db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
+                const saldoSekarang = snap.val() || 0;
+                const saldoBaru = saldoSekarang + merchantTotal;
                 
-                if (!userOrders.some(o => o.id === orderId)) {
-                    userOrders.push({
-                        id: orderId,
-                        ...newOrder
-                    });
-                    
-                    userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    
-                    displayRecentOrders();
-                    
-                    if (!document.getElementById('orders-page').classList.contains('hidden')) {
+                updates[`/merchants/${merchantId}/saldo`] = saldoBaru;
+                
+                totalProcessed++;
+                
+                if (totalProcessed === totalMerchants) {
+                    db.ref().update(updates).then(() => {
+                        showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
+                        
+                        order.status = 'selesai';
                         displayAllOrders();
-                    }
-                    
-                    showNotification('📦 Ada pesanan baru!', 'success');
+                        displayRecentOrders();
+                        
+                        const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
+                                     `Order: #${orderId.slice(-8)}\n` +
+                                     `User: ${currentUser.phone}\n` +
+                                     `Total: Rp ${(order.total || 0).toLocaleString('id-ID')}\n` +
+                                     `Saldo otomatis masuk ke merchant.`;
+                        
+                        window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                        
+                    }).catch(error => {
+                        console.error('Error updating:', error);
+                        showNotification('Gagal update: ' + error.message, 'error');
+                    });
                 }
+            }).catch(error => {
+                console.error('Error getting merchant saldo:', error);
+                showNotification('Gagal mengambil data merchant', 'error');
             });
-        }
-
-        function stopOrderListener() {
-            if (currentUser.phone) {
-                db.ref('/transactions/' + currentUser.phone).off();
-            }
-        }
-
-        // ===========================================
-        // KONFIRMASI PESANAN SELESAI
-        // ===========================================
-        function konfirmasiPesananSelesai(orderId) {
-            if (!orderId) return;
-            
-            const order = userOrders.find(o => o.id === orderId);
-            if (!order) {
-                showNotification('Pesanan tidak ditemukan', 'error');
-                return;
-            }
-            
-            if (order.status === 'selesai') {
-                showNotification('Pesanan sudah selesai sebelumnya', 'info');
-                return;
-            }
-            
-            if (order.status !== 'dikirim') {
-                showNotification('Hanya pesanan dengan status DIKIRIM yang bisa dikonfirmasi', 'warning');
-                return;
-            }
-            
-            if (!confirm('Yakin pesanan sudah diterima? Saldo akan otomatis masuk ke merchant.')) {
-                return;
-            }
-            
-            showNotification('Memproses konfirmasi...', 'info');
-            
-            const updates = {};
-            let totalProcessed = 0;
-            let totalMerchants = 0;
-            
-            if (order.items_by_merchant) {
-                totalMerchants = Object.keys(order.items_by_merchant).length;
-            } else if (order.items) {
-                const uniqueMerchants = new Set();
-                order.items.forEach(item => {
-                    if (item.merchant_id) uniqueMerchants.add(item.merchant_id);
-                });
-                totalMerchants = uniqueMerchants.size;
-            }
-            
-            updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
-            
-            const processMerchant = (merchantId, merchantItems, merchantTotal) => {
-                updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
-                
-                db.ref('/merchants/' + merchantId + '/saldo').once('value', (snap) => {
-                    const saldoSekarang = snap.val() || 0;
-                    const saldoBaru = saldoSekarang + merchantTotal;
-                    
-                    updates[`/merchants/${merchantId}/saldo`] = saldoBaru;
-                    
-                    totalProcessed++;
-                    
-                    if (totalProcessed === totalMerchants) {
-                        db.ref().update(updates).then(() => {
-                            showNotification('✅ Pesanan selesai! Saldo merchant bertambah', 'success');
-                            
-                            order.status = 'selesai';
-                            displayAllOrders();
-                            displayRecentOrders();
-                            
-                            const pesan = `*KONFIRMASI PESANAN SELESAI*\n` +
-                                         `Order: #${orderId.slice(-8)}\n` +
-                                         `User: ${currentUser.phone}\n` +
-                                         `Total: Rp ${(order.total || 0).toLocaleString('id-ID')}\n` +
-                                         `Saldo otomatis masuk ke merchant.`;
-                            
-                            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
-                            
-                        }).catch(error => {
-                            console.error('Error updating:', error);
-                            showNotification('Gagal update: ' + error.message, 'error');
-                        });
-                    }
-                }).catch(error => {
-                    console.error('Error getting merchant saldo:', error);
-                    showNotification('Gagal mengambil data merchant', 'error');
-                });
-            };
-            
-            if (order.items_by_merchant) {
-                for (let merchantId in order.items_by_merchant) {
-                    const merchantItems = order.items_by_merchant[merchantId];
-                    const merchantTotal = merchantItems.reduce((sum, item) => {
-                        return sum + ((item.price || 0) * (item.quantity || 1));
-                    }, 0);
-                    
-                    processMerchant(merchantId, merchantItems, merchantTotal);
-                }
-            } else if (order.items) {
-                const itemsByMerchant = {};
-                order.items.forEach(item => {
-                    if (!item.merchant_id) return;
-                    if (!itemsByMerchant[item.merchant_id]) {
-                        itemsByMerchant[item.merchant_id] = [];
-                    }
-                    itemsByMerchant[item.merchant_id].push(item);
-                });
-                
-                for (let merchantId in itemsByMerchant) {
-                    const merchantItems = itemsByMerchant[merchantId];
-                    const merchantTotal = merchantItems.reduce((sum, item) => {
-                        return sum + ((item.price || 0) * (item.quantity || 1));
-                    }, 0);
-                    
-                    processMerchant(merchantId, merchantItems, merchantTotal);
-                }
-            } else {
-                showNotification('Data pesanan tidak lengkap', 'error');
-            }
-        }
-
-        // ===========================================
-        // SHOP NAVIGATION
-        // ===========================================
-        function showShop() {
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.remove('hidden');
-            loadMerchantsAndProducts();
-        }
-        
-        function hideShop() {
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
-        }
-
-        // ===========================================
-        // WITHDRAWAL
-        // ===========================================
-        function openWithdrawalModal() {
-            document.getElementById('modal-overlay').style.display = 'flex';
-        }
-        
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-        }
-        
-        function updatePaymentPlaceholder() {
-            const method = document.getElementById('payment-method').value;
-            const placeholder = method === 'BANK' 
-                ? 'Nama Bank, No Rekening, Atas Nama'
-                : `No HP ${method}, Atas Nama`;
-            document.getElementById('payment-details').placeholder = placeholder;
-        }
-        
-        function processWithdrawal() {
-            const method = document.getElementById('payment-method').value;
-            const details = document.getElementById('payment-details').value;
-            
-            if (!details) {
-                showNotification('Isi detail pembayaran!', 'error');
-                return;
-            }
-            
-            const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            
-            if (saldo < 5000) {
-                showNotification('Minimal penarikan Rp 5.000', 'error');
-                return;
-            }
-            
-            const transId = Date.now().toString();
-            db.ref('/transactions/' + currentUser.phone + '/' + transId).set({
-                type: 'PENARIKAN',
-                method: method,
-                details: details,
-                amount: saldo,
-                timestamp: Date.now(),
-                source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE',
-                status: 'pending'
-            }).then(() => {
-                db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
-                    const pesan = `*PENARIKAN SALDO USER*\n` +
-                                 `ID: ${currentUser.phone}\n` +
-                                 `Sumber: ${currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'}\n` +
-                                 `Jumlah: Rp ${saldo.toLocaleString('id-ID')}\n` +
-                                 `Metode: ${method}\n` +
-                                 `Detail: ${details}`;
-                    
-                    window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
-                    closeModal();
-                    showNotification('Permintaan penarikan dikirim', 'success');
-                });
-            }).catch((error) => {
-                console.error('Error withdrawal:', error);
-                showNotification('Gagal memproses penarikan', 'error');
-            });
-        }
-
-        // ===========================================
-        // INITIALIZATION
-        // ===========================================
-        window.onload = function() {
-            console.log('🌐 HALAMAN DIMUAT');
-            const urlParams = new URLSearchParams(window.location.search);
-            console.log('📌 PARAMETER URL:', {
-                mesin: urlParams.get('mesin'),
-                source: urlParams.get('source')
-            });
-            
-            const mode = getModeFromUrl();
-            
-            if (mode.mode === 'machine') {
-                document.getElementById('machine-info-login').classList.remove('hidden');
-                document.getElementById('machine-id-display').innerText = mode.machineId;
-                
-                if (mode.loginSource === 'machine') {
-                    document.getElementById('auth-subtitle').innerText = 'Login via QR (khusus mesin)';
-                    document.getElementById('source-info-login').innerText = 'via QR';
-                } else {
-                    document.getElementById('auth-subtitle').innerText = 'Login via web di mesin (tidak bisa menabung)';
-                    document.getElementById('source-info-login').innerText = 'via Web';
-                }
-                document.getElementById('source-info-login').classList.remove('hidden');
-            }
-            
-            document.getElementById('pass-warning').classList.add('hidden');
-            
-            const autoLoginSuccess = checkAutoLogin();
-            if (!autoLoginSuccess) {
-                document.getElementById('login-page').classList.remove('hidden');
-                document.getElementById('dashboard-page').classList.add('hidden');
-            }
         };
+        
+        if (order.items_by_merchant) {
+            for (let merchantId in order.items_by_merchant) {
+                const merchantItems = order.items_by_merchant[merchantId];
+                const merchantTotal = merchantItems.reduce((sum, item) => {
+                    return sum + ((item.price || 0) * (item.quantity || 1));
+                }, 0);
+                
+                processMerchant(merchantId, merchantItems, merchantTotal);
+            }
+        } else if (order.items) {
+            const itemsByMerchant = {};
+            order.items.forEach(item => {
+                if (!item.merchant_id) return;
+                if (!itemsByMerchant[item.merchant_id]) {
+                    itemsByMerchant[item.merchant_id] = [];
+                }
+                itemsByMerchant[item.merchant_id].push(item);
+            });
+            
+            for (let merchantId in itemsByMerchant) {
+                const merchantItems = itemsByMerchant[merchantId];
+                const merchantTotal = merchantItems.reduce((sum, item) => {
+                    return sum + ((item.price || 0) * (item.quantity || 1));
+                }, 0);
+                
+                processMerchant(merchantId, merchantItems, merchantTotal);
+            }
+        } else {
+            showNotification('Data pesanan tidak lengkap', 'error');
+        }
+    }
+
+    // ===========================================
+    // SHOP NAVIGATION
+    // ===========================================
+    function showShop() {
+        document.getElementById('dashboard-page').classList.add('hidden');
+        document.getElementById('orders-page').classList.add('hidden');
+        document.getElementById('shop-page').classList.remove('hidden');
+        loadMerchantsAndProducts();
+    }
+    
+    function hideShop() {
+        document.getElementById('shop-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+    }
+
+    // ===========================================
+    // WITHDRAWAL
+    // ===========================================
+    function openWithdrawalModal() {
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+    
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+    
+    function updatePaymentPlaceholder() {
+        const method = document.getElementById('payment-method').value;
+        const placeholder = method === 'BANK' 
+            ? 'Nama Bank, No Rekening, Atas Nama'
+            : `No HP ${method}, Atas Nama`;
+        document.getElementById('payment-details').placeholder = placeholder;
+    }
+    
+    function processWithdrawal() {
+        const method = document.getElementById('payment-method').value;
+        const details = document.getElementById('payment-details').value;
+        
+        if (!details) {
+            showNotification('Isi detail pembayaran!', 'error');
+            return;
+        }
+        
+        const saldo = currentUser.botol * HARGA_PER_BOTOL;
+        
+        if (saldo < 5000) {
+            showNotification('Minimal penarikan Rp 5.000', 'error');
+            return;
+        }
+        
+        const transId = Date.now().toString();
+        db.ref('/transactions/' + currentUser.phone + '/' + transId).set({
+            type: 'PENARIKAN',
+            method: method,
+            details: details,
+            amount: saldo,
+            timestamp: Date.now(),
+            source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE',
+            status: 'pending'
+        }).then(() => {
+            db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
+                const pesan = `*PENARIKAN SALDO USER*\n` +
+                             `ID: ${currentUser.phone}\n` +
+                             `Sumber: ${currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'}\n` +
+                             `Jumlah: Rp ${saldo.toLocaleString('id-ID')}\n` +
+                             `Metode: ${method}\n` +
+                             `Detail: ${details}`;
+                
+                window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                closeModal();
+                showNotification('Permintaan penarikan dikirim', 'success');
+            });
+        }).catch((error) => {
+            console.error('Error withdrawal:', error);
+            showNotification('Gagal memproses penarikan', 'error');
+        });
+    }
+
+    // ===========================================
+    // INITIALIZATION
+    // ===========================================
+    window.onload = function() {
+        console.log('🌐 HALAMAN DIMUAT');
+        const urlParams = new URLSearchParams(window.location.search);
+        console.log('📌 PARAMETER URL:', {
+            mesin: urlParams.get('mesin'),
+            source: urlParams.get('source')
+        });
+        
+        const mode = getModeFromUrl();
+        
+        if (mode.mode === 'machine') {
+            document.getElementById('machine-info-login').classList.remove('hidden');
+            document.getElementById('machine-id-display').innerText = mode.machineId;
+            
+            if (mode.loginSource === 'machine') {
+                document.getElementById('auth-subtitle').innerText = 'Login via QR (khusus mesin)';
+                document.getElementById('source-info-login').innerText = 'via QR';
+            } else {
+                document.getElementById('auth-subtitle').innerText = 'Login via web di mesin (tidak bisa menabung)';
+                document.getElementById('source-info-login').innerText = 'via Web';
+            }
+            document.getElementById('source-info-login').classList.remove('hidden');
+        }
+        
+        document.getElementById('pass-warning').classList.add('hidden');
+        
+        const autoLoginSuccess = checkAutoLogin();
+        if (!autoLoginSuccess) {
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('dashboard-page').classList.add('hidden');
+        }
+    };
+</script>
     </script>
 </body>
 </html>
