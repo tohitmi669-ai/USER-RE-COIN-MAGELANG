@@ -1316,6 +1316,11 @@
         let previousBotol = 0;
         
         // ===========================================
+        // AUTO LOGOUT VARIABLES
+        // ===========================================
+        let autoLogoutTimer = null;
+        
+        // ===========================================
         // ULTIMATE LOCATION SYSTEM
         // ===========================================
         let userLocation = {
@@ -1388,6 +1393,9 @@
                 showCoinAnimation(added);
                 animateBotolCard();
                 showNotification(`+${added} botol! Saldo bertambah Rp ${(added * HARGA_PER_BOTOL).toLocaleString('id-ID')}`, 'success', true);
+                
+                // 🔥 UPDATE LAST ACTIVITY KARENA ADA BOTOL MASUK
+                updateLastActivity();
             }
         }
 
@@ -1458,6 +1466,71 @@
             } catch (e) {
                 return 'Tanggal error';
             }
+        }
+
+        // ===========================================
+        // AUTO LOGOUT FUNCTIONS
+        // ===========================================
+        function mulaiAutoLogoutTimer() {
+            // Hapus timer lama jika ada
+            if (autoLogoutTimer) {
+                clearTimeout(autoLogoutTimer);
+            }
+            
+            // Set timer 5 menit (300000 ms)
+            autoLogoutTimer = setTimeout(() => {
+                console.log('⏰ 5 MENIT TANPA AKTIVITAS! AUTO LOGOUT...');
+                
+                // Cek apakah masih ada aktivitas?
+                const machinePath = '/' + currentUser.machine + '/active_user';
+                
+                db.ref(machinePath).once('value', (snap) => {
+                    const data = snap.val();
+                    if (data && data.id === currentUser.phone) {
+                        
+                        // Hapus user dari Firebase
+                        db.ref(machinePath).remove().then(() => {
+                            console.log('✅ Auto logout: user dihapus dari Firebase');
+                            
+                            showNotification('⏰ Auto logout setelah 5 menit tidak aktif', 'info');
+                            
+                            // Ubah mode ke online
+                            currentUser.isMachineMode = false;
+                            currentUser.machine = "";
+                            
+                            document.getElementById('machine-info-dashboard').classList.add('hidden');
+                            document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                            document.getElementById('mode-badge-dashboard').className = 'mode-badge online-mode';
+                            
+                            // Reset timer
+                            autoLogoutTimer = null;
+                        }).catch(error => {
+                            console.error('❌ Gagal auto logout:', error);
+                        });
+                    }
+                });
+                
+            }, 300000); // 5 menit
+        }
+
+        function updateLastActivity() {
+            if (!currentUser.isMachineMode || !currentUser.machine) return;
+            
+            const machinePath = '/' + currentUser.machine + '/active_user';
+            
+            db.ref(machinePath).update({
+                last_activity: Date.now()
+            }).then(() => {
+                console.log('⏱️ Last activity diupdate');
+                
+                // Reset timer auto logout
+                if (autoLogoutTimer) {
+                    clearTimeout(autoLogoutTimer);
+                    mulaiAutoLogoutTimer();
+                }
+            }).catch(error => {
+                console.error('❌ Gagal update last activity:', error);
+            });
         }
 
         // ===========================================
@@ -2140,62 +2213,163 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const sourceFromUrl = urlParams.get('source') || 'web';
                 
-                // PAKSA SOURCE = 'machine' KALAU DARI QR
                 if (sourceFromUrl === 'machine') {
                     currentUser.loginSource = 'machine';
                 }
                 
-                // 🔥🔥 KIRIM DATA KE FIREBASE 🔥🔥
-                console.log('📤 MENGIRIM KE FIREBASE:', {
-                    path: '/' + currentUser.machine + '/active_user',
-                    data: {
+                // 🔥🔥 CEK DULU APAKAH MESIN SEDANG DIPAKAI USER LAIN
+                const machinePath = '/' + currentUser.machine + '/active_user';
+                
+                showNotification('🔍 Memeriksa ketersediaan mesin...', 'info');
+                
+                db.ref(machinePath).once('value', (snap) => {
+                    const data = snap.val();
+                    const activeUserId = data ? data.id : null;
+                    const lastActivity = data ? data.last_activity : null;
+                    
+                    console.log('🔍 CEK MESIN:', { activeUserId, currentUser: currentUser.phone, lastActivity });
+                    
+                    // CEK APAKAH SUDAH 5 MENIT TIDAK AKTIF?
+                    if (activeUserId && lastActivity) {
+                        const waktuSekarang = Date.now();
+                        const selisih = waktuSekarang - lastActivity;
+                        
+                        if (selisih > 300000) { // 5 menit = 300000 ms
+                            console.log('⏰ User sebelumnya sudah tidak aktif >5 menit, auto logout');
+                            
+                            // Hapus user lama
+                            db.ref(machinePath).remove().then(() => {
+                                console.log('✅ User lama dihapus');
+                                kirimKeMesin();
+                            });
+                            return;
+                        }
+                    }
+                    
+                    // KASUS 1: TIDAK ADA USER AKTIF
+                    if (!activeUserId || activeUserId === "") {
+                        console.log('✅ Mesin kosong, boleh login');
+                        kirimKeMesin();
+                        return;
+                    }
+                    
+                    // KASUS 2: USER YANG SAMA (refresh/login ulang)
+                    if (activeUserId === currentUser.phone) {
+                        console.log('✅ User sama, refresh login');
+                        
+                        // Update login_time dan last_activity
+                        db.ref(machinePath).update({
+                            login_time: Date.now(),
+                            last_activity: Date.now(),
+                            expires: Date.now() + 300000,
+                            source: 'machine'
+                        }).then(() => {
+                            console.log('✅ Session diperpanjang');
+                            showNotification('✅ Session mesin diperpanjang', 'success');
+                            tampilkanDashboardMesin();
+                            
+                            // 🔥 MULAI AUTO LOGOUT TIMER
+                            mulaiAutoLogoutTimer();
+                        }).catch(error => {
+                            console.error('❌ Gagal update:', error);
+                        });
+                        
+                        return;
+                    }
+                    
+                    // KASUS 3: USER LAIN SEDANG MENGGUNAKAN MESIN
+                    if (activeUserId && activeUserId !== currentUser.phone) {
+                        console.log('❌❌ MESIN SEDANG DIPAKAI USER LAIN:', activeUserId);
+                        
+                        showNotification('⚠️ Mesin sedang digunakan oleh ' + activeUserId.substring(0, 5) + '...', 'error');
+                        
+                        currentUser.isMachineMode = false;
+                        currentUser.machine = "";
+                        
+                        document.getElementById('machine-info-dashboard').classList.add('hidden');
+                        modeBadge.innerText = '🌐 Mode Online';
+                        modeBadge.className = 'mode-badge online-mode';
+                        
+                        saveUserSession();
+                        startSaldoListener();
+                        loadMerchantsAndProducts();
+                        loadUserOrders();
+                        startOrderListener();
+                        
+                        showNotification('Anda login sebagai mode online', 'info');
+                        return;
+                    }
+                }).catch(error => {
+                    console.error('❌ Gagal cek mesin:', error);
+                    kirimKeMesin();
+                });
+                
+                // Fungsi untuk kirim data ke mesin
+                function kirimKeMesin() {
+                    console.log('📤 MENGIRIM KE FIREBASE:', {
+                        path: '/' + currentUser.machine + '/active_user',
+                        data: {
+                            id: currentUser.phone,
+                            login_time: Date.now(),
+                            last_activity: Date.now(),
+                            expires: Date.now() + 300000,
+                            source: 'machine'
+                        }
+                    });
+                    
+                    db.ref('/' + currentUser.machine + '/active_user').set({
                         id: currentUser.phone,
                         login_time: Date.now(),
+                        last_activity: Date.now(),
                         expires: Date.now() + 300000,
                         source: 'machine'
-                    }
-                });
-                
-                // KIRIM DATA KE FIREBASE
-                db.ref('/' + currentUser.machine + '/active_user').set({
-                    id: currentUser.phone,
-                    login_time: Date.now(),
-                    expires: Date.now() + 300000,
-                    source: 'machine'
-                }).then(() => {
-                    console.log('✅ BERHASIL TERKIRIM KE FIREBASE!');
-                    showNotification('✅ Terhubung ke mesin', 'success');
-                }).catch((error) => {
-                    console.error('❌ GAGAL MENGIRIM:', error);
-                    showNotification('❌ Gagal terhubung ke mesin', 'error');
-                });
-                
-                // Tampilkan di dashboard
-                if (currentUser.loginSource === 'machine') {
-                    modeBadge.innerText = '🏭 Mode Mesin (QR)';
-                    modeBadge.className = 'mode-badge qr-mode';
-                    document.getElementById('source-info-dashboard').innerText = 'via QR';
-                } else {
-                    modeBadge.innerText = '🏭 Mode Mesin (Web)';
-                    modeBadge.className = 'mode-badge machine-mode';
-                    document.getElementById('source-info-dashboard').innerText = 'via Web';
+                    }).then(() => {
+                        console.log('✅ BERHASIL TERKIRIM KE FIREBASE!');
+                        showNotification('✅ Terhubung ke mesin', 'success');
+                        tampilkanDashboardMesin();
+                        
+                        // 🔥 MULAI AUTO LOGOUT TIMER
+                        mulaiAutoLogoutTimer();
+                    }).catch((error) => {
+                        console.error('❌ GAGAL MENGIRIM:', error);
+                        showNotification('❌ Gagal terhubung ke mesin', 'error');
+                        tampilkanDashboardMesin();
+                    });
                 }
-                document.getElementById('source-info-dashboard').classList.remove('hidden');
+                
+                // Fungsi untuk tampilkan dashboard mesin
+                function tampilkanDashboardMesin() {
+                    if (currentUser.loginSource === 'machine') {
+                        modeBadge.innerText = '🏭 Mode Mesin (QR)';
+                        modeBadge.className = 'mode-badge qr-mode';
+                        document.getElementById('source-info-dashboard').innerText = 'via QR';
+                    } else {
+                        modeBadge.innerText = '🏭 Mode Mesin (Web)';
+                        modeBadge.className = 'mode-badge machine-mode';
+                        document.getElementById('source-info-dashboard').innerText = 'via Web';
+                    }
+                    document.getElementById('source-info-dashboard').classList.remove('hidden');
+                    
+                    saveUserSession();
+                    startSaldoListener();
+                    loadMerchantsAndProducts();
+                    loadUserOrders();
+                    startOrderListener();
+                }
                 
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
                 modeBadge.innerText = '🌐 Mode Online';
                 modeBadge.className = 'mode-badge online-mode';
+                
+                saveUserSession();
+                startSaldoListener();
+                loadMerchantsAndProducts();
+                loadUserOrders();
+                startOrderListener();
+                
+                showNotification('Selamat datang di RE-COIN!');
             }
-            
-            saveUserSession();
-            
-            startSaldoListener();
-            loadMerchantsAndProducts();
-            loadUserOrders();
-            startOrderListener();
-            
-            showNotification('Selamat datang di RE-COIN!');
         }
         
         function startSaldoListener() {
@@ -2244,6 +2418,12 @@
             showNotification('Proses logout...', 'info');
             
             stopOrderListener();
+            
+            // Hapus auto logout timer
+            if (autoLogoutTimer) {
+                clearTimeout(autoLogoutTimer);
+                autoLogoutTimer = null;
+            }
             
             if (currentUser.isMachineMode && currentUser.machine) {
                 db.ref('/' + currentUser.machine + '/active_user').remove().catch(e => console.log(e));
