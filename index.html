@@ -296,6 +296,11 @@
             color: #2d3436;
         }
         
+        .qr-mode {
+            background: var(--success);
+            color: white;
+        }
+        
         .btn-logout {
             background: none;
             border: none;
@@ -979,6 +984,16 @@
             cursor: pointer;
         }
         
+        /* QR Source Badge */
+        .qr-badge {
+            background: var(--success);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        
         /* Mobile Optimization */
         @media (max-width: 480px) {
             .product-grid {
@@ -1031,6 +1046,7 @@
         <!-- Mode info (akan tampil jika ada QR) -->
         <div id="machine-info-login" class="machine-info hidden">
             <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
+            <span id="source-info-login" class="qr-badge hidden">QR</span>
         </div>
         
         <input type="number" id="phone-input" placeholder="Nomor HP" required>
@@ -1064,7 +1080,8 @@
         </div>
         
         <div id="machine-info-dashboard" class="machine-info hidden">
-            <span>Anda menggunakan mesin: <span id="active-machine" class="machine-id">-</span></span>
+            <span>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></span>
+            <span id="source-info-dashboard" class="qr-badge hidden"></span>
         </div>
         
         <div class="stat-card" id="botol-stat-card">
@@ -1245,6 +1262,7 @@
             botol: 0,
             machine: "",
             isMachineMode: false,
+            loginSource: "web", // "web" atau "machine"
             rememberMe: true
         };
         
@@ -1325,16 +1343,21 @@
         }
         
         // ===========================================
-        // UTILITY FUNCTIONS
+        // UTILITY FUNCTIONS - DENGAN SOURCE DETECTION
         // ===========================================
         function getModeFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const mesin = urlParams.get('mesin');
+            const source = urlParams.get('source');
             
             if (mesin) {
-                return { mode: 'machine', machineId: mesin };
+                return { 
+                    mode: 'machine', 
+                    machineId: mesin,
+                    loginSource: source || 'web' // default 'web' jika tidak ada source
+                };
             } else {
-                return { mode: 'online', machineId: null };
+                return { mode: 'online', machineId: null, loginSource: 'web' };
             }
         }
         
@@ -1543,7 +1566,44 @@
         }
         
         // ===========================================
-        // AUTO LOGIN FUNCTIONS - DENGAN CEK MESIN
+        // FUNGSI UNTUK CEK USER AKTIF DI MESIN
+        // ===========================================
+        function checkMachineActiveUser(machineId, myPhone) {
+            return new Promise((resolve) => {
+                db.ref('/' + machineId + '/active_user/id').once('value', (snap) => {
+                    const activeUserId = snap.val();
+                    
+                    if (activeUserId && activeUserId !== myPhone) {
+                        // Ada user lain yang sedang menggunakan mesin
+                        resolve({
+                            available: false,
+                            message: 'Mesin sedang digunakan oleh user lain'
+                        });
+                    } else if (activeUserId === myPhone) {
+                        // User yang sama sedang menggunakan mesin
+                        resolve({
+                            available: true,
+                            message: 'Anda masih terdaftar di mesin'
+                        });
+                    } else {
+                        // Mesin kosong
+                        resolve({
+                            available: true,
+                            message: 'Mesin tersedia'
+                        });
+                    }
+                }).catch(error => {
+                    console.error('Error checking machine:', error);
+                    resolve({
+                        available: true,
+                        message: 'Gagal cek mesin, lanjutkan'
+                    });
+                });
+            });
+        }
+        
+        // ===========================================
+        // AUTO LOGIN FUNCTIONS - DENGAN SOURCE
         // ===========================================
         function saveUserSession() {
             if (!currentUser.phone) return;
@@ -1554,7 +1614,8 @@
                 loginTime: Date.now(),
                 expiresAt: Date.now() + SESSION_DURATION,
                 machine: currentUser.machine,
-                isMachineMode: currentUser.isMachineMode
+                isMachineMode: currentUser.isMachineMode,
+                loginSource: currentUser.loginSource // SIMPAN SOURCE
             };
             
             localStorage.setItem('recoin_user_session', JSON.stringify(sessionData));
@@ -1580,6 +1641,7 @@
                     currentUser.machine = session.machine || "";
                     currentUser.isMachineMode = session.isMachineMode || false;
                     currentUser.rememberMe = true;
+                    currentUser.loginSource = session.loginSource || 'web';
                     
                     db.ref('/accounts/' + session.phone).once('value', (snap) => {
                         if (snap.exists()) {
@@ -1629,17 +1691,20 @@
             if (currentUser.isMachineMode) {
                 document.getElementById('active-machine').innerText = currentUser.machine;
                 document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                modeBadge.innerText = '🏭 Mode Mesin';
-                modeBadge.className = 'mode-badge machine-mode';
                 
-                // Set active user di mesin (sudah dipastikan aman)
-                db.ref('/' + currentUser.machine + '/active_user').set({
-                    id: currentUser.phone,
-                    login_time: Date.now(),
-                    expires: Date.now() + 300000
-                }).catch(error => {
-                    console.error('Error setting active user:', error);
-                });
+                // Tampilkan source di dashboard
+                const sourceInfo = document.getElementById('source-info-dashboard');
+                if (currentUser.loginSource === 'machine') {
+                    modeBadge.innerText = '🏭 Mode Mesin (QR)';
+                    modeBadge.className = 'mode-badge qr-mode';
+                    sourceInfo.innerText = 'via QR';
+                    sourceInfo.classList.remove('hidden');
+                } else {
+                    modeBadge.innerText = '🏭 Mode Mesin (Web)';
+                    modeBadge.className = 'mode-badge machine-mode';
+                    sourceInfo.innerText = 'via Web';
+                    sourceInfo.classList.remove('hidden');
+                }
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
                 modeBadge.innerText = '🌐 Mode Online';
@@ -1665,44 +1730,7 @@
         }
         
         // ===========================================
-        // FUNGSI UNTUK CEK USER AKTIF DI MESIN
-        // ===========================================
-        function checkMachineActiveUser(machineId, myPhone) {
-            return new Promise((resolve) => {
-                db.ref('/' + machineId + '/active_user/id').once('value', (snap) => {
-                    const activeUserId = snap.val();
-                    
-                    if (activeUserId && activeUserId !== myPhone) {
-                        // Ada user lain yang sedang menggunakan mesin
-                        resolve({
-                            available: false,
-                            message: 'Mesin sedang digunakan oleh user lain'
-                        });
-                    } else if (activeUserId === myPhone) {
-                        // User yang sama sedang menggunakan mesin
-                        resolve({
-                            available: true,
-                            message: 'Anda masih terdaftar di mesin'
-                        });
-                    } else {
-                        // Mesin kosong
-                        resolve({
-                            available: true,
-                            message: 'Mesin tersedia'
-                        });
-                    }
-                }).catch(error => {
-                    console.error('Error checking machine:', error);
-                    resolve({
-                        available: true,
-                        message: 'Gagal cek mesin, lanjutkan'
-                    });
-                });
-            });
-        }
-        
-        // ===========================================
-        // AUTHENTICATION - DENGAN CEK MESIN
+        // AUTHENTICATION - DENGAN SOURCE
         // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
@@ -1724,12 +1752,25 @@
             document.getElementById('pass-warning').classList.add('hidden');
             currentUser.phone = phone;
             currentUser.rememberMe = rememberMe;
+            currentUser.loginSource = mode.loginSource; // SIMPAN SOURCE DARI URL
             
             if (mode.mode === 'machine') {
                 currentUser.machine = mode.machineId;
                 currentUser.isMachineMode = true;
                 
-                // CEK DULU SEBELUM LOGIN
+                // Tampilkan info source di login page
+                document.getElementById('machine-info-login').classList.remove('hidden');
+                document.getElementById('machine-id-display').innerText = mode.machineId;
+                
+                const sourceInfo = document.getElementById('source-info-login');
+                if (mode.loginSource === 'machine') {
+                    sourceInfo.innerText = 'via QR';
+                    sourceInfo.classList.remove('hidden');
+                } else {
+                    sourceInfo.innerText = 'via Web';
+                    sourceInfo.classList.remove('hidden');
+                }
+                
                 showNotification('Memeriksa ketersediaan mesin...', 'info');
                 
                 checkMachineActiveUser(mode.machineId, phone).then(result => {
@@ -1809,18 +1850,34 @@
             if (currentUser.isMachineMode) {
                 document.getElementById('active-machine').innerText = currentUser.machine;
                 document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                modeBadge.innerText = '🏭 Mode Mesin';
-                modeBadge.className = 'mode-badge machine-mode';
                 
-                // Set active user di mesin (sudah dipastikan aman)
+                // SET ACTIVE USER DI MESIN DENGAN SOURCE
                 db.ref('/' + currentUser.machine + '/active_user').set({
                     id: currentUser.phone,
                     login_time: Date.now(),
-                    expires: Date.now() + 300000 // 5 menit
+                    expires: Date.now() + 300000, // 5 menit
+                    source: currentUser.loginSource || 'web' // PENTING: source disimpan
                 }).catch(error => {
                     console.error('Error setting active user:', error);
                     showNotification('Gagal mengakses mesin', 'error');
                 });
+                
+                // Tampilkan source di dashboard
+                const sourceInfo = document.getElementById('source-info-dashboard');
+                if (currentUser.loginSource === 'machine') {
+                    modeBadge.innerText = '🏭 Mode Mesin (QR)';
+                    modeBadge.className = 'mode-badge qr-mode';
+                    sourceInfo.innerText = 'via QR';
+                    sourceInfo.classList.remove('hidden');
+                } else {
+                    modeBadge.innerText = '🏭 Mode Mesin (Web)';
+                    modeBadge.className = 'mode-badge machine-mode';
+                    sourceInfo.innerText = 'via Web';
+                    sourceInfo.classList.remove('hidden');
+                    
+                    // Tampilkan peringatan jika login via web di mesin
+                    showNotification('⚠️ Anda login via web di mesin. Mesin mungkin tidak merespon.', 'warning');
+                }
             } else {
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
                 modeBadge.innerText = '🌐 Mode Online';
@@ -1912,12 +1969,14 @@
             document.getElementById('phone-input').value = '';
             document.getElementById('pass-input').value = '';
             document.getElementById('machine-info-login').classList.add('hidden');
+            document.getElementById('source-info-login').classList.add('hidden');
             
             currentUser = {
                 phone: "",
                 botol: 0,
                 machine: "",
                 isMachineMode: false,
+                loginSource: "web",
                 rememberMe: true
             };
             
@@ -2297,7 +2356,7 @@
                 total: subtotal,
                 timestamp: Date.now(),
                 status: 'diproses',
-                source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE'
+                source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'
             };
             
             if (deliveryEnabled && (userLocation || manualAddress)) {
@@ -2327,7 +2386,8 @@
                     total: itemsByMerchant[merchantId].reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
                     timestamp: Date.now(),
                     status: 'diproses',
-                    delivery: transactionData.delivery || null
+                    delivery: transactionData.delivery || null,
+                    source: transactionData.source
                 };
             }
             
@@ -2359,6 +2419,7 @@
         function sendWhatsAppNotification(transactionData) {
             let pesan = `*PEMBELIAN RE-COIN*\n`;
             pesan += `ID User: ${currentUser.phone}\n`;
+            pesan += `Sumber: ${transactionData.source || 'ONLINE'}\n`;
             pesan += `Waktu: ${new Date().toLocaleString('id-ID')}\n\n`;
             
             pesan += `*PRODUK:*\n`;
@@ -2924,12 +2985,13 @@
                 details: details,
                 amount: saldo,
                 timestamp: Date.now(),
-                source: currentUser.isMachineMode ? 'MESIN' : 'ONLINE',
+                source: currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE',
                 status: 'pending'
             }).then(() => {
                 db.ref('/accounts/' + currentUser.phone + '/botol').set(0).then(() => {
                     const pesan = `*PENARIKAN SALDO USER*\n` +
                                  `ID: ${currentUser.phone}\n` +
+                                 `Sumber: ${currentUser.isMachineMode ? (currentUser.loginSource === 'machine' ? 'MESIN_QR' : 'MESIN_WEB') : 'ONLINE'}\n` +
                                  `Jumlah: Rp ${saldo.toLocaleString('id-ID')}\n` +
                                  `Metode: ${method}\n` +
                                  `Detail: ${details}`;
@@ -2953,7 +3015,16 @@
             if (mode.mode === 'machine') {
                 document.getElementById('machine-info-login').classList.remove('hidden');
                 document.getElementById('machine-id-display').innerText = mode.machineId;
-                document.getElementById('auth-subtitle').innerText = 'Login via QR (wajib password)';
+                
+                if (mode.loginSource === 'machine') {
+                    document.getElementById('auth-subtitle').innerText = 'Login via QR (khusus mesin)';
+                    document.getElementById('source-info-login').innerText = 'via QR';
+                    document.getElementById('source-info-login').classList.remove('hidden');
+                } else {
+                    document.getElementById('auth-subtitle').innerText = 'Login via web di mesin (tidak bisa menabung)';
+                    document.getElementById('source-info-login').innerText = 'via Web';
+                    document.getElementById('source-info-login').classList.remove('hidden');
+                }
             }
             
             document.getElementById('pass-warning').classList.add('hidden');
