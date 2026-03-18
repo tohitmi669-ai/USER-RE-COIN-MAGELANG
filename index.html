@@ -1536,497 +1536,229 @@
         // ===========================================
         // ULTIMATE LOCATION FUNCTIONS
         // ===========================================
-        function toggleDelivery() {
-            const checkbox = document.getElementById('delivery-checkbox');
-            const deliveryOptions = document.getElementById('delivery-options');
+        // ===========================================
+// GPS SEDERHANA - PAKAI GPS PERANGKAT SAJA
+// ===========================================
+let userLocation = null;  // Simpan lokasi user
+let deliveryEnabled = false;
+let manualAddress = "";
+
+function toggleDelivery() {
+    const checkbox = document.getElementById('delivery-checkbox');
+    const deliveryOptions = document.getElementById('delivery-options');
+    
+    deliveryEnabled = checkbox.checked;
+    
+    if (deliveryEnabled) {
+        deliveryOptions.classList.remove('hidden');
+    } else {
+        deliveryOptions.classList.add('hidden');
+        resetLocation();
+    }
+    
+    updateCartDisplay();
+}
+
+function resetLocation() {
+    userLocation = null;
+    manualAddress = "";
+    document.getElementById('delivery-info').classList.add('hidden');
+    document.getElementById('maps-link').classList.add('hidden');
+    document.getElementById('manual-address-input').classList.add('hidden');
+}
+
+function showManualAddressInput() {
+    document.getElementById('manual-address-input').classList.remove('hidden');
+}
+
+function submitManualAddress() {
+    const address = document.getElementById('manual-address').value.trim();
+    
+    if (!address) {
+        showNotification('Masukkan alamat terlebih dahulu!', 'error');
+        return;
+    }
+    
+    if (address.length < 10) {
+        showNotification('Alamat terlalu pendek. Masukkan alamat lengkap.', 'error');
+        return;
+    }
+    
+    manualAddress = address;
+    userLocation = null; // Reset GPS karena pakai manual
+    
+    // Update tampilan
+    document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
+    
+    // Buat link Google Maps
+    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    document.getElementById('maps-link').href = mapsLink;
+    document.getElementById('maps-link').classList.remove('hidden');
+    
+    document.getElementById('delivery-info').classList.remove('hidden');
+    document.getElementById('manual-address-input').classList.add('hidden');
+    
+    updateCartDisplay();
+    showNotification('✅ Alamat manual berhasil disimpan', 'success');
+}
+
+// 🔥 FUNGSI UTAMA GPS - SEDERHANA DAN EFEKTIF
+function getUserLocation() {
+    showNotification('📍 Mengakses GPS perangkat...', 'info');
+    
+    // Reset data sebelumnya
+    userLocation = null;
+    
+    // Tampilkan loading
+    const deliveryInfo = document.getElementById('delivery-info');
+    const deliveryAddress = document.getElementById('delivery-address');
+    deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengakses GPS...';
+    deliveryInfo.classList.remove('hidden');
+    document.getElementById('maps-link').classList.add('hidden');
+    
+    // CEK APAKAH PERANGKAT MENDUKUNG GPS
+    if (!navigator.geolocation) {
+        showNotification('❌ Perangkat tidak mendukung GPS. Silakan input manual.', 'error');
+        showManualAddressInput();
+        return;
+    }
+    
+    // Opsi GPS - akurasi tinggi untuk mobile
+    const options = {
+        enableHighAccuracy: true,  // Minta akurasi tinggi (pakai GPS, bukan WiFi)
+        timeout: 15000,            // Timeout 15 detik
+        maximumAge: 0              // Jangan pakai cache
+    };
+    
+    // Minta izin dan ambil lokasi
+    navigator.geolocation.getCurrentPosition(
+        // SUKSES - DAPAT LOKASI
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
             
-            deliveryEnabled = checkbox.checked;
+            console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
             
-            if (deliveryEnabled) {
-                deliveryOptions.classList.remove('hidden');
-            } else {
-                deliveryOptions.classList.add('hidden');
-                resetLocationData();
-            }
-            
-            updateCartDisplay();
-        }
-        
-        function resetLocationData() {
+            // Simpan data lokasi
             userLocation = {
-                coordinates: null,
-                address: null,
-                method: null,
-                timestamp: null,
-                source: null,
-                accuracy: null
+                lat: lat,
+                lng: lng,
+                accuracy: accuracy,
+                timestamp: Date.now()
             };
-            manualAddress = "";
-            document.getElementById('delivery-info').classList.add('hidden');
-            document.getElementById('maps-link').classList.add('hidden');
-            document.getElementById('manual-address-input').classList.add('hidden');
-            document.getElementById('accuracy-indicator').classList.add('hidden');
-        }
-        
-        function showManualAddressInput() {
-            document.getElementById('manual-address-input').classList.remove('hidden');
-        }
-        
-        function submitManualAddress() {
-            const address = document.getElementById('manual-address').value.trim();
-            
-            if (!address) {
-                showNotification('Masukkan alamat terlebih dahulu!', 'error');
-                return;
-            }
-            
-            if (address.length < 10) {
-                showNotification('Alamat terlalu pendek. Masukkan alamat lengkap.', 'error');
-                return;
-            }
-            
-            manualAddress = address;
-            
-            // Reset data GPS
-            userLocation = {
-                coordinates: null,
-                address: address,
-                method: 'manual',
-                timestamp: Date.now(),
-                source: 'input manual',
-                accuracy: null
-            };
-            
-            // Update tampilan
-            document.getElementById('delivery-address').innerHTML = `<strong>${address}</strong>`;
             
             // Buat link Google Maps
-            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
             document.getElementById('maps-link').href = mapsLink;
             document.getElementById('maps-link').classList.remove('hidden');
             
-            document.getElementById('delivery-info').classList.remove('hidden');
-            document.getElementById('manual-address-input').classList.add('hidden');
-            document.getElementById('accuracy-indicator').classList.add('hidden');
+            // Tampilkan koordinat dulu
+            deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
+            
+            showNotification('📍 Lokasi GPS didapatkan!', 'success');
+            
+            // OPSIONAL: Cari alamat dari koordinat (pakai API gratis)
+            cariAlamatDariKoordinat(lat, lng);
             
             updateCartDisplay();
-            showNotification('✅ Alamat manual berhasil disimpan', 'success');
-        }
-        
-        // MAIN FUNCTION: GET USER LOCATION (3-TIER SYSTEM)
-        function getUserLocation() {
-            showNotification('📍 Mendeteksi lokasi terbaik...', 'info');
+        },
+        // GAGAL - TIDAK DAPAT LOKASI
+        (error) => {
+            let message = 'Gagal mendapatkan lokasi';
             
-            // Reset data sebelumnya
-            userLocation = {
-                coordinates: null,
-                address: null,
-                method: null,
-                timestamp: null,
-                source: null,
-                accuracy: null
-            };
-            
-            // Tampilkan loading
-            const deliveryInfo = document.getElementById('delivery-info');
-            const deliveryAddress = document.getElementById('delivery-address');
-            deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari lokasi terakurat...';
-            deliveryInfo.classList.remove('hidden');
-            document.getElementById('maps-link').classList.add('hidden');
-            document.getElementById('accuracy-indicator').classList.add('hidden');
-            
-            // TIER 1: Coba GPS dulu (paling akurat)
-            if (navigator.geolocation) {
-                tryGPSSmart();
-            } else {
-                // TIER 2: GPS tidak didukung, langsung fallback ke IP
-                showNotification('📡 GPS tidak tersedia, mencoba deteksi via jaringan...', 'info');
-                fallbackToNetworkLocation();
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'Izin GPS ditolak. Silakan izinkan akses atau input manual.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Sinyal GPS tidak tersedia. Coba di luar ruangan.';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Waktu GPS habis. Coba lagi atau input manual.';
+                    break;
+                default:
+                    message = 'Error GPS tidak diketahui';
             }
-        }
-        
-        // TIER 1: GPS dengan smart timeout
-        function tryGPSSmart() {
-            showNotification('📡 Mengaktifkan GPS...', 'info');
             
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0
-            };
+            showNotification(`❌ ${message}`, 'error');
+            console.error('GPS Error:', error);
             
-            navigator.geolocation.getCurrentPosition(
-                // SUCCESS GPS
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    
-                    console.log(`📍 GPS: Lat ${lat}, Lng ${lng}, Akurasi ${accuracy}m`);
-                    
-                    // Simpan koordinat
-                    userLocation.coordinates = { lat, lng };
-                    userLocation.method = 'gps';
-                    userLocation.timestamp = Date.now();
-                    userLocation.accuracy = accuracy;
-                    
-                    // Tentukan kualitas akurasi
-                    let accuracyClass = '';
-                    let accuracyText = '';
-                    if (accuracy <= 10) {
-                        accuracyClass = 'accuracy-high';
-                        accuracyText = '⭐ Akurasi Sangat Tinggi';
-                    } else if (accuracy <= 50) {
-                        accuracyClass = 'accuracy-high';
-                        accuracyText = '✅ Akurasi Tinggi';
-                    } else if (accuracy <= 200) {
-                        accuracyClass = 'accuracy-medium';
-                        accuracyText = '⚠️ Akurasi Sedang';
-                    } else {
-                        accuracyClass = 'accuracy-low';
-                        accuracyText = '⚠️ Akurasi Rendah';
-                    }
-                    
-                    // Tampilkan indikator akurasi
-                    const accuracyDiv = document.getElementById('accuracy-indicator');
-                    accuracyDiv.innerHTML = `<span class="accuracy-badge ${accuracyClass}">${accuracyText} (${accuracy.toFixed(0)}m)</span>`;
-                    accuracyDiv.classList.remove('hidden');
-                    
-                    // Buat link Google Maps
-                    createGoogleMapsLink(lat, lng);
-                    
-                    // Cari alamat
-                    findAddressFromCoordinates(lat, lng, accuracy);
-                },
-                // ERROR GPS
-                (error) => {
-                    console.log('GPS gagal:', error.code);
-                    
-                    let errorMessage = '';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Akses GPS ditolak';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Sinyal GPS tidak tersedia';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = 'Waktu GPS habis';
-                            break;
-                        default:
-                            errorMessage = 'Error GPS';
-                    }
-                    
-                    showNotification(`⚠️ ${errorMessage}, mencari alternatif...`, 'warning');
-                    
-                    // TIER 2: Fallback ke IP
-                    fallbackToNetworkLocation();
-                },
-                options
-            );
-        }
-        
-        // TIER 2: Network/IP Location (gratis, multiple providers)
-        function fallbackToNetworkLocation() {
-            showNotification('📱 Mendeteksi lokasi via jaringan...', 'info');
+            // Sembunyikan loading
+            deliveryInfo.classList.add('hidden');
             
-            // Coba multiple IP services secara parallel
-            Promise.any([
-                getLocationFromIpApi(),
-                getLocationFromIpInfo(),
-                getLocationFromGeoPlugin()
-            ])
-            .then(result => {
-                const { lat, lng, city, region, country, source } = result;
-                
-                console.log(`📍 IP Location: ${city}, ${region} (${lat},${lng}) dari ${source}`);
-                
-                userLocation.coordinates = { lat, lng };
-                userLocation.method = 'network';
-                userLocation.timestamp = Date.now();
-                userLocation.source = source;
-                userLocation.accuracy = 5000; // IP accuracy sekitar 5km
-                
-                // Tampilkan indikator akurasi
-                const accuracyDiv = document.getElementById('accuracy-indicator');
-                accuracyDiv.innerHTML = `<span class="accuracy-badge accuracy-low">⚠️ Akurasi Rendah (perkiraan dari IP)</span>`;
-                accuracyDiv.classList.remove('hidden');
-                
-                // Buat link Google Maps
-                createGoogleMapsLink(lat, lng);
-                
-                // Format alamat dari data IP
-                const addressFromIP = `${city || 'Kota'}, ${region || ''}, ${country || 'Indonesia'}`
-                    .replace(/, ,/g, ',')
-                    .replace(/,$/, '')
-                    .trim();
-                
-                document.getElementById('delivery-address').innerHTML = 
-                    `<strong>${addressFromIP}</strong><br><small style="color:#666;">(perkiraan dari jaringan)</small>`;
-                
-                userLocation.address = addressFromIP;
-                
-                showNotification(`📍 Lokasi: ${addressFromIP}`, 'success');
-                
-                // Tawarkan koreksi alamat
-                showAddressCorrectionOption(addressFromIP);
-            })
-            .catch(error => {
-                console.log('Semua IP service gagal:', error);
-                
-                // TIER 3: Fallback ke input manual
-                showNotification('⚠️ Tidak bisa deteksi otomatis. Silakan input manual.', 'warning');
-                document.getElementById('delivery-info').classList.add('hidden');
-                showManualAddressInput();
-            });
-        }
-        
-        // IP Geolocation Services (GRATIS)
-        function getLocationFromIpApi() {
-            return new Promise((resolve, reject) => {
-                fetch('https://ipapi.co/json/', {
-                    headers: { 'User-Agent': 'RE-COIN-App/1.0' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.latitude && data.longitude) {
-                        resolve({
-                            lat: data.latitude,
-                            lng: data.longitude,
-                            city: data.city,
-                            region: data.region,
-                            country: data.country_name,
-                            source: 'ipapi.co'
-                        });
-                    } else {
-                        reject(new Error('IPAPI gagal'));
-                    }
-                })
-                .catch(() => {
-                    // Fallback ke API kedua
-                    getLocationFromIpApiFallback().then(resolve).catch(reject);
-                });
-            });
-        }
-        
-        function getLocationFromIpApiFallback() {
-            return new Promise((resolve, reject) => {
-                fetch('http://ip-api.com/json/?fields=status,lat,lon,city,regionName,country', {
-                    headers: { 'User-Agent': 'RE-COIN-App/1.0' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        resolve({
-                            lat: data.lat,
-                            lng: data.lon,
-                            city: data.city,
-                            region: data.regionName,
-                            country: data.country,
-                            source: 'ip-api.com'
-                        });
-                    } else {
-                        reject(new Error('IP-API gagal'));
-                    }
-                })
-                .catch(reject);
-            });
-        }
-        
-        function getLocationFromIpInfo() {
-            return new Promise((resolve, reject) => {
-                fetch('https://ipinfo.io/json?token=') // Token kosong = limited free
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.loc) {
-                        const [lat, lng] = data.loc.split(',');
-                        resolve({
-                            lat: parseFloat(lat),
-                            lng: parseFloat(lng),
-                            city: data.city,
-                            region: data.region,
-                            country: data.country,
-                            source: 'ipinfo.io'
-                        });
-                    } else {
-                        reject(new Error('IPInfo gagal'));
-                    }
-                })
-                .catch(reject);
-            });
-        }
-        
-        function getLocationFromGeoPlugin() {
-            return new Promise((resolve, reject) => {
-                fetch('http://www.geoplugin.net/json.gp')
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.geoplugin_status === 200) {
-                        resolve({
-                            lat: parseFloat(data.geoplugin_latitude),
-                            lng: parseFloat(data.geoplugin_longitude),
-                            city: data.geoplugin_city,
-                            region: data.geoplugin_region,
-                            country: data.geoplugin_countryName,
-                            source: 'geoplugin.net'
-                        });
-                    } else {
-                        reject(new Error('GeoPlugin gagal'));
-                    }
-                })
-                .catch(reject);
-            });
-        }
-        
-        // Reverse Geocoding (Koordinat -> Alamat)
-        function findAddressFromCoordinates(lat, lng, accuracy) {
-            showNotification('🔍 Mencari alamat...', 'info');
-            
-            const deliveryAddress = document.getElementById('delivery-address');
-            deliveryAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari alamat...';
-            
-            // Coba multiple reverse geocoding services
-            Promise.any([
-                getAddressFromNominatim(lat, lng),
-                getAddressFromBigDataCloud(lat, lng)
-            ])
-            .then(address => {
-                userLocation.address = address;
-                
-                // Tampilkan dengan info akurasi
-                let accuracyText = '';
-                if (accuracy <= 10) accuracyText = '⭐ Akurasi sangat tinggi';
-                else if (accuracy <= 50) accuracyText = '✅ Akurasi tinggi';
-                else if (accuracy <= 200) accuracyText = '⚠️ Akurasi sedang';
-                else accuracyText = '⚠️ Akurasi rendah';
-                
-                deliveryAddress.innerHTML = `
-                    <strong>${address}</strong><br>
-                    <small style="color: #666;">${accuracyText} (${accuracy.toFixed(0)}m)</small>
-                `;
-                
-                showNotification(`📍 Alamat ditemukan`, 'success');
-            })
-            .catch(error => {
-                console.log('Reverse geocoding gagal:', error);
-                
-                // Fallback: tampilkan koordinat
-                deliveryAddress.innerHTML = `
-                    ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>
-                    <small style="color: #999;">Klik link Maps untuk lihat peta</small>
-                `;
-                
-                showNotification('📍 Koordinat tersedia, klik link Google Maps', 'info');
-            });
-        }
-        
-        function getAddressFromNominatim(lat, lng) {
-            return new Promise((resolve, reject) => {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
-                
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=id`, {
-                    headers: { 
-                        'User-Agent': 'RE-COIN-App/1.0',
-                        'Accept-Language': 'id'
-                    },
-                    signal: controller.signal
-                })
-                .then(response => response.json())
-                .then(data => {
-                    clearTimeout(timeoutId);
-                    if (data && data.display_name) {
-                        resolve(formatAddressIndonesia(data));
-                    } else {
-                        reject(new Error('No address'));
-                    }
-                })
-                .catch(reject);
-            });
-        }
-        
-        function getAddressFromBigDataCloud(lat, lng) {
-            return new Promise((resolve, reject) => {
-                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && (data.locality || data.city || data.principalSubdivision)) {
-                        const parts = [];
-                        if (data.locality) parts.push(data.locality);
-                        if (data.city) parts.push(data.city);
-                        if (data.principalSubdivision) parts.push(data.principalSubdivision);
-                        if (data.postcode) parts.push(data.postcode);
-                        
-                        resolve(parts.join(', ') || 'Alamat tidak ditemukan');
-                    } else {
-                        reject(new Error('No address'));
-                    }
-                })
-                .catch(reject);
-            });
-        }
-        
-        function formatAddressIndonesia(data) {
-            if (!data || !data.address) return data?.display_name || 'Alamat tidak diketahui';
-            
-            const addr = data.address;
-            const parts = [];
-            
-            if (addr.road) parts.push(addr.road);
-            if (addr.suburb) parts.push(addr.suburb);
-            if (addr.city || addr.town || addr.village) {
-                parts.push(addr.city || addr.town || addr.village);
-            }
-            if (addr.county) parts.push(addr.county);
-            if (addr.state) parts.push(addr.state);
-            if (addr.postcode) parts.push(addr.postcode);
-            
-            return parts.join(', ') || data.display_name;
-        }
-        
-        function createGoogleMapsLink(lat, lng) {
-            const mapsLink = document.getElementById('maps-link');
-            const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-            mapsLink.href = googleMapsUrl;
-            mapsLink.classList.remove('hidden');
-        }
-        
-        function showAddressCorrectionOption(estimatedAddress) {
-            const deliveryInfo = document.getElementById('delivery-info');
-            
-            // Hapus tombol sebelumnya jika ada
-            const existing = deliveryInfo.querySelector('.address-correction');
-            if (existing) existing.remove();
-            
-            const correctionDiv = document.createElement('div');
-            correctionDiv.className = 'address-correction';
-            correctionDiv.innerHTML = `
-                <button class="btn-secondary" onclick="showManualAddressInput()" style="width:100%; margin-bottom:5px;">
-                    <i class="fas fa-pencil-alt"></i> Perbaiki Alamat
-                </button>
-                <button class="btn-success" onclick="confirmEstimatedAddress()" style="width:100%;">
-                    <i class="fas fa-check"></i> Gunakan Alamat Ini
-                </button>
-            `;
-            
-            deliveryInfo.appendChild(correctionDiv);
-        }
-        
-        function confirmEstimatedAddress() {
-            const addressElement = document.getElementById('delivery-address');
-            const addressText = addressElement.innerText || addressElement.textContent;
-            const cleanAddress = addressText.split('\n')[0].trim();
-            
-            userLocation.address = cleanAddress;
-            
-            // Hapus tombol koreksi
-            const correctionDiv = document.querySelector('.address-correction');
-            if (correctionDiv) correctionDiv.remove();
-            
-            showNotification('✅ Alamat dikonfirmasi', 'success');
-            updateCartDisplay();
-        }
+            // Tawarkan input manual
+            showManualAddressInput();
+        },
+        options
+    );
+}
 
+// OPSIONAL: Cari alamat dari koordinat (pakai Nominatim - gratis)
+function cariAlamatDariKoordinat(lat, lng) {
+    const deliveryAddress = document.getElementById('delivery-address');
+    
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&accept-language=id`, {
+        headers: { 'User-Agent': 'RE-COIN-App/1.0' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.display_name) {
+            let address = data.display_name;
+            if (address.length > 100) {
+                address = address.substring(0, 100) + '...';
+            }
+            deliveryAddress.innerHTML = `<strong>${address}</strong><br><small>Akurasi: ${userLocation.accuracy.toFixed(0)}m</small>`;
+            userLocation.address = address;
+        }
+    })
+    .catch(error => {
+        console.log('Gagal ambil alamat:', error);
+        // Tetap pakai koordinat
+    });
+}
+
+// ===========================================
+// MODIFIKASI FUNGSI CHECKOUT
+// ===========================================
+// Di dalam fungsi checkout(), ganti bagian penyimpanan lokasi dengan ini:
+
+// SIMPAN DATA LOKASI
+if (deliveryEnabled) {
+    let googleMapsLink = '';
+    let address = '';
+    let locationDetail = {};
+    
+    if (userLocation) {
+        // Punya koordinat GPS
+        const { lat, lng, accuracy } = userLocation;
+        googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        address = userLocation.address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        
+        locationDetail = {
+            type: 'gps',
+            lat: lat,
+            lng: lng,
+            accuracy: accuracy,
+            address: address,
+            google_maps_link: googleMapsLink
+        };
+    } else if (manualAddress) {
+        // Manual address
+        googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(manualAddress)}`;
+        
+        locationDetail = {
+            type: 'manual',
+            address: manualAddress,
+            google_maps_link: googleMapsLink
+        };
+    } else {
+        showNotification('📍 Harap tentukan lokasi pengiriman!', 'error');
+        return;
+    }
+    
+    transactionData.delivery = locationDetail;
+}
         // ===========================================
         // AUTO LOGIN FUNCTIONS
         // ===========================================
