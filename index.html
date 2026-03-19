@@ -103,7 +103,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps, .btn-refresh {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -153,18 +153,7 @@
             margin-top: 5px;
         }
         
-        .btn-refresh {
-            background: var(--info);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            font-size: 14px;
-        }
-        
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-refresh:active {
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active {
             transform: scale(0.98);
         }
         
@@ -346,7 +335,6 @@
             border-radius: 20px;
             padding: 16px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid #ecf0f1;
         }
         
         .merchant-header {
@@ -356,6 +344,11 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #ecf0f1;
+            cursor: pointer;
+        }
+        
+        .merchant-header:hover {
+            background: #f8f9fa;
         }
         
         .merchant-avatar {
@@ -397,7 +390,6 @@
             border-radius: 16px;
             padding: 12px;
             transition: transform 0.3s ease;
-            border: 1px solid #ecf0f1;
         }
         
         .product-card:hover {
@@ -471,7 +463,6 @@
             position: relative;
             display: inline-block;
             cursor: pointer;
-            font-size: 24px;
         }
         
         .cart-count {
@@ -966,26 +957,160 @@
             margin-left: 5px;
         }
         
-        .debug-info {
-            background: #2d3436;
-            color: #f1f2f6;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            margin: 10px 0;
-            max-height: 200px;
-            overflow-y: auto;
+        /* Timeline Status */
+        .status-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
         }
         
-        .debug-toggle {
+        .status-timeline::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 40px;
+            right: 40px;
+            height: 2px;
             background: #dfe6e9;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            z-index: 1;
+        }
+        
+        .timeline-point {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .timeline-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            background: white;
+            border: 2px solid #dfe6e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            color: #7f8c8d;
+        }
+        
+        .timeline-point.active .timeline-icon {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .timeline-point.completed .timeline-icon {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .timeline-label {
             font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .timeline-point.active .timeline-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .timeline-point.completed .timeline-label {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        /* Tombol Konfirmasi */
+        .btn-konfirmasi {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
             cursor: pointer;
-            margin-bottom: 10px;
+            transition: 0.3s;
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .btn-konfirmasi:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-konfirmasi:disabled {
+            background: #dfe6e9;
+            animation: none;
+            cursor: not-allowed;
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(39, 174, 96, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+        }
+        
+        /* Detail Pesanan */
+        .order-detail-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .order-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .order-detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .order-detail-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        .order-detail-value {
+            font-weight: 600;
+            color: var(--dark);
+            text-align: right;
+        }
+        
+        .order-items-list {
+            margin: 15px 0;
+        }
+        
+        .order-item-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .order-item-name {
+            flex: 2;
+        }
+        
+        .order-item-qty {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .order-item-price {
+            flex: 1;
+            text-align: right;
+            font-weight: 600;
         }
         
         @media (max-width: 480px) {
@@ -1047,7 +1172,7 @@
             • Tukar botol jadi saldo uang dan belanja<br>
             • Belanja dari berbagai merchant Mitra RECOIN<br>
             • Pengiriman GRATIS ke lokasi Anda<br>
-            • Konfirmasi pesanan untuk saldo merchant<br>
+            • KONFIRMASI PESANAN setelah diterima untuk menambah saldo merchant<br>
             • Login akan tersimpan 7 hari
         </div>
     </div>
@@ -1111,19 +1236,6 @@
                 🛒
                 <span class="cart-count" id="cart-count">0</span>
             </div>
-        </div>
-        
-        <!-- Refresh Button -->
-        <button class="btn-refresh" onclick="loadMerchantsAndProducts()">
-            <i class="fas fa-sync"></i> Refresh Produk
-        </button>
-        
-        <!-- Debug Info (Hidden by default) -->
-        <button class="debug-toggle" onclick="toggleDebug()">
-            <i class="fas fa-bug"></i> Toggle Debug Info
-        </button>
-        <div id="debug-info" class="debug-info hidden">
-            <div id="debug-content"></div>
         </div>
         
         <!-- Cart Panel -->
@@ -1206,6 +1318,17 @@
         </div>
     </div>
 
+    <!-- ORDER DETAIL PAGE (BARU) -->
+    <div id="order-detail-page" class="card card-full hidden">
+        <button class="btn-back" onclick="hideOrderDetail()">
+            ← Kembali ke Pesanan
+        </button>
+        
+        <div id="order-detail-content">
+            <!-- Isi akan diisi JavaScript -->
+        </div>
+    </div>
+
     <!-- WITHDRAWAL MODAL -->
     <div id="modal-overlay">
         <div class="modal">
@@ -1273,7 +1396,7 @@
         let autoLogoutTimer = null;
         
         // ===========================================
-        // GPS SEDERHANA
+        // GPS
         // ===========================================
         let userLocation = null;
         let deliveryEnabled = false;
@@ -1339,37 +1462,6 @@
             } catch (e) {
                 return 'Tanggal error';
             }
-        }
-
-        // ===========================================
-        // DEBUG FUNCTIONS
-        // ===========================================
-        function toggleDebug() {
-            document.getElementById('debug-info').classList.toggle('hidden');
-            updateDebugInfo();
-        }
-        
-        function updateDebugInfo() {
-            const debug = document.getElementById('debug-content');
-            if (!debug) return;
-            
-            let html = '<strong>🔍 DEBUG INFO:</strong><br>';
-            html += `Merchants: ${merchants.length}<br>`;
-            html += `Products: ${products.length}<br><br>`;
-            
-            html += '<strong>Merchants List:</strong><br>';
-            merchants.forEach(m => {
-                html += `- ${m.nama_toko} (${m.id}) status: ${m.status || 'active'}<br>`;
-            });
-            
-            html += '<br><strong>Products List:</strong><br>';
-            products.forEach(p => {
-                html += `- ${p.name} (${p.id})<br>`;
-                html += `  merchant_id: ${p.merchant_id}<br>`;
-                html += `  stock: ${p.stock}, price: ${p.price}<br>`;
-            });
-            
-            debug.innerHTML = html;
         }
 
         // ===========================================
@@ -1538,6 +1630,7 @@
             document.getElementById('dashboard-page').classList.add('hidden');
             document.getElementById('shop-page').classList.add('hidden');
             document.getElementById('orders-page').classList.add('hidden');
+            document.getElementById('order-detail-page').classList.add('hidden');
         }
 
         // ===========================================
@@ -1633,62 +1726,20 @@
         }
 
         // ===========================================
-        // LOAD DATA (FIXED VERSION)
+        // LOAD DATA
         // ===========================================
         function loadMerchantsAndProducts() {
-            // Show loading
-            document.getElementById('products-container').innerHTML = 
-                '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat produk...</p></div>';
-            
-            // Reset arrays
-            merchants = [];
-            products = [];
-            
-            // Load merchants
             db.ref('/merchants').once('value', (ms) => {
-                console.log('📦 Raw merchants data:', ms.val());
-                
+                merchants = [];
                 ms.forEach(m => { 
-                    const merchantData = m.val();
-                    console.log('Merchant:', m.key, merchantData);
-                    
-                    // If no status field, assume active
-                    if (!merchantData.status || merchantData.status === 'active') {
-                        merchants.push({ 
-                            id: m.key, 
-                            nama_toko: merchantData.nama_toko || 'Toko ' + m.key.substr(0,5),
-                            ...merchantData 
-                        });
+                    if (m.val().status === 'active' || !m.val().status) {
+                        merchants.push({ id: m.key, ...m.val() }); 
                     }
                 });
                 
-                console.log('✅ Processed merchants:', merchants.length);
-                
-                // Load products
                 db.ref('/products').once('value', (ps) => {
-                    console.log('📦 Raw products data:', ps.val());
-                    
-                    ps.forEach(p => {
-                        const productData = p.val();
-                        console.log('Product:', p.key, productData);
-                        
-                        products.push({ 
-                            id: p.key, 
-                            name: productData.name || productData.nama || 'Produk',
-                            price: productData.price || productData.harga || 0,
-                            stock: productData.stock || productData.stok || 0,
-                            merchant_id: productData.merchant_id || productData.merchantId || productData.toko_id,
-                            image: productData.image || productData.gambar || 'https://via.placeholder.com/150',
-                            ...productData 
-                        });
-                    });
-                    
-                    console.log('✅ Processed products:', products.length);
-                    
-                    // Update debug info
-                    updateDebugInfo();
-                    
-                    // Display products
+                    products = [];
+                    ps.forEach(p => products.push({ id: p.key, ...p.val() }));
                     displayProducts();
                 });
             });
@@ -1702,21 +1753,9 @@
             } else if (products.length === 0) {
                 html = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Tidak ada produk</p></div>';
             } else {
-                let totalProductsDisplayed = 0;
-                
                 merchants.forEach(m => {
-                    // Filter products for this merchant
-                    const merchantProducts = products.filter(p => {
-                        const match = p.merchant_id === m.id && p.stock > 0;
-                        console.log(`Product ${p.id}: merchant_id=${p.merchant_id}, m.id=${m.id}, stock=${p.stock}, match=${match}`);
-                        return match;
-                    });
-                    
-                    console.log(`Merchant ${m.nama_toko} (${m.id}) has ${merchantProducts.length} products`);
-                    
-                    if (merchantProducts.length === 0) return;
-                    
-                    totalProductsDisplayed += merchantProducts.length;
+                    const mp = products.filter(p => p.merchant_id === m.id && p.stock > 0);
+                    if (!mp.length) return;
                     
                     html += `<div class="merchant-section">
                         <div class="merchant-header">
@@ -1728,13 +1767,13 @@
                         </div>
                         <div class="product-grid">`;
                     
-                    merchantProducts.slice(0, 4).forEach(p => {
+                    mp.slice(0, 4).forEach(p => {
                         html += `<div class="product-card">
                             <div class="product-image">
-                                <img src="${p.image}" onerror="this.src='https://via.placeholder.com/150'">
+                                <img src="${p.image || 'https://via.placeholder.com/150'}" onerror="this.src='https://via.placeholder.com/150'">
                             </div>
-                            <div class="product-name">${p.name}</div>
-                            <div class="product-price">${formatRupiah(p.price)}</div>
+                            <div class="product-name">${p.name || 'Produk'}</div>
+                            <div class="product-price">${formatRupiah(p.price || 0)}</div>
                             <div class="product-stock ${p.stock <= 5 ? 'stock-low' : ''}">Stok: ${p.stock}</div>
                             <button class="btn-beli" onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
                                 <i class="fas fa-cart-plus"></i> Tambah
@@ -1744,21 +1783,9 @@
                     
                     html += '</div></div>';
                 });
-                
-                if (totalProductsDisplayed === 0) {
-                    html = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Tidak ada produk tersedia</p></div>';
-                }
             }
             
-            document.getElementById('products-container').innerHTML = html;
-            
-            // Add message if no products
-            if (html === '') {
-                document.getElementById('products-container').innerHTML = 
-                    '<div class="empty-state"><i class="fas fa-box-open"></i><p>Belum ada produk yang ditambahkan</p></div>';
-            }
-            
-            console.log('✅ Display products completed');
+            document.getElementById('products-container').innerHTML = html || '<div class="empty-state">Tidak ada produk tersedia</div>';
         }
 
         // ===========================================
@@ -1766,10 +1793,7 @@
         // ===========================================
         function addToCart(id) {
             const p = products.find(p => p.id === id);
-            if (!p) {
-                showNotification('Produk tidak ditemukan!', 'error');
-                return;
-            }
+            if (!p) return;
             
             if (currentUser.botol * HARGA_PER_BOTOL < p.price) {
                 showNotification('Saldo tidak cukup!', 'error');
@@ -1784,7 +1808,9 @@
                 cart.push({ 
                     ...p, 
                     quantity: 1, 
-                    merchant_name: merchant?.nama_toko || 'Toko'
+                    merchant_name: merchant?.nama_toko || 'Toko',
+                    merchant_id: p.merchant_id,
+                    ongkir: p.ongkir || 0
                 });
             }
             
@@ -1869,6 +1895,8 @@
                 return;
             }
             
+            showNotification('Memproses pesanan...', 'info');
+            
             const transId = 'TRX' + Date.now();
             const transaction = {
                 user_id: currentUser.phone,
@@ -1921,6 +1949,7 @@
             db.ref().update(updates)
                 .then(() => {
                     showNotification('✅ Pesanan berhasil dibuat!', 'success');
+                    playNotificationSound();
                     
                     // Reset cart and delivery
                     cart = [];
@@ -1941,15 +1970,20 @@
         }
 
         // ===========================================
-        // ORDERS
+        // ORDERS - DENGAN FITUR KONFIRMASI PENERIMAAN
         // ===========================================
         function loadUserOrders() {
-            db.ref('/transactions/' + currentUser.phone).limitToLast(5).once('value', (snap) => {
+            db.ref('/transactions/' + currentUser.phone).orderByChild('timestamp').once('value', (snap) => {
                 userOrders = [];
                 snap.forEach(o => {
                     userOrders.push({ id: o.key, ...o.val() });
                 });
+                
+                // Urutkan dari terbaru
+                userOrders.sort((a, b) => b.timestamp - a.timestamp);
+                
                 displayRecentOrders();
+                displayAllOrders();
             });
         }
         
@@ -1960,14 +1994,18 @@
                 html = '<p style="text-align:center; color:#7f8c8d;">Belum ada pesanan</p>';
             } else {
                 userOrders.slice(0, 3).forEach(o => {
-                    html += `<div class="order-item" onclick="showAllOrders()">
+                    const statusClass = o.status === 'diproses' ? 'status-diproses' : 
+                                       o.status === 'dikirim' ? 'status-dikirim' : 
+                                       o.status === 'selesai' ? 'status-selesai' : 'status-batal';
+                    
+                    html += `<div class="order-item" onclick="showOrderDetail('${o.id}')">
                         <div>
                             <div>#${o.id.slice(-8)}</div>
                             <div class="order-merchant">${o.items?.length || 0} item</div>
                         </div>
                         <div>
                             <div>${formatRupiah(o.total || 0)}</div>
-                            <span class="order-status status-${o.status || 'diproses'}">${o.status || 'diproses'}</span>
+                            <span class="order-status ${statusClass}">${o.status || 'diproses'}</span>
                         </div>
                     </div>`;
                 });
@@ -1976,20 +2014,23 @@
             document.getElementById('recent-orders').innerHTML = html;
         }
         
-        function showAllOrders() {
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.remove('hidden');
-            
+        function displayAllOrders() {
             let html = '';
             
             if (userOrders.length === 0) {
                 html = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Belum ada pesanan</p></div>';
             } else {
-                userOrders.sort((a, b) => b.timestamp - a.timestamp).forEach(o => {
-                    html += `<div class="order-card">
+                userOrders.forEach(o => {
+                    const statusClass = o.status === 'diproses' ? 'status-diproses' : 
+                                       o.status === 'dikirim' ? 'status-dikirim' : 
+                                       o.status === 'selesai' ? 'status-selesai' : 'status-batal';
+                    
+                    const canConfirm = o.status === 'dikirim';
+                    
+                    html += `<div class="order-card" id="order-card-${o.id}">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <strong>#${o.id.slice(-8)}</strong>
-                            <span class="order-status status-${o.status || 'diproses'}">${o.status || 'diproses'}</span>
+                            <span class="order-status ${statusClass}">${o.status || 'diproses'}</span>
                         </div>
                         <div style="font-size: 13px; margin-bottom: 8px;">
                             ${formatDate(o.timestamp)}
@@ -2009,11 +2050,224 @@
                         </div>`;
                     }
                     
+                    // TOMBOL KONFIRMASI - FITUR BARU
+                    if (canConfirm) {
+                        html += `
+                            <button class="btn-konfirmasi" onclick="confirmOrderReceived('${o.id}')">
+                                <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA
+                            </button>
+                        `;
+                    } else if (o.status === 'selesai') {
+                        html += `
+                            <div class="selesai-badge">
+                                <i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!
+                            </div>
+                        `;
+                    }
+                    
                     html += `</div>`;
                 });
             }
             
             document.getElementById('orders-list-full').innerHTML = html;
+        }
+        
+        // ===========================================
+        // FITUR BARU: KONFIRMASI PENERIMAAN PESANAN
+        // ===========================================
+        function confirmOrderReceived(orderId) {
+            const order = userOrders.find(o => o.id === orderId);
+            if (!order) {
+                showNotification('Order tidak ditemukan!', 'error');
+                return;
+            }
+            
+            if (order.status !== 'dikirim') {
+                showNotification('Pesanan belum dikirim!', 'error');
+                return;
+            }
+            
+            showNotification('Memproses konfirmasi...', 'info');
+            
+            const updates = {};
+            
+            // 1. Update status di transaksi user
+            updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
+            updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
+            
+            // 2. Untuk setiap item dalam pesanan, tambahkan saldo ke merchant
+            order.items.forEach(item => {
+                const merchantId = item.merchant_id;
+                const itemTotal = item.price * item.quantity;
+                
+                // Tambah saldo merchant
+                const merchantSaldoRef = `/merchants/${merchantId}/saldo`;
+                updates[merchantSaldoRef] = firebase.database.ServerValue.increment(itemTotal);
+                
+                console.log(`💰 Menambah saldo merchant ${merchantId}: +${itemTotal}`);
+            });
+            
+            // 3. Update status di merchant_orders (untuk sinkronisasi)
+            order.items.forEach(item => {
+                const merchantId = item.merchant_id;
+                updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
+                updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
+            });
+            
+            // 4. Simpan ke history konfirmasi
+            updates[`/confirmations/${orderId}`] = {
+                user_id: currentUser.phone,
+                order_id: orderId,
+                timestamp: Date.now(),
+                items: order.items,
+                total: order.total
+            };
+            
+            db.ref().update(updates)
+                .then(() => {
+                    showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
+                    playNotificationSound();
+                    
+                    // Update local data
+                    order.status = 'selesai';
+                    
+                    // Refresh tampilan
+                    displayAllOrders();
+                    showAllOrders(); // Kembali ke daftar pesanan
+                    
+                    // Kirim notifikasi ke merchant via WhatsApp
+                    const pesan = `*PESANAN DITERIMA*\n\n` +
+                                 `Halo kak! Pesanan #${orderId.slice(-8)} telah dikonfirmasi diterima oleh pembeli.\n` +
+                                 `Saldo merchant otomatis bertambah.\n\n` +
+                                 `Terima kasih telah berjualan di RE-COIN! 🎉`;
+                    
+                    // Kirim ke admin (bisa diganti dengan nomor merchant)
+                    window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                    
+                })
+                .catch(error => {
+                    console.error('Error confirming order:', error);
+                    showNotification('Gagal konfirmasi: ' + error.message, 'error');
+                });
+        }
+        
+        function showOrderDetail(orderId) {
+            const order = userOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const statusClass = order.status === 'diproses' ? 'status-diproses' : 
+                               order.status === 'dikirim' ? 'status-dikirim' : 
+                               order.status === 'selesai' ? 'status-selesai' : 'status-batal';
+            
+            const canConfirm = order.status === 'dikirim';
+            const isCompleted = order.status === 'selesai';
+            
+            // Timeline status
+            const timeline = `
+                <div class="status-timeline">
+                    <div class="timeline-point ${order.status !== 'batal' ? 'completed' : ''}">
+                        <div class="timeline-icon"><i class="fas fa-check"></i></div>
+                        <div class="timeline-label">Diproses</div>
+                    </div>
+                    <div class="timeline-point ${order.status === 'dikirim' || order.status === 'selesai' ? 'completed' : ''}">
+                        <div class="timeline-icon"><i class="fas fa-truck"></i></div>
+                        <div class="timeline-label">Dikirim</div>
+                    </div>
+                    <div class="timeline-point ${order.status === 'selesai' ? 'completed' : ''}">
+                        <div class="timeline-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="timeline-label">Selesai</div>
+                    </div>
+                </div>
+            `;
+            
+            // Items list
+            let itemsHtml = '<div class="order-items-list">';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item-detail">
+                        <span class="order-item-name">${item.name}</span>
+                        <span class="order-item-qty">${item.quantity}x</span>
+                        <span class="order-item-price">${formatRupiah(item.price * item.quantity)}</span>
+                    </div>
+                `;
+            });
+            itemsHtml += '</div>';
+            
+            // Delivery info
+            let deliveryHtml = '';
+            if (order.delivery) {
+                deliveryHtml = `
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Alamat Kirim</span>
+                        <span class="order-detail-value">${order.delivery.address || `${order.delivery.lat}, ${order.delivery.lng}`}</span>
+                    </div>
+                `;
+            }
+            
+            const html = `
+                ${timeline}
+                
+                <div class="order-detail-card">
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">No. Order</span>
+                        <span class="order-detail-value">#${order.id.slice(-8)}</span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Tanggal</span>
+                        <span class="order-detail-value">${formatDate(order.timestamp)}</span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Status</span>
+                        <span class="order-detail-value"><span class="order-status ${statusClass}">${order.status}</span></span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Merchant</span>
+                        <span class="order-detail-value">${order.items[0]?.merchant_name || '-'}</span>
+                    </div>
+                    ${deliveryHtml}
+                </div>
+                
+                <div class="order-detail-card">
+                    <h4 style="margin-bottom: 15px;">Detail Produk</h4>
+                    ${itemsHtml}
+                    <div class="order-detail-row" style="margin-top: 15px; border-top: 2px solid #dfe6e9; padding-top: 15px;">
+                        <span class="order-detail-label"><strong>Total</strong></span>
+                        <span class="order-detail-value" style="font-size: 18px; color: var(--primary);"><strong>${formatRupiah(order.total)}</strong></span>
+                    </div>
+                </div>
+            `;
+            
+            // Tombol konfirmasi
+            if (canConfirm) {
+                html += `
+                    <button class="btn-konfirmasi" onclick="confirmOrderReceived('${order.id}')">
+                        <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA
+                    </button>
+                `;
+            } else if (isCompleted) {
+                html += `
+                    <div class="selesai-badge" style="margin-top: 20px;">
+                        <i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!
+                    </div>
+                `;
+            }
+            
+            document.getElementById('order-detail-content').innerHTML = html;
+            
+            document.getElementById('orders-page').classList.add('hidden');
+            document.getElementById('order-detail-page').classList.remove('hidden');
+        }
+        
+        function hideOrderDetail() {
+            document.getElementById('order-detail-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.remove('hidden');
+        }
+        
+        function showAllOrders() {
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('orders-page').classList.remove('hidden');
+            document.getElementById('order-detail-page').classList.add('hidden');
+            displayAllOrders();
         }
         
         function hideOrders() {
@@ -2022,9 +2276,44 @@
         }
         
         function startOrderListener() {
-            db.ref('/transactions/' + currentUser.phone).on('child_changed', () => {
+            db.ref('/transactions/' + currentUser.phone).on('child_changed', (snap) => {
+                console.log('📝 Order updated:', snap.key);
                 loadUserOrders();
+                playNotificationSound();
             });
+            
+            db.ref('/transactions/' + currentUser.phone).on('child_added', (snap) => {
+                console.log('🆕 New order:', snap.key);
+                loadUserOrders();
+                playNotificationSound();
+            });
+        }
+        
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            } catch (e) {
+                console.log('Sound not supported');
+            }
         }
 
         // ===========================================
@@ -2075,14 +2364,11 @@
                 user_id: currentUser.phone
             };
             
-            // Save withdrawal request
             db.ref('/withdrawals/' + currentUser.phone + '/' + withdrawalId).set(withdrawal)
                 .then(() => {
-                    // Reset user botol to 0
                     return db.ref('/accounts/' + currentUser.phone + '/botol').set(0);
                 })
                 .then(() => {
-                    // Open WhatsApp
                     const message = `Halo kak, saya ${currentUser.phone} ingin menarik saldo sebesar ${formatRupiah(saldo)} melalui ${method}. Detail: ${details}`;
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(message)}`, '_blank');
                     
