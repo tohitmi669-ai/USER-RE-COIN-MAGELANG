@@ -182,6 +182,20 @@
             padding: 20px;
             border-radius: 24px;
             margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card.highlight {
+            transform: scale(1.02);
+            background: linear-gradient(135deg, #e8f8f5, #d1f2eb);
+            box-shadow: 0 0 30px rgba(0,184,148,0.4);
+            border: 2px solid var(--primary);
+        }
+        
+        .stat-card.pulse {
+            animation: pulse 1s ease;
         }
         
         .stat-label {
@@ -197,6 +211,12 @@
             color: var(--primary);
             margin: 4px 0;
             line-height: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .val-botol.increase {
+            animation: numberPop 0.5s ease;
+            color: var(--success);
         }
         
         .val-rupiah {
@@ -204,6 +224,24 @@
             font-weight: 800;
             color: var(--dark);
             margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .val-rupiah.increase {
+            animation: numberPop 0.5s ease;
+            color: var(--success);
+        }
+        
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: var(--primary); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0,184,148,0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0,184,148,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,184,148,0); }
         }
         
         .machine-info {
@@ -1096,11 +1134,20 @@
             font-size: 24px;
             cursor: pointer;
             padding: 5px;
+            transition: transform 0.3s;
         }
 
         .refresh-btn:active {
             transform: rotate(180deg);
-            transition: 0.3s;
+        }
+
+        .refresh-btn.spin {
+            animation: spin 1s ease;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .product-update-toast {
@@ -1136,6 +1183,185 @@
         .debug-panel.show {
             display: block;
         }
+
+        /* ===== NOTIFIKASI SALDO BARU ===== */
+        .saldo-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,184,148,0.3);
+            z-index: 10005;
+            text-align: center;
+            min-width: 280px;
+            border: 3px solid var(--primary);
+            animation: popIn 0.4s ease;
+        }
+
+        .saldo-toast.warning {
+            border-color: var(--warning);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .saldo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            animation: bounce 2s infinite;
+        }
+
+        .saldo-icon i {
+            font-size: 35px;
+            color: white;
+        }
+
+        .saldo-toast h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .saldo-amount {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+            animation: pulse 1s infinite;
+        }
+
+        .saldo-detail {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 15px 0;
+        }
+
+        .saldo-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        .saldo-close-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .saldo-close-btn:hover {
+            background: #00a187;
+            transform: scale(1.05);
+        }
+
+        .floating-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 60px;
+            box-shadow: 0 10px 30px rgba(0,184,148,0.3);
+            z-index: 10004;
+            animation: slideInRight 0.5s ease, float 3s ease infinite;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid white;
+            cursor: pointer;
+            max-width: 90%;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .bubble-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bubble-icon i {
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .coin-animation {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10006;
+            font-size: 30px;
+            animation: coinFall 1.5s ease-out forwards;
+        }
+
+        @keyframes coinFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(300px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        /* ===== END NOTIFIKASI SALDO ===== */
     </style>
 </head>
 <body>
@@ -1207,7 +1433,7 @@
             <div class="val-botol" id="count">0</div>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" id="rupiah-stat-card">
             <div class="stat-label">SALDO REKENING SAMPAH</div>
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
@@ -1397,7 +1623,10 @@
         // FIREBASE CONFIGURATION
         // ===========================================
         const firebaseConfig = {
-            databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app/"
+            apiKey: "YOUR_API_KEY", // GANTI DENGAN API KEY ANDA
+            authDomain: "YOUR_AUTH_DOMAIN", // GANTI DENGAN AUTH DOMAIN ANDA
+            databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "YOUR_PROJECT_ID" // GANTI DENGAN PROJECT ID ANDA
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -1427,6 +1656,10 @@
         // Untuk tracking produk baru
         let lastProductCount = 0;
         let newProducts = new Set(); // Menyimpan ID produk baru
+        
+        // Untuk tracking saldo
+        let lastSaldo = 0;
+        let saldoListenerActive = false;
         
         // ===========================================
         // GPS VARIABLES
@@ -1666,32 +1899,229 @@
             return true;
         }
 
-        function completeLogin() {
-            document.getElementById('user-display').innerText = currentUser.phone;
-            document.getElementById('mode-badge-dashboard').innerText = 
-                currentUser.isMachineMode ? '🏭 Mode Mesin' : '🌐 Mode Online';
-            if (currentUser.isMachineMode) {
-                document.getElementById('active-machine').innerText = currentUser.machine;
-                document.getElementById('machine-info-dashboard').classList.remove('hidden');
-            }
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
+        // ===========================================
+        // NOTIFIKASI SALDO REAL-TIME (NEW!)
+        // ===========================================
+        function startSaldoListener() {
+            if (!currentUser.phone || saldoListenerActive) return;
             
-            // Load data sekali saat login
-            refreshSaldo();
-            loadMerchantsAndProducts();
-            refreshOrders();
+            logDebug('Memulai listener saldo real-time...');
+            saldoListenerActive = true;
             
-            // Start listener untuk produk baru (REALTIME tapi ringan)
-            startProductListener();
+            // Simpan saldo awal
+            lastSaldo = currentUser.botol;
+            
+            // Listener real-time untuk saldo
+            db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snapshot) => {
+                const newSaldo = snapshot.val() || 0;
+                const oldSaldo = lastSaldo;
+                
+                logDebug('Saldo berubah:', { old: oldSaldo, new: newSaldo });
+                
+                // Update lastSaldo
+                lastSaldo = newSaldo;
+                
+                // Update currentUser
+                currentUser.botol = newSaldo;
+                
+                // Update tampilan dashboard
+                updateSaldoDisplay();
+                
+                // CEK APAKAH SALDO BERTAMBAH?
+                if (newSaldo > oldSaldo) {
+                    const tambahBotol = newSaldo - oldSaldo;
+                    const tambahRupiah = tambahBotol * HARGA_PER_BOTOL;
+                    
+                    logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
+                    
+                    // Tampilkan notifikasi
+                    showSaldoIncreaseNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo);
+                    
+                    // Efek visual di dashboard
+                    highlightSaldoCards();
+                    
+                    // Animasi angka
+                    animateSaldoNumbers();
+                    
+                    // Buat efek koin berjatuhan (opsional)
+                    createCoinRain(tambahBotol);
+                    
+                    // Update tombol tarik
+                    document.getElementById('btn-tarik').disabled = newSaldo * HARGA_PER_BOTOL < 5000;
+                }
+                
+                updateLastActivity();
+            });
         }
-
-        function showLoginPage() {
-            document.getElementById('login-page').classList.remove('hidden');
-            document.getElementById('dashboard-page').classList.add('hidden');
-            document.getElementById('shop-page').classList.add('hidden');
-            document.getElementById('orders-page').classList.add('hidden');
-            document.getElementById('order-detail-page').classList.add('hidden');
+        
+        function updateSaldoDisplay() {
+            document.getElementById('count').innerText = currentUser.botol;
+            document.getElementById('rupiah').innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
+            document.getElementById('modal-saldo').innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
+        }
+        
+        function showSaldoIncreaseNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo) {
+            // 1. NOTIFIKASI MODAL POP-UP
+            const modalHtml = `
+                <div id="saldo-notif-modal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10010;
+                    animation: fadeIn 0.3s ease;
+                ">
+                    <div class="saldo-toast">
+                        <div class="saldo-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <h3>🎉 SALDO BERTAMBAH!</h3>
+                        <div class="saldo-amount">+${tambahBotol} Botol</div>
+                        <div class="saldo-amount" style="font-size: 28px;">${formatRupiah(tambahRupiah)}</div>
+                        
+                        <div class="saldo-detail">
+                            <div class="saldo-detail-row">
+                                <span>Saldo Sebelumnya</span>
+                                <span>${oldSaldo} botol (${formatRupiah(oldSaldo * HARGA_PER_BOTOL)})</span>
+                            </div>
+                            <div class="saldo-detail-row">
+                                <span>Saldo Sekarang</span>
+                                <span><strong style="color: var(--primary);">${newSaldo} botol (${formatRupiah(newSaldo * HARGA_PER_BOTOL)})</strong></span>
+                            </div>
+                        </div>
+                        
+                        <button class="saldo-close-btn" onclick="closeSaldoNotification()">
+                            <i class="fas fa-check"></i> OK, MANTAP!
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Hapus modal lama jika ada
+            const oldModal = document.getElementById('saldo-notif-modal');
+            if (oldModal) oldModal.remove();
+            
+            // Tambahkan modal ke body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Auto close setelah 5 detik
+            setTimeout(() => {
+                closeSaldoNotification();
+            }, 5000);
+            
+            // 2. FLOATING BUBBLE NOTIFICATION
+            showFloatingSaldoBubble(tambahBotol, tambahRupiah);
+            
+            // 3. PLAY SOUND (opsional)
+            playCoinSound();
+        }
+        
+        function showFloatingSaldoBubble(tambahBotol, tambahRupiah) {
+            const bubble = document.createElement('div');
+            bubble.className = 'floating-bubble';
+            bubble.onclick = function() { this.remove(); };
+            bubble.innerHTML = `
+                <div class="bubble-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 800; font-size: 16px;">💰 +${tambahBotol} Botol!</div>
+                    <div style="font-size: 13px; opacity: 0.9;">${formatRupiah(tambahRupiah)} masuk ke saldo</div>
+                </div>
+            `;
+            document.body.appendChild(bubble);
+            
+            // Auto remove setelah 5 detik
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.style.animation = 'slideOutRight 0.5s ease';
+                    setTimeout(() => bubble.remove(), 500);
+                }
+            }, 5000);
+        }
+        
+        function closeSaldoNotification() {
+            const modal = document.getElementById('saldo-notif-modal');
+            if (modal) {
+                modal.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+        
+        function highlightSaldoCards() {
+            const botolCard = document.getElementById('botol-stat-card');
+            const rupiahCard = document.getElementById('rupiah-stat-card');
+            
+            // Tambahkan class highlight
+            botolCard.classList.add('highlight', 'pulse');
+            rupiahCard.classList.add('highlight', 'pulse');
+            
+            // Hapus setelah 1 detik
+            setTimeout(() => {
+                botolCard.classList.remove('highlight', 'pulse');
+                rupiahCard.classList.remove('highlight', 'pulse');
+            }, 1000);
+        }
+        
+        function animateSaldoNumbers() {
+            const botolElement = document.getElementById('count');
+            const rupiahElement = document.getElementById('rupiah');
+            
+            botolElement.classList.add('increase');
+            rupiahElement.classList.add('increase');
+            
+            setTimeout(() => {
+                botolElement.classList.remove('increase');
+                rupiahElement.classList.remove('increase');
+            }, 500);
+        }
+        
+        function createCoinRain(jumlah) {
+            // Batasi jumlah koin maksimal 10
+            const coinCount = Math.min(jumlah, 10);
+            
+            for (let i = 0; i < coinCount; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.className = 'coin-animation';
+                    coin.innerHTML = '🪙';
+                    coin.style.left = Math.random() * 100 + '%';
+                    coin.style.top = '-50px';
+                    coin.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                    coin.style.animationDuration = (Math.random() * 1 + 1) + 's';
+                    document.body.appendChild(coin);
+                    
+                    setTimeout(() => coin.remove(), 2000);
+                }, i * 100);
+            }
+        }
+        
+        function playCoinSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Frekuensi naik (efek koin)
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio tidak bisa diputar', e);
+            }
         }
 
         // ===========================================
@@ -1752,14 +2182,19 @@
             }
             
             saveUserSession();
+            
+            // Load data
             refreshSaldo();
             loadMerchantsAndProducts();
             refreshOrders();
             startProductListener();
+            
+            // MULAI LISTENER SALDO REAL-TIME (NEW!)
+            startSaldoListener();
         }
         
         // ===========================================
-        // PRODUCT LISTENER REAL-TIME (YANG SUDAH DIPERBAIKI)
+        // PRODUCT LISTENER REAL-TIME
         // ===========================================
         function startProductListener() {
             logDebug('Memulai product listener...');
@@ -1881,6 +2316,7 @@
         function logout() {
             // Hapus listener
             db.ref('/products').off();
+            db.ref('/accounts/' + currentUser.phone + '/botol').off(); // Hapus listener saldo
             
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
             if (currentUser.isMachineMode && currentUser.machine) {
@@ -1892,6 +2328,7 @@
             cart = [];
             deliveryEnabled = false;
             newProducts.clear();
+            saldoListenerActive = false;
         }
 
         // ===========================================
@@ -2652,27 +3089,27 @@
         }
 
         // ===========================================
-        // TEST FUNCTIONS (untuk simulasi produk baru)
+        // TEST FUNCTIONS (untuk simulasi saldo bertambah)
         // ===========================================
-        function testAddProduct() {
-            const newId = 'prod' + Date.now();
-            const newProduct = {
-                id: newId,
-                merchant_id: 'merchant1',
-                name: 'Produk Baru ' + new Date().toLocaleTimeString(),
-                price: Math.floor(Math.random() * 50000) + 10000,
-                stock: 10,
-                image: 'https://via.placeholder.com/150?text=NEW'
-            };
+        function testTambahSaldo(botol = 5) {
+            if (!currentUser.phone) {
+                showNotification('Login dulu!', 'error');
+                return;
+            }
             
-            db.ref('/products/' + newId).set(newProduct)
+            const newSaldo = currentUser.botol + botol;
+            db.ref('/accounts/' + currentUser.phone + '/botol').set(newSaldo)
                 .then(() => {
-                    showNotification('Produk test ditambahkan!', 'success');
+                    showNotification(`Test: +${botol} botol ditambahkan`, 'success');
+                })
+                .catch(error => {
+                    showNotification('Error: ' + error.message, 'error');
                 });
         }
 
         // Tambahkan tombol test di console
-        console.log('TEST: Ketik testAddProduct() untuk simulasi produk baru');
+        console.log('🔥 NOTIFIKASI SALDO REAL-TIME AKTIF!');
+        console.log('📱 TEST: Ketik testTambahSaldo(5) untuk simulasi saldo bertambah');
 
         // ===========================================
         // INIT
@@ -2691,8 +3128,9 @@
             }
             
             // Debug di console
-            console.log('RE-COIN App siap!');
-            console.log('Gunakan testAddProduct() untuk simulasi produk baru');
+            console.log('🔥 RE-COIN App siap dengan notifikasi real-time!');
+            console.log('💰 Fitur: Notifikasi otomatis saat saldo bertambah');
+            console.log('📱 TEST: testTambahSaldo(5) - untuk simulasi');
         };
     </script>
 </body>
