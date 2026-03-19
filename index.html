@@ -322,6 +322,7 @@
             padding: 16px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             position: relative;
+            border: 1px solid #ecf0f1;
         }
         
         .merchant-header {
@@ -374,6 +375,13 @@
             padding: 12px;
             position: relative;
             animation: fadeIn 0.3s ease;
+            border: 1px solid #ecf0f1;
+            transition: transform 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         @keyframes fadeIn {
@@ -392,13 +400,13 @@
             font-size: 10px;
             font-weight: 700;
             z-index: 2;
-            animation: pulse 2s infinite;
+            animation: blink 2s infinite;
         }
         
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
         
         .product-image {
@@ -1110,11 +1118,30 @@
             animation: slideUp 0.3s ease;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
+
+        /* Debug panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .debug-panel.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div id="notification"></div>
     <div id="product-toast" class="product-update-toast hidden"></div>
+    <div id="debug-panel" class="debug-panel hidden">Debug Mode</div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -1407,6 +1434,21 @@
         let userLocation = null;
         let deliveryEnabled = false;
         let manualAddress = "";
+
+        // ===========================================
+        // DEBUG MODE (aktifkan untuk testing)
+        // ===========================================
+        const DEBUG = true;
+        
+        function logDebug(...args) {
+            if (DEBUG) {
+                console.log('[DEBUG]', ...args);
+                document.getElementById('debug-panel').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('debug-panel').classList.remove('show');
+                }, 2000);
+            }
+        }
 
         // ===========================================
         // UTILITY FUNCTIONS
@@ -1717,15 +1759,18 @@
         }
         
         // ===========================================
-        // PRODUCT LISTENER REAL-TIME (TAPI RINGAN)
+        // PRODUCT LISTENER REAL-TIME (YANG SUDAH DIPERBAIKI)
         // ===========================================
         function startProductListener() {
+            logDebug('Memulai product listener...');
+            
             // Hapus listener lama jika ada
             db.ref('/products').off();
             
             // Listener untuk produk baru (child_added)
             db.ref('/products').on('child_added', (snapshot) => {
                 const newProduct = { id: snapshot.key, ...snapshot.val() };
+                logDebug('Produk baru detected:', newProduct);
                 
                 // Cek apakah produk sudah ada di array
                 const exists = products.some(p => p.id === newProduct.id);
@@ -1733,26 +1778,39 @@
                 if (!exists && currentUser.phone) {
                     // Produk benar-benar baru
                     products.push(newProduct);
+                    logDebug('Produk ditambahkan ke array. Total produk:', products.length);
                     
                     // Tandai sebagai produk baru
                     newProducts.add(newProduct.id);
                     
                     // Update tampilan jika sedang di halaman shop
                     if (!document.getElementById('shop-page').classList.contains('hidden')) {
+                        logDebug('Update tampilan shop dengan produk baru');
                         displayProducts();
                     }
                     
-                    // Tampilkan notifikasi
-                    showProductToast(`🆕 Produk Baru: ${newProduct.name} dari ${getMerchantName(newProduct.merchant_id)}`);
-                    
                     // Update counter
                     document.getElementById('total-products').innerText = products.length;
+                    
+                    // Tampilkan notifikasi
+                    const merchantName = getMerchantName(newProduct.merchant_id);
+                    showProductToast(`🆕 Produk Baru: ${newProduct.name} dari ${merchantName}`);
+                    
+                    // Hapus status new setelah 5 detik
+                    setTimeout(() => {
+                        newProducts.delete(newProduct.id);
+                        if (!document.getElementById('shop-page').classList.contains('hidden')) {
+                            displayProducts(); // Refresh untuk hilangkan badge
+                        }
+                    }, 5000);
                 }
             });
             
             // Listener untuk update produk (child_changed)
             db.ref('/products').on('child_changed', (snapshot) => {
                 const updatedProduct = { id: snapshot.key, ...snapshot.val() };
+                logDebug('Produk diupdate:', updatedProduct);
+                
                 const index = products.findIndex(p => p.id === updatedProduct.id);
                 
                 if (index !== -1) {
@@ -1769,12 +1827,18 @@
             // Listener untuk produk dihapus (child_removed)
             db.ref('/products').on('child_removed', (snapshot) => {
                 const removedId = snapshot.key;
+                logDebug('Produk dihapus:', removedId);
+                
                 products = products.filter(p => p.id !== removedId);
+                newProducts.delete(removedId);
                 
                 // Update tampilan jika sedang di halaman shop
                 if (!document.getElementById('shop-page').classList.contains('hidden')) {
                     displayProducts();
                 }
+                
+                // Update counter
+                document.getElementById('total-products').innerText = products.length;
                 
                 showProductToast(`❌ Produk dihapus dari toko`);
             });
@@ -1839,10 +1903,13 @@
                 ms.forEach(m => { 
                     merchants.push({ id: m.key, ...m.val() }); 
                 });
+                logDebug('Merchants loaded:', merchants.length);
                 
                 db.ref('/products').once('value', (ps) => {
                     products = [];
                     ps.forEach(p => products.push({ id: p.key, ...p.val() }));
+                    
+                    logDebug('Products loaded:', products.length);
                     
                     // Update counter
                     document.getElementById('total-products').innerText = products.length;
@@ -1860,6 +1927,7 @@
         }
 
         function createDummyData() {
+            logDebug('Membuat dummy data...');
             merchants = [
                 {
                     id: 'merchant1',
@@ -1961,6 +2029,7 @@
         }
 
         function displayProducts() {
+            logDebug('Menampilkan products...');
             let html = '';
             
             if (merchants.length === 0) {
@@ -1969,7 +2038,7 @@
                 merchants.forEach(m => {
                     const mp = products.filter(p => p.merchant_id === m.id);
                     
-                    html += `<div class="merchant-section">
+                    html += `<div class="merchant-section" id="merchant-${m.id}">
                         <div class="merchant-header">
                             <div class="merchant-avatar">${m.nama_toko?.[0] || m.id?.[0] || 'T'}</div>
                             <div class="merchant-info">
@@ -1993,7 +2062,7 @@
                             const isOutOfStock = p.stock <= 0;
                             const isNew = newProducts.has(p.id);
                             
-                            html += `<div class="product-card">
+                            html += `<div class="product-card" id="product-${p.id}">
                                 ${isNew ? '<span class="new-badge">NEW</span>' : ''}
                                 <div class="product-image">
                                     <img src="${p.image || 'https://via.placeholder.com/150'}" 
@@ -2019,12 +2088,9 @@
                 });
             }
             
-            document.getElementById('products-container').innerHTML = html || '<div class="empty-state">Tidak ada produk tersedia</div>';
-            
-            // Hapus status new setelah 5 detik (opsional)
-            setTimeout(() => {
-                newProducts.clear();
-            }, 5000);
+            const container = document.getElementById('products-container');
+            container.innerHTML = html || '<div class="empty-state">Tidak ada produk tersedia</div>';
+            logDebug('Display products selesai');
         }
 
         // ===========================================
@@ -2037,14 +2103,15 @@
             msg += `📦 Produk: ${products.length}\n`;
             msg += `📝 Pesanan: ${userOrders.length}\n`;
             msg += `🆕 Produk Baru: ${newProducts.size}\n\n`;
+            msg += `🛒 Keranjang: ${cart.length} item\n`;
             
             merchants.forEach(m => {
                 const jml = products.filter(p => p.merchant_id === m.id).length;
-                msg += `${m.nama_toko || m.id}: ${jml} produk\n`;
+                msg += `\n${m.nama_toko || m.id}: ${jml} produk`;
             });
             
             alert(msg);
-            console.log('Debug:', { currentUser, merchants, products, userOrders, cart, newProducts });
+            logDebug('Debug info:', { currentUser, merchants, products, userOrders, cart, newProducts });
         }
 
         // ===========================================
@@ -2585,6 +2652,29 @@
         }
 
         // ===========================================
+        // TEST FUNCTIONS (untuk simulasi produk baru)
+        // ===========================================
+        function testAddProduct() {
+            const newId = 'prod' + Date.now();
+            const newProduct = {
+                id: newId,
+                merchant_id: 'merchant1',
+                name: 'Produk Baru ' + new Date().toLocaleTimeString(),
+                price: Math.floor(Math.random() * 50000) + 10000,
+                stock: 10,
+                image: 'https://via.placeholder.com/150?text=NEW'
+            };
+            
+            db.ref('/products/' + newId).set(newProduct)
+                .then(() => {
+                    showNotification('Produk test ditambahkan!', 'success');
+                });
+        }
+
+        // Tambahkan tombol test di console
+        console.log('TEST: Ketik testAddProduct() untuk simulasi produk baru');
+
+        // ===========================================
         // INIT
         // ===========================================
         window.onload = function() {
@@ -2599,6 +2689,10 @@
             if (!checkAutoLogin()) {
                 showLoginPage();
             }
+            
+            // Debug di console
+            console.log('RE-COIN App siap!');
+            console.log('Gunakan testAddProduct() untuk simulasi produk baru');
         };
     </script>
 </body>
