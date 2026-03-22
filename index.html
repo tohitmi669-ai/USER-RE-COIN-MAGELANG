@@ -20,6 +20,23 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
+        /* Cegah pull-to-refresh di mobile */
+        body {
+            background: linear-gradient(135deg, #00b894 0%, #0984e3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin: 0;
+            overscroll-behavior-y: contain;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         :root {
             --primary: #00b894;
             --secondary: #00cec9;
@@ -31,16 +48,6 @@
             --success: #27ae60;
             --gray: #95a5a6;
             --new-badge: #e84342;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #00b894 0%, #0984e3 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            margin: 0;
         }
         
         .card {
@@ -1634,11 +1641,14 @@
         // FIREBASE CONFIGURATION
         // ===========================================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "YOUR_PROJECT_ID"
-        };
+            apiKey: "AIzaSyDgm6P2T7DCLCy4ROuPNu6WtE_PIzoMvWk",
+  authDomain: "re-coin-magelang-2026.firebaseapp.com",
+  databaseURL: "https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "re-coin-magelang-2026",
+  storageBucket: "re-coin-magelang-2026.firebasestorage.app",
+  messagingSenderId: "864198166030",
+  appId: "1:864198166030:web:62e91d05f706592a2f9e5f"
+};
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -1655,7 +1665,6 @@
             rememberMe: true
         };
         
-        // SESSION TOKEN UNTUK VALIDASI MESIN
         let machineSessionToken = null;
         let machineSessionExpiry = null;
         
@@ -1896,17 +1905,27 @@
                     machineSessionExpiry = null;
                     document.getElementById('machine-info-dashboard').classList.add('hidden');
                     document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                    
+                    if (window.history && window.history.replaceState) {
+                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.replaceState({}, document.title, newUrl);
+                    }
                     return;
                 }
                 
-                if (data.id !== currentUser.phone) {
-                    showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}!`, 'error');
+                if (data.id !== currentUser.phone && data.source === "machine") {
+                    showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
                     currentUser.isMachineMode = false;
                     currentUser.machine = "";
                     machineSessionToken = null;
                     machineSessionExpiry = null;
                     document.getElementById('machine-info-dashboard').classList.add('hidden');
                     document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                    
+                    if (window.history && window.history.replaceState) {
+                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.replaceState({}, document.title, newUrl);
+                    }
                 }
                 else if (data.session_token !== machineSessionToken && machineSessionToken !== null) {
                     showNotification('⚠️ Sesi mesin diperbarui!', 'info');
@@ -2224,48 +2243,72 @@
             
             if (currentUser.isMachineMode) {
                 document.getElementById('active-machine').innerText = currentUser.machine;
-                document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                document.getElementById('mode-badge-dashboard').innerText = '🔌 Mode Mesin';
                 
-                // ============================================
-                // LANGSUNG TIMPA DATA DI FIREBASE!
-                // TIDAK PEDULI ADA USER LAIN ATAU TIDAK
-                // ============================================
-                
-                // Generate session token baru
-                machineSessionToken = generateSessionToken(currentUser.phone);
-                machineSessionExpiry = Date.now() + (5 * 60 * 1000); // 5 menit
-                
-                const sessionData = {
-                    id: currentUser.phone,
-                    login_time: Date.now(),
-                    last_activity: Date.now(),
-                    source: "machine",  // DIPAKSA "machine" AGAR ESP32 MENERIMA
-                    session_token: machineSessionToken,
-                    session_expiry: machineSessionExpiry
-                };
-                
-                // LANGSUNG TIMPA, BUKAN CEK DULU
-                db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
-                    .then(() => {
-                        showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
-                        mulaiAutoLogoutTimer();
+                // CEK APAKAH MESIN SEDANG DIPAKAI USER LAIN
+                db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
+                    const data = snap.val();
+                    
+                    // Jika mesin sedang dipakai user lain dan user ini bukan pemiliknya
+                    if (data && data.id && data.id !== currentUser.phone && data.source === "machine") {
+                        showNotification(`⚠️ Mesin sedang digunakan oleh ${data.id.substr(0,5)}...`, 'error');
                         
-                        if (document.getElementById('session-token-info')) {
-                            document.getElementById('session-token-info').innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
-                            document.getElementById('session-token-info').classList.remove('hidden');
-                        }
-                        logDebug('Session Token dibuat:', machineSessionToken);
-                        
-                        startMachineSessionListener();
-                    })
-                    .catch(error => {
-                        console.error('Gagal update mesin:', error);
-                        showNotification('Gagal terhubung ke mesin', 'error');
                         currentUser.isMachineMode = false;
+                        currentUser.machine = "";
+                        machineSessionToken = null;
+                        machineSessionExpiry = null;
+                        
                         document.getElementById('machine-info-dashboard').classList.add('hidden');
                         document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
-                    });
+                        
+                        if (window.history && window.history.replaceState) {
+                            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                            window.history.replaceState({}, document.title, newUrl);
+                        }
+                        
+                        refreshSaldo();
+                        loadMerchantsAndProducts();
+                        refreshOrders();
+                        
+                        return;
+                    }
+                    
+                    // Generate session token baru
+                    machineSessionToken = generateSessionToken(currentUser.phone);
+                    machineSessionExpiry = Date.now() + (5 * 60 * 1000);
+                    
+                    const sessionData = {
+                        id: currentUser.phone,
+                        login_time: Date.now(),
+                        last_activity: Date.now(),
+                        source: "machine",
+                        session_token: machineSessionToken,
+                        session_expiry: machineSessionExpiry
+                    };
+                    
+                    db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
+                        .then(() => {
+                            showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
+                            mulaiAutoLogoutTimer();
+                            
+                            document.getElementById('machine-info-dashboard').classList.remove('hidden');
+                            document.getElementById('mode-badge-dashboard').innerText = '🔌 Mode Mesin';
+                            
+                            if (document.getElementById('session-token-info')) {
+                                document.getElementById('session-token-info').innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
+                                document.getElementById('session-token-info').classList.remove('hidden');
+                            }
+                            logDebug('Session Token dibuat:', machineSessionToken);
+                            
+                            startMachineSessionListener();
+                        })
+                        .catch(error => {
+                            console.error('Gagal update mesin:', error);
+                            showNotification('Gagal terhubung ke mesin', 'error');
+                            currentUser.isMachineMode = false;
+                            document.getElementById('machine-info-dashboard').classList.add('hidden');
+                            document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                        });
+                });
                     
             } else {
                 document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
@@ -3179,6 +3222,7 @@
             console.log('🔥 RE-COIN App siap dengan sistem validasi sesi mesin!');
             console.log('💰 Fitur: Notifikasi otomatis saat saldo bertambah');
             console.log('🔐 Fitur: Hanya scan QR dengan source=machine yang bisa mengakses mesin');
+            console.log('🔄 Fitur: Pull-to-refresh tidak akan mengembalikan mode mesin jika sudah diambil alih');
             console.log('📱 TEST: testTambahSaldo(5) - untuk simulasi');
         };
     </script>
