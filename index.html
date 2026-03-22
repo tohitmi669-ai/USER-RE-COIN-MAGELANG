@@ -2,15 +2,12 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>RE-COIN | Tukar Botol Jadi Belanja</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <!-- Html5Qrcode Scanner Library -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -171,18 +168,8 @@
         }
         
         .btn-scan {
-            background: linear-gradient(135deg, #6c5ce7, #a363d9);
+            background: linear-gradient(to right, var(--success), #219a52);
             color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 18px;
-            padding: 18px;
-        }
-        
-        .btn-scan i {
-            font-size: 24px;
         }
         
         .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active {
@@ -1385,128 +1372,12 @@
             text-align: center;
             word-break: break-all;
         }
-
-        /* QR SCANNER MODAL STYLES */
-        .scanner-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 20000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-        
-        .scanner-container {
-            width: 100%;
-            max-width: 500px;
-            background: #000;
-            border-radius: 32px;
-            overflow: hidden;
-            position: relative;
-            margin: 20px;
-        }
-        
-        .scanner-header {
-            padding: 20px;
-            background: #1a1a2e;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .scanner-header h3 {
-            margin: 0;
-            font-size: 18px;
-        }
-        
-        .scanner-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0 10px;
-        }
-        
-        #qr-reader {
-            width: 100%;
-            background: #000;
-        }
-        
-        .scanner-info {
-            padding: 20px;
-            background: #1a1a2e;
-            color: white;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .scanner-info i {
-            margin-right: 8px;
-        }
-        
-        .btn-manual-input {
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            margin-top: 15px;
-            width: 100%;
-            cursor: pointer;
-        }
-        
-        .btn-manual-input:hover {
-            background: var(--primary);
-        }
-        
-        .manual-machine-input {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 12px;
-        }
-        
-        .manual-machine-input.hidden {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div id="notification"></div>
     <div id="product-toast" class="product-update-toast hidden"></div>
     <div id="debug-panel" class="debug-panel hidden">Debug Mode</div>
-
-    <!-- QR SCANNER MODAL -->
-    <div id="scanner-modal" class="scanner-modal">
-        <div class="scanner-container">
-            <div class="scanner-header">
-                <h3><i class="fas fa-qrcode"></i> Scan QR Code Mesin</h3>
-                <button class="scanner-close" onclick="closeScanner()">&times;</button>
-            </div>
-            <div id="qr-reader"></div>
-            <div class="scanner-info">
-                <i class="fas fa-camera"></i> Arahkan kamera ke QR code di bodi mesin
-                <button class="btn-manual-input" onclick="showManualMachineInput()">
-                    <i class="fas fa-keyboard"></i> Input ID Mesin Manual
-                </button>
-                <div id="manual-machine-input" class="manual-machine-input hidden">
-                    <input type="text" id="manual-machine-id" placeholder="Contoh: ID_01" class="form-control">
-                    <button class="btn-success" onclick="connectManualMachine()" style="margin-top: 10px;">
-                        <i class="fas fa-link"></i> Hubungkan
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -1604,8 +1475,8 @@
             Minimal saldo Rp 5.000 untuk tarik tunai
         </div>
         
-        <button class="btn-scan" onclick="openScanner()">
-            <i class="fas fa-qrcode"></i> HUBUNGKAN KE MESIN (SCAN QR)
+        <button class="btn-scan" onclick="scanMachineAgain()" style="margin-top: 10px;">
+            <i class="fas fa-qrcode"></i> Hubungkan ke Mesin (Scan QR)
         </button>
         
         <button class="btn-logout" onclick="logout()">LOGOUT</button>
@@ -1784,12 +1655,9 @@
             rememberMe: true
         };
         
+        // SESSION TOKEN UNTUK VALIDASI MESIN
         let machineSessionToken = null;
         let machineSessionExpiry = null;
-        
-        // QR Scanner instance
-        let html5QrCode = null;
-        let isScannerRunning = false;
         
         const HARGA_PER_BOTOL = 50;
         const ADMIN_WA = "6289524538835";
@@ -1939,176 +1807,6 @@
         }
 
         // ===========================================
-        // QR SCANNER FUNCTIONS
-        // ===========================================
-        async function openScanner() {
-            const modal = document.getElementById('scanner-modal');
-            modal.style.display = 'flex';
-            
-            // Inisialisasi scanner
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("qr-reader");
-            }
-            
-            try {
-                if (!isScannerRunning) {
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        {
-                            fps: 10,
-                            qrbox: { width: 250, height: 250 }
-                        },
-                        onScanSuccess,
-                        onScanError
-                    );
-                    isScannerRunning = true;
-                    logDebug('Scanner started');
-                }
-            } catch (err) {
-                console.error('Error starting scanner:', err);
-                showNotification('Gagal mengakses kamera. Pastikan izin kamera diberikan.', 'error');
-                // Fallback ke input manual
-                showManualMachineInput();
-            }
-        }
-        
-        function onScanSuccess(decodedText, decodedResult) {
-            logDebug('QR Code scanned:', decodedText);
-            
-            // Proses hasil scan - bisa berupa ID mesin langsung atau JSON
-            let machineId = decodedText.trim();
-            
-            // Jika QR berisi format JSON dengan key machine_id
-            try {
-                const jsonData = JSON.parse(decodedText);
-                if (jsonData.machine_id || jsonData.machineId) {
-                    machineId = jsonData.machine_id || jsonData.machineId;
-                }
-            } catch (e) {
-                // Bukan JSON, gunakan sebagai string biasa
-            }
-            
-            // Validasi format ID mesin (bisa disesuaikan)
-            if (machineId.length > 0) {
-                closeScanner();
-                connectToMachine(machineId);
-            } else {
-                showNotification('QR Code tidak valid!', 'error');
-            }
-        }
-        
-        function onScanError(errorMessage) {
-            // Silent error, tidak perlu ditampilkan ke user
-            console.warn('Scan error:', errorMessage);
-        }
-        
-        function closeScanner() {
-            const modal = document.getElementById('scanner-modal');
-            modal.style.display = 'none';
-            
-            if (html5QrCode && isScannerRunning) {
-                html5QrCode.stop().then(() => {
-                    isScannerRunning = false;
-                    logDebug('Scanner stopped');
-                }).catch(err => {
-                    console.error('Error stopping scanner:', err);
-                });
-            }
-        }
-        
-        function showManualMachineInput() {
-            const manualDiv = document.getElementById('manual-machine-input');
-            manualDiv.classList.toggle('hidden');
-        }
-        
-        function connectManualMachine() {
-            const machineId = document.getElementById('manual-machine-id').value.trim();
-            if (!machineId) {
-                showNotification('Masukkan ID Mesin!', 'error');
-                return;
-            }
-            closeScanner();
-            connectToMachine(machineId);
-        }
-        
-        function connectToMachine(machineId) {
-            logDebug('Connecting to machine:', machineId);
-            
-            // Update URL tanpa reload untuk menyimpan state
-            const url = new URL(window.location);
-            url.searchParams.set('mesin', machineId);
-            url.searchParams.set('source', 'qr');
-            window.history.pushState({}, '', url);
-            
-            // Update currentUser dengan mode mesin
-            currentUser.machine = machineId;
-            currentUser.isMachineMode = true;
-            currentUser.loginSource = 'qr';
-            
-            // Update tampilan login jika perlu
-            document.getElementById('machine-id-display').innerText = machineId;
-            document.getElementById('source-info-login').innerText = 'via QR';
-            document.getElementById('machine-info-login').classList.remove('hidden');
-            
-            // Refresh koneksi mesin setelah login
-            if (currentUser.phone) {
-                // Sudah login, langsung hubungkan
-                reconnectMachineSession();
-            } else {
-                // Belum login, akan dihubungkan setelah login
-                showNotification('Silakan login untuk terhubung ke mesin', 'info');
-            }
-        }
-        
-        function reconnectMachineSession() {
-            if (!currentUser.machine) return;
-            
-            db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
-                const data = snap.val();
-                
-                if (data && data.id && data.id !== currentUser.phone) {
-                    showNotification('⚠️ Mesin sedang digunakan oleh ' + data.id.substr(0,5), 'error');
-                    currentUser.isMachineMode = false;
-                    currentUser.machine = "";
-                    machineSessionToken = null;
-                    document.getElementById('machine-info-dashboard').classList.add('hidden');
-                    document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
-                } else {
-                    machineSessionToken = generateSessionToken(currentUser.phone);
-                    machineSessionExpiry = Date.now() + (5 * 60 * 1000);
-                    
-                    const sessionData = {
-                        id: currentUser.phone,
-                        login_time: Date.now(),
-                        last_activity: Date.now(),
-                        source: 'qr',
-                        session_token: machineSessionToken,
-                        session_expiry: machineSessionExpiry
-                    };
-                    
-                    db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
-                        .then(() => {
-                            showNotification('✅ Terhubung ke mesin ' + currentUser.machine, 'success');
-                            mulaiAutoLogoutTimer();
-                            startMachineSessionListener();
-                            
-                            document.getElementById('active-machine').innerText = currentUser.machine;
-                            document.getElementById('machine-info-dashboard').classList.remove('hidden');
-                            document.getElementById('mode-badge-dashboard').innerText = '🔌 Mode Mesin';
-                            
-                            if (document.getElementById('session-token-info')) {
-                                document.getElementById('session-token-info').innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
-                                document.getElementById('session-token-info').classList.remove('hidden');
-                            }
-                        })
-                        .catch(err => {
-                            showNotification('Gagal koneksi mesin: ' + err.message, 'error');
-                        });
-                }
-            });
-        }
-
-        // ===========================================
         // GPS FUNCTIONS
         // ===========================================
         function toggleDelivery() {
@@ -2184,7 +1882,7 @@
         }
 
         // ===========================================
-        // MACHINE SESSION LISTENER
+        // MACHINE SESSION LISTENER (PENTING!)
         // ===========================================
         function startMachineSessionListener() {
             if (!currentUser.isMachineMode || !currentUser.machine) return;
@@ -2528,8 +2226,50 @@
             document.getElementById('dashboard-page').classList.remove('hidden');
             document.getElementById('user-display').innerText = currentUser.phone;
             
-            if (currentUser.isMachineMode && currentUser.machine) {
-                reconnectMachineSession();
+            if (currentUser.isMachineMode) {
+                document.getElementById('active-machine').innerText = currentUser.machine;
+                document.getElementById('machine-info-dashboard').classList.remove('hidden');
+                document.getElementById('mode-badge-dashboard').innerText = '🔌 Mode Mesin';
+                
+                db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
+                    const data = snap.val();
+                    
+                    if (data && data.id && data.id !== currentUser.phone) {
+                        showNotification('⚠️ Mesin sedang digunakan oleh ' + data.id.substr(0,5), 'error');
+                        currentUser.isMachineMode = false;
+                        document.getElementById('machine-info-dashboard').classList.add('hidden');
+                        document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
+                        showNotification('Anda masuk dalam mode ONLINE (tidak terhubung mesin)', 'info');
+                        machineSessionToken = null;
+                    } 
+                    else {
+                        machineSessionToken = generateSessionToken(currentUser.phone);
+                        machineSessionExpiry = Date.now() + (5 * 60 * 1000);
+                        
+                        const sessionData = {
+                            id: currentUser.phone,
+                            login_time: Date.now(),
+                            last_activity: Date.now(),
+                            source: currentUser.loginSource,
+                            session_token: machineSessionToken,
+                            session_expiry: machineSessionExpiry
+                        };
+                        
+                        db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
+                            .then(() => {
+                                showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
+                                mulaiAutoLogoutTimer();
+                                
+                                if (document.getElementById('session-token-info')) {
+                                    document.getElementById('session-token-info').innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
+                                    document.getElementById('session-token-info').classList.remove('hidden');
+                                }
+                                logDebug('Session Token dibuat:', machineSessionToken);
+                                
+                                startMachineSessionListener();
+                            });
+                    }
+                });
             } else {
                 document.getElementById('mode-badge-dashboard').innerText = '🌐 Mode Online';
                 document.getElementById('machine-info-dashboard').classList.add('hidden');
@@ -2614,13 +2354,16 @@
             loadUserOrders();
         }
         
-        function logout() {
-            // Hentikan scanner jika berjalan
-            if (html5QrCode && isScannerRunning) {
-                html5QrCode.stop().catch(e => console.log(e));
-                isScannerRunning = false;
+        function scanMachineAgain() {
+            const machineId = prompt('Masukkan ID Mesin (contoh: ID_01):');
+            if (machineId && machineId.trim()) {
+                window.location.href = `?mesin=${machineId.trim()}&source=web`;
+            } else {
+                showNotification('ID Mesin tidak boleh kosong!', 'error');
             }
-            
+        }
+        
+        function logout() {
             db.ref('/products').off();
             db.ref('/accounts/' + currentUser.phone + '/botol').off();
             
@@ -2644,12 +2387,6 @@
             saldoListenerActive = false;
             machineSessionToken = null;
             machineSessionExpiry = null;
-            
-            // Bersihkan URL parameters
-            const url = new URL(window.location);
-            url.searchParams.delete('mesin');
-            url.searchParams.delete('source');
-            window.history.pushState({}, '', url);
         }
         
         function showLoginPage() {
@@ -3442,9 +3179,8 @@
                 showLoginPage();
             }
             
-            console.log('🔥 RE-COIN App siap dengan fitur SCAN QR CODE!');
+            console.log('🔥 RE-COIN App siap dengan sistem validasi sesi mesin!');
             console.log('💰 Fitur: Notifikasi otomatis saat saldo bertambah');
-            console.log('📱 Fitur: Scan QR Code via kamera HP');
             console.log('🔐 Fitur: Validasi sesi mesin dengan token unik');
             console.log('📱 TEST: testTambahSaldo(5) - untuk simulasi');
         };
