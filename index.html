@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>RE-COIN | Tukar Botol Jadi Belanja</title>
+    <title>RE-COIN | Tukar Botol Jadi Belanja + Hijaukan Bumi</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -41,6 +41,8 @@
             --success: #27ae60;
             --gray: #95a5a6;
             --new-badge: #e84342;
+            --eco: #2ecc71;
+            --earth: #3498db;
         }
         
         .card {
@@ -196,10 +198,34 @@
             animation: pulse 1s ease;
         }
         
+        .eco-card {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-left: 5px solid var(--eco);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .eco-card::before {
+            content: '🌱';
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            font-size: 80px;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+        
         .stat-label {
             font-size: 12px;
             font-weight: 700;
             color: #b2bec3;
+            text-transform: uppercase;
+        }
+        
+        .eco-label {
+            color: #2e7d32;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
         }
         
@@ -215,6 +241,19 @@
         .val-botol.increase {
             animation: numberPop 0.5s ease;
             color: var(--success);
+        }
+        
+        .val-eco {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2e7d32;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .val-eco.increase {
+            animation: numberPop 0.5s ease;
+            color: #1b5e20;
         }
         
         .val-rupiah {
@@ -240,6 +279,28 @@
             0% { box-shadow: 0 0 0 0 rgba(0,184,148,0.4); }
             70% { box-shadow: 0 0 0 20px rgba(0,184,148,0); }
             100% { box-shadow: 0 0 0 0 rgba(0,184,148,0); }
+        }
+        
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes popOut {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
         }
         
         .machine-info {
@@ -1099,136 +1160,6 @@
             display: block;
         }
         
-        .saldo-toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 25px;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0,184,148,0.3);
-            z-index: 10005;
-            text-align: center;
-            min-width: 280px;
-            border: 3px solid var(--primary);
-            animation: popIn 0.4s ease;
-        }
-        
-        @keyframes popIn {
-            0% {
-                transform: translate(-50%, -50%) scale(0.5);
-                opacity: 0;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-        
-        .saldo-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-        }
-        
-        .saldo-icon i {
-            font-size: 35px;
-            color: white;
-        }
-        
-        .saldo-toast h3 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 22px;
-        }
-        
-        .saldo-amount {
-            font-size: 36px;
-            font-weight: 800;
-            color: var(--primary);
-            margin: 10px 0;
-        }
-        
-        .saldo-detail {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 16px;
-            margin: 15px 0;
-        }
-        
-        .saldo-detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-        }
-        
-        .saldo-close-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        .floating-bubble {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 15px 25px;
-            border-radius: 60px;
-            box-shadow: 0 10px 30px rgba(0,184,148,0.3);
-            z-index: 10004;
-            animation: slideInRight 0.5s ease, float 3s ease infinite;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 2px solid white;
-            cursor: pointer;
-            max-width: 90%;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .bubble-icon {
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .bubble-icon i {
-            color: var(--primary);
-            font-size: 22px;
-        }
-        
         .coin-animation {
             position: fixed;
             pointer-events: none;
@@ -1248,12 +1179,65 @@
             }
         }
         
+        .leaf-animation {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10006;
+            font-size: 25px;
+            animation: leafFloat 2s ease-out forwards;
+        }
+        
+        @keyframes leafFloat {
+            0% {
+                transform: translateY(-50px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(400px) rotate(180deg);
+                opacity: 0;
+            }
+        }
+        
         .session-info {
             font-size: 11px;
             color: var(--info);
             margin-top: 5px;
             text-align: center;
             word-break: break-all;
+        }
+        
+        .badge-eco {
+            display: inline-block;
+            background: var(--eco);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #dfe6e9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--eco), #27ae60);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        .milestone-text {
+            font-size: 11px;
+            color: #2e7d32;
+            text-align: center;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -1271,7 +1255,7 @@
         </div>
         
         <h2 id="auth-title">RECOIN</h2>
-        <span id="auth-subtitle" class="subtitle">Masukkan nomor HP dan password</span>
+        <span id="auth-subtitle" class="subtitle">Tukar Botol Jadi Belanja + Hijaukan Bumi 🌱</span>
         
         <div id="machine-info-login" class="machine-info hidden">
             <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
@@ -1291,14 +1275,11 @@
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
         
         <div class="info-box">
-            <strong>Informasi:</strong><br>
-            • Gunakan PASSWORD kombinasi Huruf dan Angka<br>
-            • Tukar botol jadi saldo uang dan belanja<br>
-            • Produk baru dari merchant muncul OTOMATIS<br>
-            • Belanja dari berbagai merchant Mitra RECOIN<br>
-            • Pengiriman GRATIS ke lokasi Anda<br>
-            • KONFIRMASI PESANAN setelah diterima untuk menambah saldo merchant<br>
-            • Login akan tersimpan 7 hari
+            <strong>🌍 Dampak Lingkungan:</strong><br>
+            • 1 botol plastik = 60 gram emisi CO₂e<br>
+            • Setiap botol yang didaur ulang menyelamatkan bumi!<br>
+            • Kumpulkan botol, dapatkan saldo, dan selamatkan lingkungan<br>
+            • Lihat dampak hijau Anda di dashboard!
         </div>
     </div>
 
@@ -1332,12 +1313,29 @@
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
         
+        <!-- KARTU DAMPAK LINGKUNGAN -->
+        <div class="eco-card stat-card" id="eco-card">
+            <div class="eco-label">🌱 DAMPAK LINGKUNGAN ANDA</div>
+            <div class="val-eco" id="co2-saved">0 kg</div>
+            <div id="eco-equivalents" style="font-size: 13px; margin-top: 8px;">
+                🌳 Menanam <span id="trees-equivalent">0</span> pohon/tahun<br>
+                💡 Hemat <span id="energy-equivalent">0</span> kWh listrik
+            </div>
+            <div id="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="eco-progress"></div>
+                </div>
+                <div class="milestone-text" id="next-milestone"></div>
+            </div>
+            <div id="eco-badge" class="badge-eco">🌿 Eco Warrior in Progress</div>
+        </div>
+        
         <button id="btn-tarik" class="btn-tarik" onclick="openWithdrawalModal()" disabled>
             TARIK SALDO
         </button>
         
         <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
-            BUAT BELANJA
+            JAJAN
         </button>
         
         <div class="my-orders" id="my-orders-summary">
@@ -1355,7 +1353,7 @@
         </div>
         
         <button class="btn-scan" onclick="scanMachineAgain()" style="margin-top: 10px;">
-            <i class="fas fa-qrcode"></i> Hubungkan ke Mesin (Scan QR)
+            <i class="fas fa-qrcode"></i>
         </button>
         
         <button class="btn-logout" onclick="logout()">LOGOUT</button>
@@ -1372,7 +1370,7 @@
         </button>
         
         <div class="cart-header">
-            <h3 style="margin:0;">🛍️ Belanja</h3>
+            <h3 style="margin:0;">UMKM Lokal</h3>
             <div class="cart-icon" onclick="toggleCart()">
                 🛒
                 <span class="cart-count" id="cart-count">0</span>
@@ -1502,7 +1500,9 @@
     </div>
 
     <script>
-        // Firebase Configuration
+        // ===========================================
+        // FIREBASE CONFIGURATION
+        // ===========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDgm6P2T7DCLCy4ROuPNu6WtE_PIzoMvWk",
             authDomain: "re-coin-magelang-2026.firebaseapp.com",
@@ -1516,7 +1516,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Global Variables
+        // ===========================================
+        // GLOBAL VARIABLES
+        // ===========================================
         let currentUser = {
             phone: "",
             botol: 0,
@@ -1530,6 +1532,7 @@
         let machineSessionExpiry = null;
 
         const HARGA_PER_BOTOL = 50;
+        const EMISI_PER_BOTOL = 60;
         const ADMIN_WA = "6289524538835";
         const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
 
@@ -1552,7 +1555,229 @@
 
         const DEBUG = true;
 
-        // Utility Functions
+        // ===========================================
+        // FUNGSI KALKULATOR EMISI KARBON
+        // ===========================================
+        function hitungEmisiTerselamatkan(jumlahBotol) {
+            const totalEmisiGram = jumlahBotol * EMISI_PER_BOTOL;
+            const totalEmisiKg = totalEmisiGram / 1000;
+            const setaraPohon = (totalEmisiKg / 20).toFixed(1);
+            const setaraListrik = (totalEmisiKg / 0.5).toFixed(1);
+            
+            return {
+                gram: totalEmisiGram,
+                kg: totalEmisiKg,
+                setaraPohon: parseFloat(setaraPohon),
+                setaraListrik: parseFloat(setaraListrik)
+            };
+        }
+        
+        function getEcoBadge(jumlahBotol) {
+            if (jumlahBotol >= 10000) return { name: "🌍 LEGENDA BUMI", color: "#f39c12", icon: "🏆" };
+            if (jumlahBotol >= 5000) return { name: "🌿 ELOK GUARDIAN", color: "#2ecc71", icon: "🛡️" };
+            if (jumlahBotol >= 2000) return { name: "🍃 ECO HERO", color: "#27ae60", icon: "⭐" };
+            if (jumlahBotol >= 1000) return { name: "🌱 WARRIOR", color: "#229954", icon: "⚔️" };
+            if (jumlahBotol >= 500) return { name: "🌿 GUARDIAN", color: "#2e7d32", icon: "🛡️" };
+            if (jumlahBotol >= 100) return { name: "🍃 ENTHUSIAST", color: "#388e3c", icon: "🌱" };
+            if (jumlahBotol >= 50) return { name: "🌱 BEGINNER", color: "#4caf50", icon: "🌿" };
+            return { name: "🌿 ECO WARRIOR IN PROGRESS", color: "#8bc34a", icon: "🌱" };
+        }
+        
+        function getNextMilestone(jumlahBotol) {
+            const milestones = [50, 100, 500, 1000, 2000, 5000, 10000];
+            for (let m of milestones) {
+                if (jumlahBotol < m) {
+                    const sisa = m - jumlahBotol;
+                    const emisi = hitungEmisiTerselamatkan(sisa);
+                    return {
+                        target: m,
+                        sisa: sisa,
+                        pesan: `🎯 ${sisa} botol lagi (${emisi.kg.toFixed(1)} kg CO₂e) untuk jadi ${getEcoBadge(m).name}`
+                    };
+                }
+            }
+            return { target: 10000, sisa: 0, pesan: "🏆 Anda sudah mencapai puncak! Terima kasih telah menyelamatkan bumi! 🌍" };
+        }
+        
+        function updateEcoDisplay() {
+            const botol = currentUser.botol;
+            const emisi = hitungEmisiTerselamatkan(botol);
+            
+            const co2SavedEl = document.getElementById('co2-saved');
+            const treesEl = document.getElementById('trees-equivalent');
+            const energyEl = document.getElementById('energy-equivalent');
+            const badgeEl = document.getElementById('eco-badge');
+            const progressFill = document.getElementById('eco-progress');
+            const nextMilestoneEl = document.getElementById('next-milestone');
+            
+            if (co2SavedEl) co2SavedEl.innerText = `${emisi.kg.toFixed(1)} kg CO₂e`;
+            if (treesEl) treesEl.innerText = emisi.setaraPohon.toFixed(1);
+            if (energyEl) energyEl.innerText = emisi.setaraListrik.toFixed(1);
+            
+            const badge = getEcoBadge(botol);
+            if (badgeEl) {
+                badgeEl.innerHTML = `${badge.icon} ${badge.name}`;
+                badgeEl.style.background = badge.color;
+            }
+            
+            const nextMilestone = getNextMilestone(botol);
+            if (nextMilestoneEl) nextMilestoneEl.innerText = nextMilestone.pesan;
+            
+            const maxTarget = 10000;
+            let progressPercent = Math.min((botol / maxTarget) * 100, 100);
+            if (progressFill) progressFill.style.width = `${progressPercent}%`;
+        }
+        
+        function createLeafRain(jumlahBotol) {
+            const leafCount = Math.min(Math.floor(jumlahBotol / 10), 15);
+            for (let i = 0; i < leafCount; i++) {
+                setTimeout(() => {
+                    const leaf = document.createElement('div');
+                    leaf.className = 'leaf-animation';
+                    const leaves = ['🍃', '🌿', '🍂', '🌱', '🍀'];
+                    leaf.innerHTML = leaves[Math.floor(Math.random() * leaves.length)];
+                    leaf.style.left = Math.random() * 100 + '%';
+                    leaf.style.top = '-50px';
+                    leaf.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                    leaf.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+                    document.body.appendChild(leaf);
+                    setTimeout(() => leaf.remove(), 2000);
+                }, i * 150);
+            }
+        }
+        
+        function createCoinRain(jumlah) {
+            const coinCount = Math.min(jumlah, 10);
+            for (let i = 0; i < coinCount; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.className = 'coin-animation';
+                    coin.innerHTML = '🪙';
+                    coin.style.left = Math.random() * 100 + '%';
+                    coin.style.top = '-50px';
+                    coin.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                    coin.style.animationDuration = (Math.random() * 1 + 1) + 's';
+                    document.body.appendChild(coin);
+                    setTimeout(() => coin.remove(), 2000);
+                }, i * 100);
+            }
+        }
+        
+        function playCoinSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio tidak bisa diputar', e);
+            }
+        }
+
+        // ===========================================
+        // NOTIFIKASI TUNGGAL (HANYA 1 POPUP)
+        // ===========================================
+        function showSingleNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisi) {
+            const oldNotif = document.getElementById('single-notification');
+            if (oldNotif) oldNotif.remove();
+            
+            const notif = document.createElement('div');
+            notif.id = 'single-notification';
+            notif.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                border-radius: 28px;
+                padding: 24px;
+                box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+                z-index: 10010;
+                min-width: 320px;
+                max-width: 90%;
+                text-align: center;
+                animation: popIn 0.4s ease;
+                border: 3px solid var(--primary);
+            `;
+            
+            notif.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">SALDO BERTAMBAH!</h3>
+                    
+                    <div style="background: #e8f8f5; padding: 15px; border-radius: 20px; margin: 15px 0;">
+                        <div style="font-size: 28px; font-weight: 800; color: var(--primary);">
+                            +${tambahBotol} Botol
+                        </div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--dark);">
+                            ${formatRupiah(tambahRupiah)}
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 16px; margin: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                            <span>Saldo Sebelumnya:</span>
+                            <span><strong>${oldSaldo} botol</strong> (${formatRupiah(oldSaldo * HARGA_PER_BOTOL)})</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0; border-top: 1px solid #dfe6e9; padding-top: 8px;">
+                            <span>Saldo Sekarang:</span>
+                            <span><strong style="color: var(--primary);">${newSaldo} botol</strong> (${formatRupiah(newSaldo * HARGA_PER_BOTOL)})</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 12px; border-radius: 16px; margin: 10px 0;">
+                        <div style="font-size: 14px; font-weight: 600; color: #2e7d32;">🌱 DAMPAK LINGKUNGAN</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #2e7d32;">+${emisi.kg.toFixed(1)} kg CO₂e</div>
+                        <div style="font-size: 12px; margin-top: 5px;">
+                            🌳 Setara menanam <strong>${emisi.setaraPohon.toFixed(1)} pohon</strong><br>
+                            💡 Setara hemat <strong>${emisi.setaraListrik.toFixed(1)} kWh</strong> listrik
+                        </div>
+                    </div>
+                    
+                    <button onclick="closeSingleNotification()" style="
+                        background: linear-gradient(135deg, var(--primary), var(--secondary));
+                        color: white;
+                        border: none;
+                        padding: 12px 30px;
+                        border-radius: 30px;
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                        margin-top: 15px;
+                        width: 100%;
+                    ">
+                        <i class="fas fa-check-circle"></i> LANJUTKAN
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                closeSingleNotification();
+            }, 5000);
+            
+            playCoinSound();
+        }
+        
+        function closeSingleNotification() {
+            const notif = document.getElementById('single-notification');
+            if (notif) {
+                notif.style.animation = 'popOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }
+        }
+
+        // ===========================================
+        // UTILITY FUNCTIONS
+        // ===========================================
         function logDebug(...args) {
             if (DEBUG) {
                 console.log('[DEBUG]', ...args);
@@ -1617,7 +1842,6 @@
             const toast = document.getElementById('product-toast');
             toast.innerHTML = message;
             toast.classList.remove('hidden');
-            
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 3000);
@@ -1651,7 +1875,6 @@
 
         function mulaiAutoLogoutTimer() {
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
-            
             autoLogoutTimer = setTimeout(() => {
                 if (currentUser.isMachineMode && currentUser.machine) {
                     db.ref('/' + currentUser.machine + '/active_user').remove();
@@ -1670,7 +1893,6 @@
 
         function updateLastActivity() {
             if (!currentUser.isMachineMode || !currentUser.machine) return;
-            
             if (machineSessionToken) {
                 db.ref('/' + currentUser.machine + '/active_user').update({
                     last_activity: Date.now(),
@@ -1678,14 +1900,15 @@
                     session_expiry: machineSessionExpiry
                 });
             }
-            
             if (autoLogoutTimer) {
                 clearTimeout(autoLogoutTimer);
                 mulaiAutoLogoutTimer();
             }
         }
 
-        // GPS Functions
+        // ===========================================
+        // GPS FUNCTIONS
+        // ===========================================
         function toggleDelivery() {
             const checkbox = document.getElementById('delivery-checkbox');
             deliveryEnabled = checkbox.checked;
@@ -1737,30 +1960,24 @@
 
         function getUserLocation() {
             showNotification('📍 Mengakses GPS...', 'info');
-            
             if (!navigator.geolocation) {
                 showNotification('❌ GPS tidak didukung', 'error');
                 showManualAddressInput();
                 return;
             }
-            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude: lat, longitude: lng, accuracy } = position.coords;
                     userLocation = { lat, lng, accuracy, timestamp: Date.now() };
-                    
                     const deliveryAddress = document.getElementById('delivery-address');
                     const mapsLink = document.getElementById('maps-link');
                     const deliveryInfo = document.getElementById('delivery-info');
-                    
-                    if (deliveryAddress) deliveryAddress.innerHTML = 
-                        `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
+                    if (deliveryAddress) deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
                     if (mapsLink) {
                         mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                         mapsLink.classList.remove('hidden');
                     }
                     if (deliveryInfo) deliveryInfo.classList.remove('hidden');
-                    
                     showNotification('📍 GPS berhasil!', 'success');
                     updateCartDisplay();
                 },
@@ -1776,15 +1993,14 @@
             );
         }
 
-        // Machine Session Listener
+        // ===========================================
+        // MACHINE SESSION LISTENER
+        // ===========================================
         function startMachineSessionListener() {
             if (!currentUser.isMachineMode || !currentUser.machine) return;
-            
             logDebug('Memulai listener sesi mesin...');
-            
             db.ref('/' + currentUser.machine + '/active_user').on('value', (snapshot) => {
                 const data = snapshot.val();
-                
                 if (!data) {
                     showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'error');
                     currentUser.isMachineMode = false;
@@ -1795,14 +2011,12 @@
                     const modeBadge = document.getElementById('mode-badge-dashboard');
                     if (machineInfo) machineInfo.classList.add('hidden');
                     if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    
                     if (window.history && window.history.replaceState) {
                         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                         window.history.replaceState({}, document.title, newUrl);
                     }
                     return;
                 }
-                
                 if (data.id !== currentUser.phone && data.source === "machine") {
                     showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
                     currentUser.isMachineMode = false;
@@ -1813,7 +2027,6 @@
                     const modeBadge = document.getElementById('mode-badge-dashboard');
                     if (machineInfo) machineInfo.classList.add('hidden');
                     if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    
                     if (window.history && window.history.replaceState) {
                         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                         window.history.replaceState({}, document.title, newUrl);
@@ -1826,7 +2039,6 @@
                     const sessionInfo = document.getElementById('session-token-info');
                     if (sessionInfo) sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
                 }
-                
                 if (data.id === currentUser.phone && data.last_activity) {
                     const inactiveTime = Date.now() - data.last_activity;
                     if (inactiveTime > 300000) {
@@ -1841,7 +2053,9 @@
             });
         }
 
-        // Auto Login
+        // ===========================================
+        // AUTO LOGIN
+        // ===========================================
         function saveUserSession() {
             if (!currentUser.phone || !currentUser.rememberMe) return;
             localStorage.setItem('recoin_user_session', JSON.stringify({
@@ -1862,7 +2076,6 @@
         function checkAutoLogin() {
             const session = JSON.parse(localStorage.getItem('recoin_user_session') || '{}');
             if (!session.phone || session.expiresAt < Date.now()) return false;
-            
             currentUser.phone = session.phone;
             currentUser.machine = session.machine || "";
             currentUser.isMachineMode = session.isMachineMode || false;
@@ -1870,7 +2083,6 @@
             currentUser.rememberMe = true;
             machineSessionToken = session.sessionToken || null;
             machineSessionExpiry = session.sessionExpiry || null;
-            
             db.ref('/accounts/' + session.phone).once('value', (snap) => {
                 if (snap.exists()) {
                     currentUser.botol = snap.val().botol || 0;
@@ -1883,20 +2095,18 @@
             return true;
         }
 
-        // Saldo Real-time Notification
+        // ===========================================
+        // SALDO REAL-TIME
+        // ===========================================
         function startSaldoListener() {
             if (!currentUser.phone || saldoListenerActive) return;
-            
             if (currentUser.isMachineMode && !machineSessionToken) {
                 logDebug('Mode mesin aktif tapi tidak ada token, skip listener');
                 return;
             }
-            
             logDebug('Memulai listener saldo real-time...');
             saldoListenerActive = true;
-            
             lastSaldo = currentUser.botol;
-            
             db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snapshot) => {
                 if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                     db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (tokenSnap) => {
@@ -1914,28 +2124,29 @@
 
         function processSaldoUpdate(newSaldo) {
             const oldSaldo = lastSaldo;
-            
             logDebug('Saldo berubah:', { old: oldSaldo, new: newSaldo });
-            
             lastSaldo = newSaldo;
             currentUser.botol = newSaldo;
             updateSaldoDisplay();
+            updateEcoDisplay();
             
             if (newSaldo > oldSaldo) {
                 const tambahBotol = newSaldo - oldSaldo;
                 const tambahRupiah = tambahBotol * HARGA_PER_BOTOL;
-                
+                const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
                 logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
                 
-                showSaldoIncreaseNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo);
+                // HANYA 1 NOTIFIKASI - Gabungan semua informasi
+                showSingleNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisiBaru);
+                
                 highlightSaldoCards();
                 animateSaldoNumbers();
                 createCoinRain(tambahBotol);
+                createLeafRain(tambahBotol);
                 
                 const btnTarik = document.getElementById('btn-tarik');
                 if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
             }
-            
             updateLastActivity();
         }
 
@@ -1948,179 +2159,54 @@
             if (modalSaldo) modalSaldo.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
         }
 
-        function showSaldoIncreaseNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo) {
-            const modalHtml = `
-                <div id="saldo-notif-modal" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.7);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10010;
-                    animation: fadeIn 0.3s ease;
-                ">
-                    <div class="saldo-toast">
-                        <div class="saldo-icon">
-                            <i class="fas fa-coins"></i>
-                        </div>
-                        <h3>🎉 SALDO BERTAMBAH!</h3>
-                        <div class="saldo-amount">+${tambahBotol} Botol</div>
-                        <div class="saldo-amount" style="font-size: 28px;">${formatRupiah(tambahRupiah)}</div>
-                        
-                        <div class="saldo-detail">
-                            <div class="saldo-detail-row">
-                                <span>Saldo Sebelumnya</span>
-                                <span>${oldSaldo} botol (${formatRupiah(oldSaldo * HARGA_PER_BOTOL)})</span>
-                            </div>
-                            <div class="saldo-detail-row">
-                                <span>Saldo Sekarang</span>
-                                <span><strong style="color: var(--primary);">${newSaldo} botol (${formatRupiah(newSaldo * HARGA_PER_BOTOL)})</strong></span>
-                            </div>
-                        </div>
-                        
-                        <button class="saldo-close-btn" onclick="closeSaldoNotification()">
-                            <i class="fas fa-check"></i> OK, MANTAP!
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            const oldModal = document.getElementById('saldo-notif-modal');
-            if (oldModal) oldModal.remove();
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            setTimeout(() => {
-                closeSaldoNotification();
-            }, 5000);
-            
-            showFloatingSaldoBubble(tambahBotol, tambahRupiah);
-            playCoinSound();
-        }
-
-        function showFloatingSaldoBubble(tambahBotol, tambahRupiah) {
-            const bubble = document.createElement('div');
-            bubble.className = 'floating-bubble';
-            bubble.onclick = function() { this.remove(); };
-            bubble.innerHTML = `
-                <div class="bubble-icon">
-                    <i class="fas fa-coins"></i>
-                </div>
-                <div>
-                    <div style="font-weight: 800; font-size: 16px;">💰 +${tambahBotol} Botol!</div>
-                    <div style="font-size: 13px; opacity: 0.9;">${formatRupiah(tambahRupiah)} masuk ke saldo</div>
-                </div>
-            `;
-            document.body.appendChild(bubble);
-            
-            setTimeout(() => {
-                if (bubble.parentNode) {
-                    bubble.style.animation = 'slideOutRight 0.5s ease';
-                    setTimeout(() => bubble.remove(), 500);
-                }
-            }, 5000);
-        }
-
-        function closeSaldoNotification() {
-            const modal = document.getElementById('saldo-notif-modal');
-            if (modal) {
-                modal.style.animation = 'fadeOut 0.3s ease';
-                setTimeout(() => modal.remove(), 300);
-            }
-        }
-
         function highlightSaldoCards() {
             const botolCard = document.getElementById('botol-stat-card');
             const rupiahCard = document.getElementById('rupiah-stat-card');
-            
+            const ecoCard = document.getElementById('eco-card');
             if (botolCard) botolCard.classList.add('highlight', 'pulse');
             if (rupiahCard) rupiahCard.classList.add('highlight', 'pulse');
-            
+            if (ecoCard) ecoCard.classList.add('highlight', 'pulse');
             setTimeout(() => {
                 if (botolCard) botolCard.classList.remove('highlight', 'pulse');
                 if (rupiahCard) rupiahCard.classList.remove('highlight', 'pulse');
+                if (ecoCard) ecoCard.classList.remove('highlight', 'pulse');
             }, 1000);
         }
 
         function animateSaldoNumbers() {
             const botolElement = document.getElementById('count');
             const rupiahElement = document.getElementById('rupiah');
-            
+            const co2Element = document.getElementById('co2-saved');
             if (botolElement) botolElement.classList.add('increase');
             if (rupiahElement) rupiahElement.classList.add('increase');
-            
+            if (co2Element) co2Element.classList.add('increase');
             setTimeout(() => {
                 if (botolElement) botolElement.classList.remove('increase');
                 if (rupiahElement) rupiahElement.classList.remove('increase');
+                if (co2Element) co2Element.classList.remove('increase');
             }, 500);
         }
 
-        function createCoinRain(jumlah) {
-            const coinCount = Math.min(jumlah, 10);
-            
-            for (let i = 0; i < coinCount; i++) {
-                setTimeout(() => {
-                    const coin = document.createElement('div');
-                    coin.className = 'coin-animation';
-                    coin.innerHTML = '🪙';
-                    coin.style.left = Math.random() * 100 + '%';
-                    coin.style.top = '-50px';
-                    coin.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                    coin.style.animationDuration = (Math.random() * 1 + 1) + 's';
-                    document.body.appendChild(coin);
-                    
-                    setTimeout(() => coin.remove(), 2000);
-                }, i * 100);
-            }
-        }
-
-        function playCoinSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
-                
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.3);
-            } catch (e) {
-                console.log('Audio tidak bisa diputar', e);
-            }
-        }
-
-        // Authentication
+        // ===========================================
+        // AUTHENTICATION
+        // ===========================================
         function handleAuth() {
             const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
             const password = document.getElementById('pass-input').value;
             const mode = getModeFromUrl();
-            
             if (phone.length < 10 || password.length < 4) {
                 showNotification('HP 10 digit, password 4 karakter', 'error');
                 return;
             }
-            
             currentUser = { ...currentUser, phone, rememberMe: document.getElementById('remember-me').checked, 
                 loginSource: mode.loginSource, machine: mode.machineId, isMachineMode: mode.mode === 'machine' };
-            
             db.ref('/accounts/' + phone).once('value', (snap) => {
                 if (snap.exists()) {
                     if (snap.val().password === password) loginSuccess();
                     else showNotification('Password salah!', 'error');
                 } else {
                     db.ref('/accounts/' + phone).set({ password, botol: 0, created_at: Date.now() })
-                        .then(() => { showNotification('Akun dibuat!', 'success'); loginSuccess(); })
+                        .then(() => { showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success'); loginSuccess(); })
                         .catch(() => showNotification('Gagal buat akun', 'error'));
                 }
             });
@@ -2130,7 +2216,6 @@
             const loginPage = document.getElementById('login-page');
             const dashboardPage = document.getElementById('dashboard-page');
             const userDisplay = document.getElementById('user-display');
-            
             if (loginPage) loginPage.classList.add('hidden');
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (userDisplay) userDisplay.innerText = currentUser.phone;
@@ -2138,38 +2223,29 @@
             if (currentUser.isMachineMode) {
                 const activeMachine = document.getElementById('active-machine');
                 if (activeMachine) activeMachine.innerText = currentUser.machine;
-                
                 db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                     const data = snap.val();
-                    
                     if (data && data.id && data.id !== currentUser.phone && data.source === "machine") {
                         showNotification(`⚠️ Mesin sedang digunakan oleh ${data.id.substr(0,5)}...`, 'error');
-                        
                         currentUser.isMachineMode = false;
                         currentUser.machine = "";
                         machineSessionToken = null;
                         machineSessionExpiry = null;
-                        
                         const machineInfo = document.getElementById('machine-info-dashboard');
                         const modeBadge = document.getElementById('mode-badge-dashboard');
                         if (machineInfo) machineInfo.classList.add('hidden');
                         if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                        
                         if (window.history && window.history.replaceState) {
                             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                             window.history.replaceState({}, document.title, newUrl);
                         }
-                        
                         refreshSaldo();
                         loadMerchantsAndProducts();
                         startOrdersListener();
-                        
                         return;
                     }
-                    
                     machineSessionToken = generateSessionToken(currentUser.phone);
                     machineSessionExpiry = Date.now() + (5 * 60 * 1000);
-                    
                     const sessionData = {
                         id: currentUser.phone,
                         login_time: Date.now(),
@@ -2178,16 +2254,13 @@
                         session_token: machineSessionToken,
                         session_expiry: machineSessionExpiry
                     };
-                    
                     db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
                         .then(() => {
                             showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
                             mulaiAutoLogoutTimer();
-                            
                             const machineInfo = document.getElementById('machine-info-dashboard');
                             const modeBadge = document.getElementById('mode-badge-dashboard');
                             const sessionInfo = document.getElementById('session-token-info');
-                            
                             if (machineInfo) machineInfo.classList.remove('hidden');
                             if (modeBadge) modeBadge.innerText = '🔌 Mode Mesin';
                             if (sessionInfo) {
@@ -2195,7 +2268,6 @@
                                 sessionInfo.classList.remove('hidden');
                             }
                             logDebug('Session Token dibuat:', machineSessionToken);
-                            
                             startMachineSessionListener();
                         })
                         .catch(error => {
@@ -2208,7 +2280,6 @@
                             if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
                         });
                 });
-                    
             } else {
                 const modeBadge = document.getElementById('mode-badge-dashboard');
                 const machineInfo = document.getElementById('machine-info-dashboard');
@@ -2217,10 +2288,9 @@
                 machineSessionToken = null;
                 machineSessionExpiry = null;
             }
-            
             saveUserSession();
-            
             refreshSaldo();
+            updateEcoDisplay();
             loadMerchantsAndProducts();
             startOrdersListener();
             startProductListener();
@@ -2238,26 +2308,26 @@
             });
         }
 
-        // Realtime Orders Listener
+        // ===========================================
+        // REALTIME ORDERS LISTENER
+        // ===========================================
         function startOrdersListener() {
             logDebug('Memulai listener orders real-time...');
-            
             db.ref('/transactions/' + currentUser.phone).on('value', (snapshot) => {
                 userOrders = [];
                 snapshot.forEach(o => {
                     userOrders.push({ id: o.key, ...o.val() });
                 });
-                
                 userOrders.sort((a, b) => b.timestamp - a.timestamp);
-                
                 displayRecentOrders();
                 displayAllOrders();
-                
                 logDebug('Orders updated:', userOrders.length);
             });
         }
 
-        // Refresh Functions
+        // ===========================================
+        // REFRESH FUNCTIONS
+        // ===========================================
         function refreshSaldo() {
             if (currentUser.isMachineMode && currentUser.machine) {
                 if (!machineSessionToken) {
@@ -2269,7 +2339,6 @@
                     if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
                     return;
                 }
-                
                 db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (snap) => {
                     const currentToken = snap.val();
                     if (currentToken !== machineSessionToken) {
@@ -2282,7 +2351,6 @@
                         if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
                         return;
                     }
-                    
                     doRefreshSaldo();
                 });
             } else {
@@ -2302,11 +2370,11 @@
                 const rupiahEl = document.getElementById('rupiah');
                 const modalSaldo = document.getElementById('modal-saldo');
                 const btnTarik = document.getElementById('btn-tarik');
-                
                 if (countEl) countEl.innerText = newVal;
                 if (rupiahEl) rupiahEl.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
                 if (modalSaldo) modalSaldo.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
                 if (btnTarik) btnTarik.disabled = newVal * HARGA_PER_BOTOL < 5000;
+                updateEcoDisplay();
                 updateLastActivity();
             });
         }
@@ -2324,20 +2392,15 @@
             db.ref('/products').off();
             db.ref('/accounts/' + currentUser.phone + '/botol').off();
             db.ref('/transactions/' + currentUser.phone).off();
-            
             if (currentUser.machine) {
                 db.ref('/' + currentUser.machine + '/active_user').off();
             }
-            
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
-            
             if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                 db.ref('/' + currentUser.machine + '/active_user').remove();
             }
-            
             clearUserSession();
             showLoginPage();
-            
             currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
             cart = [];
             deliveryEnabled = false;
@@ -2355,7 +2418,6 @@
             const orderDetailPage = document.getElementById('order-detail-page');
             const phoneInput = document.getElementById('phone-input');
             const passInput = document.getElementById('pass-input');
-            
             if (loginPage) loginPage.classList.remove('hidden');
             if (dashboardPage) dashboardPage.classList.add('hidden');
             if (shopPage) shopPage.classList.add('hidden');
@@ -2365,39 +2427,28 @@
             if (passInput) passInput.value = '';
         }
 
-        // Load Data - Realtime Version
+        // ===========================================
+        // LOAD DATA - REALTIME
+        // ===========================================
         function loadMerchantsAndProducts() {
             logDebug('Memulai listener realtime merchants & products...');
-            
             db.ref('/merchants').on('value', (ms) => {
                 const newMerchants = [];
-                ms.forEach(m => { 
-                    newMerchants.push({ id: m.key, ...m.val() }); 
-                });
-                
+                ms.forEach(m => { newMerchants.push({ id: m.key, ...m.val() }); });
                 merchants = newMerchants;
                 logDebug('Merchants updated:', merchants.length);
-                
                 if (!document.getElementById('shop-page').classList.contains('hidden')) {
                     displayProducts();
                 }
             });
-            
             db.ref('/products').on('value', (ps) => {
                 const oldCount = products.length;
                 const newProductsList = [];
-                
-                ps.forEach(p => {
-                    newProductsList.push({ id: p.key, ...p.val() });
-                });
-                
+                ps.forEach(p => { newProductsList.push({ id: p.key, ...p.val() }); });
                 products = newProductsList;
-                
                 logDebug('Products updated:', products.length);
-                
                 const totalSpan = document.getElementById('total-products');
                 if (totalSpan) totalSpan.innerText = products.length;
-                
                 if (oldCount > 0 && products.length > oldCount && !document.getElementById('shop-page').classList.contains('hidden')) {
                     const newCount = products.length - oldCount;
                     showProductToast(`✨ ${newCount} produk baru ditambahkan!`);
@@ -2416,7 +2467,6 @@
                         if (audioCtx.state === 'suspended') audioCtx.resume();
                     } catch(e) { console.log('Sound not supported'); }
                 }
-                
                 if (!document.getElementById('shop-page').classList.contains('hidden')) {
                     displayProducts();
                 }
@@ -2426,41 +2476,27 @@
         function displayProducts() {
             const container = document.getElementById('products-container');
             if (!container) return;
-            
             logDebug('Menampilkan products... Total:', products.length);
-            
             if (merchants.length === 0 && products.length === 0) {
                 container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat produk...</p></div>';
                 return;
             }
-            
             if (merchants.length === 0 && products.length > 0) {
                 const uniqueIds = [...new Set(products.map(p => p.merchant_id))];
                 uniqueIds.forEach(mId => {
-                    merchants.push({
-                        id: mId,
-                        nama_toko: `Toko ${mId.slice(-6)}`,
-                        alamat: 'Alamat belum tersedia'
-                    });
+                    merchants.push({ id: mId, nama_toko: `Toko ${mId.slice(-6)}`, alamat: 'Alamat belum tersedia' });
                 });
                 logDebug('Created dummy merchants from products:', merchants.length);
             }
-            
-            const merchantsWithProducts = merchants.filter(m => 
-                products.some(p => p.merchant_id === m.id)
-            );
-            
+            const merchantsWithProducts = merchants.filter(m => products.some(p => p.merchant_id === m.id));
             if (merchantsWithProducts.length === 0) {
                 container.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>Belum ada produk dari merchant</p></div>';
                 return;
             }
-            
             let html = '';
-            
             merchantsWithProducts.forEach(m => {
                 const mp = products.filter(p => p.merchant_id === m.id);
                 if (mp.length === 0) return;
-                
                 html += `<div class="merchant-section">
                     <div class="merchant-header">
                         <div class="merchant-avatar">${(m.nama_toko?.[0] || m.id?.[0] || 'T').toUpperCase()}</div>
@@ -2473,63 +2509,48 @@
                         </div>
                     </div>
                     <div class="product-grid">`;
-                
                 mp.forEach(p => {
                     const isOutOfStock = (p.stock || 0) <= 0;
                     const isNew = newProductsSet.has(p.id);
                     const productImage = p.image && !p.image.includes('placeholder') && p.image !== 'https://via.placeholder.com/150' 
-                        ? p.image 
-                        : `https://via.placeholder.com/150/00b894/ffffff?text=${encodeURIComponent(p.name || 'Produk')}`;
-                    
+                        ? p.image : `https://via.placeholder.com/150/00b894/ffffff?text=${encodeURIComponent(p.name || 'Produk')}`;
                     html += `<div class="product-card" id="product-${p.id}">
                         ${isNew ? '<span class="new-badge">NEW</span>' : ''}
                         <div class="product-image">
-                            <img src="${productImage}" 
-                                 onerror="this.src='https://via.placeholder.com/150/00b894/ffffff?text=Produk'"
-                                 alt="${escapeHtml(p.name || 'Produk')}">
+                            <img src="${productImage}" onerror="this.src='https://via.placeholder.com/150/00b894/ffffff?text=Produk'" alt="${escapeHtml(p.name || 'Produk')}">
                         </div>
                         <div class="product-name">${escapeHtml(p.name || 'Produk')}</div>
                         <div class="product-price">${formatRupiah(p.price || 0)}</div>
                         <div class="product-stock ${(p.stock || 0) <= 5 && (p.stock || 0) > 0 ? 'stock-low' : ''}">
                             ${isOutOfStock ? 'HABIS' : `Stok: ${p.stock || 0}`}
                         </div>
-                        <button class="btn-beli" onclick="addToCart('${p.id}')" 
-                                ${isOutOfStock ? 'disabled' : ''}>
+                        <button class="btn-beli" onclick="addToCart('${p.id}')" ${isOutOfStock ? 'disabled' : ''}>
                             <i class="fas fa-cart-plus"></i> ${isOutOfStock ? 'Habis' : 'Tambah'}
                         </button>
                     </div>`;
                 });
-                
                 html += `</div></div>`;
             });
-            
             container.innerHTML = html;
             logDebug('Display selesai, total merchant:', merchantsWithProducts.length);
         }
 
         function startProductListener() {
             logDebug('Memulai product listener...');
-            
             db.ref('/products').on('child_added', (snapshot) => {
                 const newProduct = { id: snapshot.key, ...snapshot.val() };
                 logDebug('Produk baru detected:', newProduct.name);
-                
                 const exists = products.some(p => p.id === newProduct.id);
-                
                 if (!exists && currentUser.phone) {
                     products.push(newProduct);
                     newProductsSet.add(newProduct.id);
-                    
                     const totalSpan = document.getElementById('total-products');
                     if (totalSpan) totalSpan.innerText = products.length;
-                    
                     if (!document.getElementById('shop-page').classList.contains('hidden')) {
                         displayProducts();
                     }
-                    
                     const merchantName = getMerchantName(newProduct.merchant_id);
                     showProductToast(`🆕 Produk Baru: ${newProduct.name} dari ${merchantName}`);
-                    
                     setTimeout(() => {
                         newProductsSet.delete(newProduct.id);
                         if (!document.getElementById('shop-page').classList.contains('hidden')) {
@@ -2538,11 +2559,9 @@
                     }, 5000);
                 }
             });
-            
             db.ref('/products').on('child_changed', (snapshot) => {
                 const updatedProduct = { id: snapshot.key, ...snapshot.val() };
                 logDebug('Produk diupdate:', updatedProduct.name);
-                
                 const index = products.findIndex(p => p.id === updatedProduct.id);
                 if (index !== -1) {
                     products[index] = updatedProduct;
@@ -2551,17 +2570,13 @@
                     }
                 }
             });
-            
             db.ref('/products').on('child_removed', (snapshot) => {
                 const removedId = snapshot.key;
                 logDebug('Produk dihapus:', removedId);
-                
                 products = products.filter(p => p.id !== removedId);
                 newProductsSet.delete(removedId);
-                
                 const totalSpan = document.getElementById('total-products');
                 if (totalSpan) totalSpan.innerText = products.length;
-                
                 if (!document.getElementById('shop-page').classList.contains('hidden')) {
                     displayProducts();
                 }
@@ -2574,31 +2589,24 @@
             return merchant ? merchant.nama_toko : 'Toko';
         }
 
-        // Cart Functions
+        // ===========================================
+        // CART FUNCTIONS
+        // ===========================================
         function addToCart(id) {
             const p = products.find(p => p.id === id);
             if (!p) return;
-            
             refreshSaldo();
-            
             if (currentUser.botol * HARGA_PER_BOTOL < p.price) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
-            
             const exist = cart.find(i => i.id === id);
             if (exist) {
                 exist.quantity++;
             } else {
                 const merchant = merchants.find(m => m.id === p.merchant_id);
-                cart.push({ 
-                    ...p, 
-                    quantity: 1, 
-                    merchant_name: merchant?.nama_toko || 'Toko',
-                    merchant_id: p.merchant_id
-                });
+                cart.push({ ...p, quantity: 1, merchant_name: merchant?.nama_toko || 'Toko', merchant_id: p.merchant_id });
             }
-            
             updateCartDisplay();
             showNotification(`${p.name} ditambahkan ke keranjang`, 'success');
         }
@@ -2606,7 +2614,6 @@
         function updateCartDisplay() {
             let subtotal = 0;
             let html = '';
-            
             cart.forEach(i => {
                 subtotal += i.price * i.quantity;
                 html += `<div class="cart-item">
@@ -2627,20 +2634,17 @@
                     </div>
                 </div>`;
             });
-            
             const cartCount = document.getElementById('cart-count');
             const cartItems = document.getElementById('cart-items');
             const cartTotal = document.getElementById('cart-total');
             const summarySubtotal = document.getElementById('summary-subtotal');
             const grandTotal = document.getElementById('grand-total');
             const btnCheckout = document.getElementById('btn-checkout');
-            
             if (cartCount) cartCount.innerText = cart.reduce((s, i) => s + i.quantity, 0);
             if (cartItems) cartItems.innerHTML = html || '<p style="text-align:center">Keranjang kosong</p>';
             if (cartTotal) cartTotal.innerHTML = `Total: ${formatRupiah(subtotal)}`;
             if (summarySubtotal) summarySubtotal.innerHTML = formatRupiah(subtotal);
             if (grandTotal) grandTotal.innerHTML = `Total: ${formatRupiah(subtotal)}`;
-            
             const saldoCukup = subtotal <= currentUser.botol * HARGA_PER_BOTOL;
             if (btnCheckout) btnCheckout.disabled = !saldoCukup || cart.length === 0;
         }
@@ -2648,12 +2652,10 @@
         function updateQuantity(id, d) {
             const index = cart.findIndex(i => i.id === id);
             if (index === -1) return;
-            
             cart[index].quantity += d;
             if (cart[index].quantity <= 0) {
                 cart.splice(index, 1);
             }
-            
             updateCartDisplay();
         }
 
@@ -2667,94 +2669,53 @@
             if (cartPanel) cartPanel.classList.toggle('hidden');
         }
 
-        // Checkout
+        // ===========================================
+        // CHECKOUT
+        // ===========================================
         function checkout() {
             const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-            
             refreshSaldo();
-            
             if (subtotal > currentUser.botol * HARGA_PER_BOTOL) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
             }
-            
             if (cart.length === 0) {
                 showNotification('Keranjang belanja kosong!', 'error');
                 return;
             }
-            
             if (deliveryEnabled && !userLocation && !manualAddress) {
                 showNotification('Harap tentukan alamat pengiriman!', 'error');
                 return;
             }
-            
             showNotification('Memproses pesanan...', 'info');
-            
             const transId = 'TRX' + Date.now();
             const transaction = {
                 user_id: currentUser.phone,
-                items: cart.map(i => ({
-                    id: i.id,
-                    name: i.name,
-                    quantity: i.quantity,
-                    price: i.price,
-                    merchant_id: i.merchant_id,
-                    merchant_name: i.merchant_name
-                })),
+                items: cart.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, price: i.price, merchant_id: i.merchant_id, merchant_name: i.merchant_name })),
                 subtotal: subtotal,
                 total: subtotal,
                 timestamp: Date.now(),
                 status: 'diproses'
             };
-            
             if (deliveryEnabled) {
                 if (userLocation) {
-                    transaction.delivery = {
-                        type: 'gps',
-                        lat: userLocation.lat,
-                        lng: userLocation.lng,
-                        accuracy: userLocation.accuracy,
-                        maps_url: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}`
-                    };
+                    transaction.delivery = { type: 'gps', lat: userLocation.lat, lng: userLocation.lng, accuracy: userLocation.accuracy, maps_url: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}` };
                 } else if (manualAddress) {
-                    transaction.delivery = {
-                        type: 'manual',
-                        address: manualAddress,
-                        maps_url: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}`
-                    };
+                    transaction.delivery = { type: 'manual', address: manualAddress, maps_url: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}` };
                 }
             }
-            
             const updates = {};
-            
             updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - Math.ceil(subtotal / HARGA_PER_BOTOL);
             updates[`/transactions/${currentUser.phone}/${transId}`] = transaction;
-            
-            cart.forEach(i => {
-                updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity);
-            });
-            
+            cart.forEach(i => { updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity); });
             const merchantOrders = {};
             cart.forEach(item => {
                 const merchantId = item.merchant_id;
                 if (!merchantOrders[merchantId]) {
-                    merchantOrders[merchantId] = {
-                        items: [],
-                        user_id: currentUser.phone,
-                        timestamp: Date.now(),
-                        status: 'diproses'
-                    };
+                    merchantOrders[merchantId] = { items: [], user_id: currentUser.phone, timestamp: Date.now(), status: 'diproses' };
                 }
-                merchantOrders[merchantId].items.push({
-                    id: item.id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    merchant_id: merchantId,
-                    merchant_name: item.merchant_name
-                });
+                merchantOrders[merchantId].items.push({ id: item.id, name: item.name, quantity: item.quantity, price: item.price, merchant_id: merchantId, merchant_name: item.merchant_name });
             });
-            
             for (const [merchantId, orderData] of Object.entries(merchantOrders)) {
                 updates[`/merchant_orders/${merchantId}/${transId}`] = {
                     id: transId,
@@ -2768,28 +2729,22 @@
                 };
                 logDebug(`Order saved to merchant_orders/${merchantId}/${transId}`);
             }
-            
             db.ref().update(updates)
                 .then(() => {
                     showNotification('✅ Pesanan berhasil dibuat!', 'success');
-                    
                     cart = [];
                     deliveryEnabled = false;
                     userLocation = null;
                     manualAddress = "";
-                    
                     const deliveryCheckbox = document.getElementById('delivery-checkbox');
                     const deliveryOptions = document.getElementById('delivery-options');
                     const cartPanel = document.getElementById('cart-panel');
-                    
                     if (deliveryCheckbox) deliveryCheckbox.checked = false;
                     if (deliveryOptions) deliveryOptions.classList.add('hidden');
                     if (cartPanel) cartPanel.classList.add('hidden');
-                    
                     updateCartDisplay();
                     refreshSaldo();
-                    
-                    logDebug('✅ Checkout completed, orders saved to transactions and merchant_orders');
+                    logDebug('✅ Checkout completed');
                 })
                 .catch(error => {
                     console.error('Checkout error:', error);
@@ -2797,228 +2752,116 @@
                 });
         }
 
-        // Orders Functions
+        // ===========================================
+        // ORDERS FUNCTIONS
+        // ===========================================
         function displayRecentOrders() {
             const recentOrders = document.getElementById('recent-orders');
             if (!recentOrders) return;
-            
             let html = '';
-            
             if (userOrders.length === 0) {
                 html = '<p style="text-align:center; color:#7f8c8d;">Belum ada pesanan</p>';
             } else {
                 userOrders.slice(0, 3).forEach(o => {
-                    const statusClass = o.status === 'diproses' ? 'status-diproses' : 
-                                       o.status === 'dikirim' ? 'status-dikirim' : 
-                                       o.status === 'selesai' ? 'status-selesai' : 'status-batal';
-                    
+                    const statusClass = o.status === 'diproses' ? 'status-diproses' : o.status === 'dikirim' ? 'status-dikirim' : o.status === 'selesai' ? 'status-selesai' : 'status-batal';
                     html += `<div class="order-item" onclick="showOrderDetail('${o.id}')">
-                        <div>
-                            <div>#${o.id.slice(-8)}</div>
-                            <div class="order-merchant">${o.items?.length || 0} item</div>
-                        </div>
-                        <div>
-                            <div>${formatRupiah(o.total || 0)}</div>
-                            <span class="order-status ${statusClass}">${o.status || 'diproses'}</span>
-                        </div>
+                        <div><div>#${o.id.slice(-8)}</div><div class="order-merchant">${o.items?.length || 0} item</div></div>
+                        <div><div>${formatRupiah(o.total || 0)}</div><span class="order-status ${statusClass}">${o.status || 'diproses'}</span></div>
                     </div>`;
                 });
             }
-            
             recentOrders.innerHTML = html;
         }
 
         function displayAllOrders() {
             const ordersListFull = document.getElementById('orders-list-full');
             if (!ordersListFull) return;
-            
             let html = '';
-            
             if (userOrders.length === 0) {
                 html = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Belum ada pesanan</p></div>';
             } else {
                 userOrders.forEach(o => {
-                    const statusClass = o.status === 'diproses' ? 'status-diproses' : 
-                                       o.status === 'dikirim' ? 'status-dikirim' : 
-                                       o.status === 'selesai' ? 'status-selesai' : 'status-batal';
-                    
+                    const statusClass = o.status === 'diproses' ? 'status-diproses' : o.status === 'dikirim' ? 'status-dikirim' : o.status === 'selesai' ? 'status-selesai' : 'status-batal';
                     const canConfirm = o.status === 'dikirim';
-                    
                     html += `<div class="order-card">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <strong>#${o.id.slice(-8)}</strong>
                             <span class="order-status ${statusClass}">${o.status || 'diproses'}</span>
                         </div>
-                        <div style="font-size: 13px; margin-bottom: 8px;">
-                            ${formatDate(o.timestamp)}
-                        </div>
-                        <div style="margin-bottom: 8px;">
-                            ${o.items?.map(i => `${i.name} x${i.quantity}`).join(', ') || 'Tidak ada item'}
-                        </div>
+                        <div style="font-size: 13px; margin-bottom: 8px;">${formatDate(o.timestamp)}</div>
+                        <div style="margin-bottom: 8px;">${o.items?.map(i => `${i.name} x${i.quantity}`).join(', ') || 'Tidak ada item'}</div>
                         <div style="display: flex; justify-content: space-between; font-weight: 700;">
                             <span>Total</span>
                             <span style="color: var(--primary);">${formatRupiah(o.total || 0)}</span>
                         </div>`;
-                    
                     if (o.delivery) {
-                        html += `<div style="margin-top: 8px; font-size: 12px; color: var(--info);">
-                            <i class="fas fa-map-marker-alt"></i> 
-                            ${o.delivery.address || `${o.delivery.lat}, ${o.delivery.lng}`}
-                        </div>`;
+                        html += `<div style="margin-top: 8px; font-size: 12px; color: var(--info);"><i class="fas fa-map-marker-alt"></i> ${o.delivery.address || `${o.delivery.lat}, ${o.delivery.lng}`}</div>`;
                     }
-                    
                     if (canConfirm) {
-                        html += `
-                            <button class="btn-konfirmasi" onclick="confirmOrderReceived('${o.id}')">
-                                <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA
-                            </button>
-                        `;
+                        html += `<button class="btn-konfirmasi" onclick="confirmOrderReceived('${o.id}')"><i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA</button>`;
                     } else if (o.status === 'selesai') {
-                        html += `
-                            <div class="selesai-badge">
-                                <i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!
-                            </div>
-                        `;
+                        html += `<div class="selesai-badge"><i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!</div>`;
                     }
-                    
                     html += `</div>`;
                 });
             }
-            
             ordersListFull.innerHTML = html;
         }
 
         function confirmOrderReceived(orderId) {
             const order = userOrders.find(o => o.id === orderId);
-            if (!order) {
-                showNotification('Order tidak ditemukan!', 'error');
-                return;
-            }
-            
-            if (order.status !== 'dikirim') {
-                showNotification('Pesanan belum dikirim!', 'error');
-                return;
-            }
-            
+            if (!order) { showNotification('Order tidak ditemukan!', 'error'); return; }
+            if (order.status !== 'dikirim') { showNotification('Pesanan belum dikirim!', 'error'); return; }
             showNotification('Memproses konfirmasi...', 'info');
-            
             const updates = {};
-            
             updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
             updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
-            
             order.items.forEach(item => {
                 const merchantId = item.merchant_id;
                 const itemTotal = item.price * item.quantity;
-                const merchantSaldoRef = `/merchants/${merchantId}/saldo`;
-                updates[merchantSaldoRef] = firebase.database.ServerValue.increment(itemTotal);
-            });
-            
-            order.items.forEach(item => {
-                const merchantId = item.merchant_id;
+                updates[`/merchants/${merchantId}/saldo`] = firebase.database.ServerValue.increment(itemTotal);
                 updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
                 updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
             });
-            
-            updates[`/confirmations/${orderId}`] = {
-                user_id: currentUser.phone,
-                order_id: orderId,
-                timestamp: Date.now(),
-                items: order.items,
-                total: order.total
-            };
-            
+            updates[`/confirmations/${orderId}`] = { user_id: currentUser.phone, order_id: orderId, timestamp: Date.now(), items: order.items, total: order.total };
             db.ref().update(updates)
                 .then(() => {
                     showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
-                    
                     order.status = 'selesai';
-                    
-                    const pesan = `*PESANAN DITERIMA*\n\n` +
-                                 `Halo kak! Pesanan #${orderId.slice(-8)} telah dikonfirmasi diterima oleh pembeli.\n` +
-                                 `Saldo merchant otomatis bertambah.\n\n` +
-                                 `Terima kasih telah berjualan di RE-COIN! 🎉`;
-                    
+                    const pesan = `*PESANAN DITERIMA*\n\nHalo kak! Pesanan #${orderId.slice(-8)} telah dikonfirmasi diterima oleh pembeli.\nSaldo merchant otomatis bertambah.\n\nTerima kasih telah berjualan di RE-COIN! 🎉`;
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(pesan)}`, '_blank');
                 })
-                .catch(error => {
-                    showNotification('Gagal konfirmasi: ' + error.message, 'error');
-                });
+                .catch(error => { showNotification('Gagal konfirmasi: ' + error.message, 'error'); });
         }
 
         function showOrderDetail(orderId) {
             const order = userOrders.find(o => o.id === orderId);
             if (!order) return;
-            
-            const statusClass = order.status === 'diproses' ? 'status-diproses' : 
-                               order.status === 'dikirim' ? 'status-dikirim' : 
-                               order.status === 'selesai' ? 'status-selesai' : 'status-batal';
-            
+            const statusClass = order.status === 'diproses' ? 'status-diproses' : order.status === 'dikirim' ? 'status-dikirim' : order.status === 'selesai' ? 'status-selesai' : 'status-batal';
             const canConfirm = order.status === 'dikirim';
             const isCompleted = order.status === 'selesai';
-            
-            const timeline = `
-                <div class="status-timeline">
-                    <div class="timeline-point ${order.status !== 'batal' ? 'completed' : ''}">
-                        <div class="timeline-icon"><i class="fas fa-check"></i></div>
-                        <div class="timeline-label">Diproses</div>
-                    </div>
-                    <div class="timeline-point ${order.status === 'dikirim' || order.status === 'selesai' ? 'completed' : ''}">
-                        <div class="timeline-icon"><i class="fas fa-truck"></i></div>
-                        <div class="timeline-label">Dikirim</div>
-                    </div>
-                    <div class="timeline-point ${order.status === 'selesai' ? 'completed' : ''}">
-                        <div class="timeline-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="timeline-label">Selesai</div>
-                    </div>
-                </div>
-            `;
-            
+            const timeline = `<div class="status-timeline">
+                <div class="timeline-point ${order.status !== 'batal' ? 'completed' : ''}"><div class="timeline-icon"><i class="fas fa-check"></i></div><div class="timeline-label">Diproses</div></div>
+                <div class="timeline-point ${order.status === 'dikirim' || order.status === 'selesai' ? 'completed' : ''}"><div class="timeline-icon"><i class="fas fa-truck"></i></div><div class="timeline-label">Dikirim</div></div>
+                <div class="timeline-point ${order.status === 'selesai' ? 'completed' : ''}"><div class="timeline-icon"><i class="fas fa-check-circle"></i></div><div class="timeline-label">Selesai</div></div>
+            </div>`;
             let itemsHtml = '<div class="order-items-list">';
             order.items.forEach(item => {
-                itemsHtml += `
-                    <div class="order-item-detail">
-                        <span class="order-item-name">${escapeHtml(item.name)}</span>
-                        <span class="order-item-qty">${item.quantity}x</span>
-                        <span class="order-item-price">${formatRupiah(item.price * item.quantity)}</span>
-                    </div>
-                `;
+                itemsHtml += `<div class="order-item-detail"><span class="order-item-name">${escapeHtml(item.name)}</span><span class="order-item-qty">${item.quantity}x</span><span class="order-item-price">${formatRupiah(item.price * item.quantity)}</span></div>`;
             });
             itemsHtml += '</div>';
-            
             let deliveryHtml = '';
             if (order.delivery) {
-                deliveryHtml = `
-                    <div class="order-detail-row">
-                        <span class="order-detail-label">Alamat Kirim</span>
-                        <span class="order-detail-value">${order.delivery.address || `${order.delivery.lat}, ${order.delivery.lng}`}</span>
-                    </div>
-                `;
+                deliveryHtml = `<div class="order-detail-row"><span class="order-detail-label">Alamat Kirim</span><span class="order-detail-value">${order.delivery.address || `${order.delivery.lat}, ${order.delivery.lng}`}</span></div>`;
             }
-            
-            let html = `
-                ${timeline}
-                
+            let html = `${timeline}
                 <div class="order-detail-card">
-                    <div class="order-detail-row">
-                        <span class="order-detail-label">No. Order</span>
-                        <span class="order-detail-value">#${order.id.slice(-8)}</span>
-                    </div>
-                    <div class="order-detail-row">
-                        <span class="order-detail-label">Tanggal</span>
-                        <span class="order-detail-value">${formatDate(order.timestamp)}</span>
-                    </div>
-                    <div class="order-detail-row">
-                        <span class="order-detail-label">Status</span>
-                        <span class="order-detail-value"><span class="order-status ${statusClass}">${order.status}</span></span>
-                    </div>
-                    <div class="order-detail-row">
-                        <span class="order-detail-label">Merchant</span>
-                        <span class="order-detail-value">${order.items[0]?.merchant_name || '-'}</span>
-                    </div>
+                    <div class="order-detail-row"><span class="order-detail-label">No. Order</span><span class="order-detail-value">#${order.id.slice(-8)}</span></div>
+                    <div class="order-detail-row"><span class="order-detail-label">Tanggal</span><span class="order-detail-value">${formatDate(order.timestamp)}</span></div>
+                    <div class="order-detail-row"><span class="order-detail-label">Status</span><span class="order-detail-value"><span class="order-status ${statusClass}">${order.status}</span></span></div>
+                    <div class="order-detail-row"><span class="order-detail-label">Merchant</span><span class="order-detail-value">${order.items[0]?.merchant_name || '-'}</span></div>
                     ${deliveryHtml}
                 </div>
-                
                 <div class="order-detail-card">
                     <h4 style="margin-bottom: 15px;">Detail Produk</h4>
                     ${itemsHtml}
@@ -3026,26 +2869,14 @@
                         <span class="order-detail-label"><strong>Total</strong></span>
                         <span class="order-detail-value" style="font-size: 18px; color: var(--primary);"><strong>${formatRupiah(order.total)}</strong></span>
                     </div>
-                </div>
-            `;
-            
+                </div>`;
             if (canConfirm) {
-                html += `
-                    <button class="btn-konfirmasi" onclick="confirmOrderReceived('${order.id}')">
-                        <i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA
-                    </button>
-                `;
+                html += `<button class="btn-konfirmasi" onclick="confirmOrderReceived('${order.id}')"><i class="fas fa-check-circle"></i> KONFIRMASI PESANAN DITERIMA</button>`;
             } else if (isCompleted) {
-                html += `
-                    <div class="selesai-badge" style="margin-top: 20px;">
-                        <i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!
-                    </div>
-                `;
+                html += `<div class="selesai-badge" style="margin-top: 20px;"><i class="fas fa-check-circle"></i> Pesanan Selesai - Terima Kasih!</div>`;
             }
-            
             const orderDetailContent = document.getElementById('order-detail-content');
             if (orderDetailContent) orderDetailContent.innerHTML = html;
-            
             const ordersPage = document.getElementById('orders-page');
             const orderDetailPage = document.getElementById('order-detail-page');
             if (ordersPage) ordersPage.classList.add('hidden');
@@ -3063,7 +2894,6 @@
             const dashboardPage = document.getElementById('dashboard-page');
             const ordersPage = document.getElementById('orders-page');
             const orderDetailPage = document.getElementById('order-detail-page');
-            
             if (dashboardPage) dashboardPage.classList.add('hidden');
             if (ordersPage) ordersPage.classList.remove('hidden');
             if (orderDetailPage) orderDetailPage.classList.add('hidden');
@@ -3072,12 +2902,13 @@
         function hideOrders() {
             const dashboardPage = document.getElementById('dashboard-page');
             const ordersPage = document.getElementById('orders-page');
-            
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (ordersPage) ordersPage.classList.add('hidden');
         }
 
-        // Withdrawal
+        // ===========================================
+        // WITHDRAWAL
+        // ===========================================
         function openWithdrawalModal() {
             refreshSaldo();
             const modalOverlay = document.getElementById('modal-overlay');
@@ -3092,7 +2923,6 @@
         function updatePaymentPlaceholder() {
             const method = document.getElementById('payment-method').value;
             const details = document.getElementById('payment-details');
-            
             if (method === 'BANK') {
                 details.placeholder = 'Nama Bank, No Rekening, Atas Nama';
             } else {
@@ -3104,50 +2934,28 @@
             const method = document.getElementById('payment-method').value;
             const details = document.getElementById('payment-details').value.trim();
             const saldo = currentUser.botol * HARGA_PER_BOTOL;
-            
-            if (!details) {
-                showNotification('Harap isi detail pembayaran!', 'error');
-                return;
-            }
-            
-            if (saldo < 5000) {
-                showNotification('Minimal saldo Rp 5.000 untuk tarik tunai', 'error');
-                return;
-            }
-            
+            if (!details) { showNotification('Harap isi detail pembayaran!', 'error'); return; }
+            if (saldo < 5000) { showNotification('Minimal saldo Rp 5.000 untuk tarik tunai', 'error'); return; }
             const withdrawalId = 'WD' + Date.now();
-            const withdrawal = {
-                type: 'PENARIKAN',
-                method: method,
-                details: details,
-                amount: saldo,
-                timestamp: Date.now(),
-                status: 'pending',
-                user_id: currentUser.phone
-            };
-            
+            const withdrawal = { type: 'PENARIKAN', method: method, details: details, amount: saldo, timestamp: Date.now(), status: 'pending', user_id: currentUser.phone };
             db.ref('/withdrawals/' + currentUser.phone + '/' + withdrawalId).set(withdrawal)
-                .then(() => {
-                    return db.ref('/accounts/' + currentUser.phone + '/botol').set(0);
-                })
+                .then(() => { return db.ref('/accounts/' + currentUser.phone + '/botol').set(0); })
                 .then(() => {
                     const message = `Halo kak, saya ${currentUser.phone} ingin menarik saldo sebesar ${formatRupiah(saldo)} melalui ${method}. Detail: ${details}`;
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(message)}`, '_blank');
-                    
                     closeModal();
                     showNotification('Permintaan penarikan dikirim', 'success');
                     refreshSaldo();
                 })
-                .catch(error => {
-                    showNotification('Error: ' + error.message, 'error');
-                });
+                .catch(error => { showNotification('Error: ' + error.message, 'error'); });
         }
 
-        // Navigation
+        // ===========================================
+        // NAVIGATION
+        // ===========================================
         function showShop() {
             const dashboardPage = document.getElementById('dashboard-page');
             const shopPage = document.getElementById('shop-page');
-            
             if (dashboardPage) dashboardPage.classList.add('hidden');
             if (shopPage) shopPage.classList.remove('hidden');
             displayProducts();
@@ -3156,15 +2964,19 @@
         function hideShop() {
             const dashboardPage = document.getElementById('dashboard-page');
             const shopPage = document.getElementById('shop-page');
-            
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (shopPage) shopPage.classList.add('hidden');
         }
 
-        // Debug
+        // ===========================================
+        // DEBUG
+        // ===========================================
         function debugDatabase() {
+            const emisi = hitungEmisiTerselamatkan(currentUser.botol);
             let msg = `👤 User: ${currentUser.phone}\n`;
             msg += `💰 Saldo: ${formatRupiah(currentUser.botol * HARGA_PER_BOTOL)}\n`;
+            msg += `🌱 Emisi Terselamatkan: ${emisi.kg.toFixed(1)} kg CO₂e\n`;
+            msg += `🌳 Setara Menanam: ${emisi.setaraPohon.toFixed(1)} pohon\n`;
             msg += `🏪 Merchant: ${merchants.length}\n`;
             msg += `📦 Produk: ${products.length}\n`;
             msg += `📝 Pesanan: ${userOrders.length}\n`;
@@ -3172,20 +2984,19 @@
             msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
             msg += `🎫 Session Token: ${machineSessionToken ? machineSessionToken.substr(0,20)+'...' : 'TIDAK ADA'}\n\n`;
             msg += `🛒 Keranjang: ${cart.length} item\n`;
-            
             merchants.forEach(m => {
                 const jml = products.filter(p => p.merchant_id === m.id).length;
                 msg += `\n${m.nama_toko || m.id}: ${jml} produk`;
             });
-            
             alert(msg);
             logDebug('Debug info:', { currentUser, merchants, products, userOrders, cart, newProductsSet, machineSessionToken });
         }
 
-        // Init
+        // ===========================================
+        // INIT
+        // ===========================================
         window.onload = function() {
             const mode = getModeFromUrl();
-            
             if (mode.mode === 'machine') {
                 const machineInfo = document.getElementById('machine-info-login');
                 const machineIdDisplay = document.getElementById('machine-id-display');
@@ -3194,13 +3005,12 @@
                 if (machineIdDisplay) machineIdDisplay.innerText = mode.machineId;
                 if (sourceInfo) sourceInfo.innerText = mode.loginSource === 'machine' ? 'via QR' : 'via Web';
             }
-            
             if (!checkAutoLogin()) {
                 showLoginPage();
             }
-            
             console.log('🔥 RE-COIN App siap!');
-            console.log('💰 Fitur: Notifikasi otomatis saat saldo bertambah');
+            console.log('💰 Fitur: Notifikasi tunggal saat saldo bertambah');
+            console.log('🌱 Fitur: Kalkulator emisi karbon - setiap botol menyelamatkan 60 gram CO₂e!');
             console.log('🔄 Fitur: Produk baru muncul OTOMATIS tanpa refresh');
             console.log('📦 Fitur: Pesanan update otomatis realtime tanpa refresh');
         };
