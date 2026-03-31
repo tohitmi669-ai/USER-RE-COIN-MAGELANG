@@ -42,7 +42,6 @@
             --gray: #95a5a6;
             --new-badge: #e84342;
             --eco: #2ecc71;
-            --earth: #3498db;
         }
         
         .card {
@@ -185,17 +184,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-        }
-        
-        .stat-card.highlight {
-            transform: scale(1.02);
-            background: linear-gradient(135deg, #e8f8f5, #d1f2eb);
-            box-shadow: 0 0 30px rgba(0,184,148,0.4);
-            border: 2px solid var(--primary);
-        }
-        
-        .stat-card.pulse {
-            animation: pulse 1s ease;
         }
         
         .eco-card {
@@ -1179,21 +1167,33 @@
             }
         }
         
-        .leaf-animation {
+        .coin-pop {
             position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            z-index: 10010;
+            animation: coinPop 0.6s ease-out forwards;
             pointer-events: none;
-            z-index: 10006;
-            font-size: 25px;
-            animation: leafFloat 2s ease-out forwards;
+            text-shadow: 0 0 20px rgba(0,184,148,0.5);
         }
         
-        @keyframes leafFloat {
+        @keyframes coinPop {
             0% {
-                transform: translateY(-50px) rotate(0deg);
+                transform: translate(-50%, -50%) scale(0.2);
+                opacity: 0;
+            }
+            30% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
             100% {
-                transform: translateY(400px) rotate(180deg);
+                transform: translate(-50%, -50%) scale(1.5);
                 opacity: 0;
             }
         }
@@ -1351,10 +1351,6 @@
         <div id="msg-limit" class="warning-text">
             Minimal saldo Rp 5.000 untuk tarik tunai
         </div>
-        
-        <button class="btn-scan" onclick="scanMachineAgain()" style="margin-top: 10px;">
-            <i class="fas fa-qrcode"></i> Hubungkan ke Mesin (Scan QR)
-        </button>
         
         <button class="btn-logout" onclick="logout()">LOGOUT</button>
         
@@ -1627,40 +1623,42 @@
             let progressPercent = Math.min((botol / maxTarget) * 100, 100);
             if (progressFill) progressFill.style.width = `${progressPercent}%`;
         }
-        
-        function createLeafRain(jumlahBotol) {
-            const leafCount = Math.min(Math.floor(jumlahBotol / 10), 15);
-            for (let i = 0; i < leafCount; i++) {
-                setTimeout(() => {
-                    const leaf = document.createElement('div');
-                    leaf.className = 'leaf-animation';
-                    const leaves = ['🍃', '🌿', '🍂', '🌱', '🍀'];
-                    leaf.innerHTML = leaves[Math.floor(Math.random() * leaves.length)];
-                    leaf.style.left = Math.random() * 100 + '%';
-                    leaf.style.top = '-50px';
-                    leaf.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                    leaf.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
-                    document.body.appendChild(leaf);
-                    setTimeout(() => leaf.remove(), 2000);
-                }, i * 150);
-            }
-        }
-        
-        function createCoinRain(jumlah) {
-            const coinCount = Math.min(jumlah, 10);
-            for (let i = 0; i < coinCount; i++) {
-                setTimeout(() => {
-                    const coin = document.createElement('div');
-                    coin.className = 'coin-animation';
-                    coin.innerHTML = '🪙';
-                    coin.style.left = Math.random() * 100 + '%';
-                    coin.style.top = '-50px';
-                    coin.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                    coin.style.animationDuration = (Math.random() * 1 + 1) + 's';
-                    document.body.appendChild(coin);
-                    setTimeout(() => coin.remove(), 2000);
-                }, i * 100);
-            }
+
+        // ===========================================
+        // NOTIFIKASI KOIN MEMBESAR
+        // ===========================================
+        function showCoinPopup(tambahBotol, tambahRupiah, emisi) {
+            // Hapus notifikasi lama jika ada
+            const oldNotif = document.getElementById('coin-popup');
+            if (oldNotif) oldNotif.remove();
+            
+            const coin = document.createElement('div');
+            coin.id = 'coin-popup';
+            coin.className = 'coin-pop';
+            coin.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 70px;">💰</div>
+                    <div style="font-size: 28px; font-weight: 800; color: var(--primary); margin-top: 10px;">
+                        +${tambahBotol} Botol
+                    </div>
+                    <div style="font-size: 18px; font-weight: 600; color: var(--dark);">
+                        ${formatRupiah(tambahRupiah)}
+                    </div>
+                    <div style="font-size: 12px; color: #2e7d32; margin-top: 8px;">
+                        🌱 +${emisi.kg.toFixed(1)} kg CO₂e
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(coin);
+            
+            // Auto hapus setelah animasi selesai
+            setTimeout(() => {
+                if (coin && coin.remove) coin.remove();
+            }, 600);
+            
+            // Mainkan suara coin
+            playCoinSound();
         }
         
         function playCoinSound() {
@@ -1678,100 +1676,6 @@
                 oscillator.stop(audioCtx.currentTime + 0.3);
             } catch (e) {
                 console.log('Audio tidak bisa diputar', e);
-            }
-        }
-
-        // ===========================================
-        // NOTIFIKASI TUNGGAL (HANYA 1 POPUP)
-        // ===========================================
-        function showSingleNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisi) {
-            const oldNotif = document.getElementById('single-notification');
-            if (oldNotif) oldNotif.remove();
-            
-            const notif = document.createElement('div');
-            notif.id = 'single-notification';
-            notif.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: white;
-                border-radius: 28px;
-                padding: 24px;
-                box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-                z-index: 10010;
-                min-width: 320px;
-                max-width: 90%;
-                text-align: center;
-                animation: popIn 0.4s ease;
-                border: 3px solid var(--primary);
-            `;
-            
-            notif.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
-                    <h3 style="color: var(--primary); margin-bottom: 10px;">SALDO BERTAMBAH!</h3>
-                    
-                    <div style="background: #e8f8f5; padding: 15px; border-radius: 20px; margin: 15px 0;">
-                        <div style="font-size: 28px; font-weight: 800; color: var(--primary);">
-                            +${tambahBotol} Botol
-                        </div>
-                        <div style="font-size: 20px; font-weight: 700; color: var(--dark);">
-                            ${formatRupiah(tambahRupiah)}
-                        </div>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 16px; margin: 10px 0;">
-                        <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                            <span>Saldo Sebelumnya:</span>
-                            <span><strong>${oldSaldo} botol</strong> (${formatRupiah(oldSaldo * HARGA_PER_BOTOL)})</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin: 5px 0; border-top: 1px solid #dfe6e9; padding-top: 8px;">
-                            <span>Saldo Sekarang:</span>
-                            <span><strong style="color: var(--primary);">${newSaldo} botol</strong> (${formatRupiah(newSaldo * HARGA_PER_BOTOL)})</span>
-                        </div>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 12px; border-radius: 16px; margin: 10px 0;">
-                        <div style="font-size: 14px; font-weight: 600; color: #2e7d32;">🌱 DAMPAK LINGKUNGAN</div>
-                        <div style="font-size: 20px; font-weight: 800; color: #2e7d32;">+${emisi.kg.toFixed(1)} kg CO₂e</div>
-                        <div style="font-size: 12px; margin-top: 5px;">
-                            🌳 Setara menanam <strong>${emisi.setaraPohon.toFixed(1)} pohon</strong><br>
-                            💡 Setara hemat <strong>${emisi.setaraListrik.toFixed(1)} kWh</strong> listrik
-                        </div>
-                    </div>
-                    
-                    <button onclick="closeSingleNotification()" style="
-                        background: linear-gradient(135deg, var(--primary), var(--secondary));
-                        color: white;
-                        border: none;
-                        padding: 12px 30px;
-                        border-radius: 30px;
-                        font-weight: 700;
-                        font-size: 16px;
-                        cursor: pointer;
-                        margin-top: 15px;
-                        width: 100%;
-                    ">
-                        <i class="fas fa-check-circle"></i> LANJUTKAN
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(notif);
-            
-            setTimeout(() => {
-                closeSingleNotification();
-            }, 5000);
-            
-            playCoinSound();
-        }
-        
-        function closeSingleNotification() {
-            const notif = document.getElementById('single-notification');
-            if (notif) {
-                notif.style.animation = 'popOut 0.3s ease';
-                setTimeout(() => notif.remove(), 300);
             }
         }
 
@@ -2136,13 +2040,11 @@
                 const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
                 logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
                 
-                // HANYA 1 NOTIFIKASI - Gabungan semua informasi
-                showSingleNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisiBaru);
+                // HANYA 1 NOTIFIKASI KOIN MEMBESAR
+                showCoinPopup(tambahBotol, tambahRupiah, emisiBaru);
                 
-                highlightSaldoCards();
+                // Animasi angka pada saldo
                 animateSaldoNumbers();
-                createCoinRain(tambahBotol);
-                createLeafRain(tambahBotol);
                 
                 const btnTarik = document.getElementById('btn-tarik');
                 if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
@@ -2157,20 +2059,6 @@
             if (countEl) countEl.innerText = currentUser.botol;
             if (rupiahEl) rupiahEl.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
             if (modalSaldo) modalSaldo.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
-        }
-
-        function highlightSaldoCards() {
-            const botolCard = document.getElementById('botol-stat-card');
-            const rupiahCard = document.getElementById('rupiah-stat-card');
-            const ecoCard = document.getElementById('eco-card');
-            if (botolCard) botolCard.classList.add('highlight', 'pulse');
-            if (rupiahCard) rupiahCard.classList.add('highlight', 'pulse');
-            if (ecoCard) ecoCard.classList.add('highlight', 'pulse');
-            setTimeout(() => {
-                if (botolCard) botolCard.classList.remove('highlight', 'pulse');
-                if (rupiahCard) rupiahCard.classList.remove('highlight', 'pulse');
-                if (ecoCard) ecoCard.classList.remove('highlight', 'pulse');
-            }, 1000);
         }
 
         function animateSaldoNumbers() {
@@ -2377,15 +2265,6 @@
                 updateEcoDisplay();
                 updateLastActivity();
             });
-        }
-
-        function scanMachineAgain() {
-            const machineId = prompt('Masukkan ID Mesin (contoh: mesin_01):');
-            if (machineId && machineId.trim()) {
-                window.location.href = `?mesin=${machineId.trim()}&source=machine`;
-            } else {
-                showNotification('ID Mesin tidak boleh kosong!', 'error');
-            }
         }
 
         function logout() {
@@ -3009,7 +2888,7 @@
                 showLoginPage();
             }
             console.log('🔥 RE-COIN App siap!');
-            console.log('💰 Fitur: Notifikasi tunggal saat saldo bertambah');
+            console.log('💰 Fitur: Notifikasi koin membesar saat saldo bertambah');
             console.log('🌱 Fitur: Kalkulator emisi karbon - setiap botol menyelamatkan 60 gram CO₂e!');
             console.log('🔄 Fitur: Produk baru muncul OTOMATIS tanpa refresh');
             console.log('📦 Fitur: Pesanan update otomatis realtime tanpa refresh');
