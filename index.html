@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        * {
+        *         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -1146,21 +1146,22 @@
             display: block;
         }
         
-        /* ANIMASI KOIN BARU */
-        @keyframes coinDrop {
+        /* ANIMASI KOIN BARU - MUNCUL DI TENGAH MEMBESAR */
+        @keyframes coinPop {
             0% {
-                transform: translateY(-100vh) rotate(0deg);
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
                 opacity: 1;
             }
             70% {
-                transform: translateY(0) rotate(360deg);
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
-            85% {
-                transform: scale(1.1);
-            }
             100% {
-                transform: scale(0) rotate(720deg);
+                transform: translate(-50%, -50%) scale(2);
                 opacity: 0;
                 visibility: hidden;
             }
@@ -1169,33 +1170,13 @@
         .coin-animation-new {
             position: fixed;
             left: 50%;
-            top: 0;
-            transform: translateX(-50%);
+            top: 50%;
+            transform: translate(-50%, -50%);
             z-index: 10006;
-            font-size: 80px;
+            font-size: 100px;
             pointer-events: none;
-            animation: coinDrop 1.2s ease-out forwards;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
-        }
-        
-        /* ANIMASI DAUN JATUH */
-        @keyframes leafFall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-        
-        .leaf-animation-new {
-            position: fixed;
-            pointer-events: none;
-            z-index: 10005;
-            font-size: 28px;
-            animation: leafFall 2s ease-in forwards;
+            animation: coinPop 0.8s ease-out forwards;
+            filter: drop-shadow(0 0 15px rgba(255,215,0,0.5));
         }
         
         .badge-eco {
@@ -1487,7 +1468,7 @@
     </div>
 
     <script>
-        // ===========================================
+                // ===========================================
         // FIREBASE CONFIGURATION
         // ===========================================
         const firebaseConfig = {
@@ -1615,7 +1596,7 @@
             if (progressFill) progressFill.style.width = `${progressPercent}%`;
         }
         
-        // NOTIFIKASI BARU: KOIN JATUH DARI ATAS + DAUN
+        // NOTIFIKASI BARU: KOIN MUNCUL DI TENGAH MEMBESAR (TANPA DAUN)
         function showCoinDropNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisi) {
             // Hapus notifikasi lama jika ada
             const oldCoin = document.getElementById('coin-notification');
@@ -1626,30 +1607,12 @@
             coin.id = 'coin-notification';
             coin.className = 'coin-animation-new';
             coin.innerHTML = '🪙';
-            coin.style.left = '50%';
-            coin.style.top = '0';
             document.body.appendChild(coin);
-            
-            // Buat daun-daun jatuh
-            const leafCount = Math.min(Math.floor(tambahBotol / 5) + 5, 15);
-            for (let i = 0; i < leafCount; i++) {
-                setTimeout(() => {
-                    const leaf = document.createElement('div');
-                    leaf.className = 'leaf-animation-new';
-                    const leaves = ['🍃', '🌿', '🍂', '🌱', '🍀', '🌾'];
-                    leaf.innerHTML = leaves[Math.floor(Math.random() * leaves.length)];
-                    leaf.style.left = Math.random() * 100 + '%';
-                    leaf.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                    leaf.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
-                    document.body.appendChild(leaf);
-                    setTimeout(() => leaf.remove(), 2000);
-                }, i * 100);
-            }
             
             // Hapus koin setelah animasi selesai
             setTimeout(() => {
                 if (coin) coin.remove();
-            }, 1200);
+            }, 800);
             
             // Play suara
             playCoinSound();
@@ -1671,39 +1634,6 @@
                 if (audioCtx.state === 'suspended') audioCtx.resume();
             } catch (e) {
                 console.log('Audio tidak bisa diputar', e);
-            }
-        }
-        
-        function createLeafRain(jumlahBotol) {
-            const leafCount = Math.min(Math.floor(jumlahBotol / 10), 15);
-            for (let i = 0; i < leafCount; i++) {
-                setTimeout(() => {
-                    const leaf = document.createElement('div');
-                    leaf.className = 'leaf-animation-new';
-                    const leaves = ['🍃', '🌿', '🍂', '🌱', '🍀'];
-                    leaf.innerHTML = leaves[Math.floor(Math.random() * leaves.length)];
-                    leaf.style.left = Math.random() * 100 + '%';
-                    leaf.style.top = '-50px';
-                    leaf.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                    leaf.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
-                    document.body.appendChild(leaf);
-                    setTimeout(() => leaf.remove(), 2000);
-                }, i * 150);
-            }
-        }
-        
-        function createCoinRain(jumlah) {
-            const coinCount = Math.min(jumlah, 5);
-            for (let i = 0; i < coinCount; i++) {
-                setTimeout(() => {
-                    const coin = document.createElement('div');
-                    coin.className = 'coin-animation-new';
-                    coin.innerHTML = '🪙';
-                    coin.style.left = (Math.random() * 80 + 10) + '%';
-                    coin.style.fontSize = (Math.random() * 30 + 40) + 'px';
-                    document.body.appendChild(coin);
-                    setTimeout(() => coin.remove(), 1200);
-                }, i * 80);
             }
         }
 
@@ -2068,12 +1998,11 @@
                 const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
                 logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
                 
-                // NOTIFIKASI BARU: KOIN JATUH + DAUN
+                // NOTIFIKASI BARU: KOIN MUNCUL DI TENGAH MEMBESAR
                 showCoinDropNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisiBaru);
                 
                 highlightSaldoCards();
                 animateSaldoNumbers();
-                createLeafRain(tambahBotol);
                 
                 const btnTarik = document.getElementById('btn-tarik');
                 if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
@@ -2931,7 +2860,7 @@
                 showLoginPage();
             }
             console.log('🔥 RE-COIN App siap!');
-            console.log('💰 Fitur: Notifikasi koin jatuh dari atas saat saldo bertambah');
+            console.log('💰 Fitur: Notifikasi koin muncul di tengah membesar saat saldo bertambah');
             console.log('🌱 Fitur: Kalkulator emisi karbon - setiap botol menyelamatkan 60 gram CO₂e!');
             console.log('🔄 Fitur: Produk baru muncul OTOMATIS tanpa refresh');
             console.log('📦 Fitur: Pesanan update otomatis realtime tanpa refresh');
