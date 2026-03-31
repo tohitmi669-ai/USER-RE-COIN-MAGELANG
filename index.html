@@ -1114,7 +1114,6 @@
             display: block;
         }
         
-        /* ANIMASI KOIN MUNCUL DI TENGAH MEMBESAR */
         @keyframes coinPop {
             0% {
                 transform: translate(-50%, -50%) scale(0);
@@ -1235,6 +1234,7 @@
             <div>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></div>
             <div id="session-token-info" class="session-info hidden"></div>
             <span id="source-info-dashboard" class="qr-badge hidden"></span>
+            <div style="font-size: 11px; color: #7f8c8d; margin-top: 5px;">⏱️ Sesi aktif 1 menit, akan diperpanjang otomatis</div>
         </div>
         
         <div class="saldo-header">
@@ -1251,7 +1251,6 @@
             <div class="val-rupiah" id="rupiah">Rp 0</div>
         </div>
         
-        <!-- KARTU DAMPAK LINGKUNGAN -->
         <div class="eco-card stat-card" id="eco-card">
             <div class="eco-label">🌱 DAMPAK LINGKUNGAN ANDA</div>
             <div class="val-eco" id="co2-saved">0 kg</div>
@@ -1469,6 +1468,7 @@
         const EMISI_PER_BOTOL = 60;
         const ADMIN_WA = "6289524538835";
         const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+        const MACHINE_SESSION_DURATION = 60 * 1000; // 1 MENIT
 
         let cart = [];
         let merchants = [];
@@ -1486,6 +1486,7 @@
         let manualAddress = "";
 
         let autoLogoutTimer = null;
+        let isSessionExpiring = false;
 
         const DEBUG = true;
 
@@ -1562,7 +1563,6 @@
             if (progressFill) progressFill.style.width = `${progressPercent}%`;
         }
         
-        // NOTIFIKASI: KOIN MUNCUL DI TENGAH MEMBESAR
         function showCoinDropNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisi) {
             const oldCoin = document.getElementById('coin-notification');
             if (oldCoin) oldCoin.remove();
@@ -1700,28 +1700,65 @@
         function mulaiAutoLogoutTimer() {
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
             autoLogoutTimer = setTimeout(() => {
-                if (currentUser.isMachineMode && currentUser.machine) {
-                    db.ref('/' + currentUser.machine + '/active_user').remove();
+                // Cek apakah sesi masih valid sebelum logout
+                if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
+                    db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
+                        const data = snap.val();
+                        // Hanya logout jika tidak ada aktivitas terbaru
+                        if (!data || data.session_token !== machineSessionToken) {
+                            return;
+                        }
+                        const lastActivity = data.last_activity || 0;
+                        const inactiveTime = Date.now() - lastActivity;
+                        if (inactiveTime >= MACHINE_SESSION_DURATION && !isSessionExpiring) {
+                            isSessionExpiring = true;
+                            showNotification('⏰ Sesi mesin habis karena tidak aktif (1 menit)', 'info');
+                            endMachineSession();
+                        }
+                        isSessionExpiring = false;
+                    });
                 }
-                currentUser.isMachineMode = false;
-                currentUser.machine = "";
-                machineSessionToken = null;
-                machineSessionExpiry = null;
-                const machineInfo = document.getElementById('machine-info-dashboard');
-                const modeBadge = document.getElementById('mode-badge-dashboard');
-                if (machineInfo) machineInfo.classList.add('hidden');
-                if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                showNotification('⏰ Auto logout setelah 5 menit', 'info');
-            }, 300000);
+            }, MACHINE_SESSION_DURATION);
+        }
+
+        function endMachineSession() {
+            if (currentUser.machine && machineSessionToken) {
+                db.ref('/' + currentUser.machine + '/active_user').remove();
+            }
+            currentUser.isMachineMode = false;
+            currentUser.machine = "";
+            machineSessionToken = null;
+            machineSessionExpiry = null;
+            
+            const machineInfo = document.getElementById('machine-info-dashboard');
+            const modeBadge = document.getElementById('mode-badge-dashboard');
+            const sessionInfo = document.getElementById('session-token-info');
+            
+            if (machineInfo) machineInfo.classList.add('hidden');
+            if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+            if (sessionInfo) sessionInfo.classList.add('hidden');
+            
+            // Update URL tanpa parameter mesin
+            if (window.history && window.history.replaceState) {
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+            
+            saveUserSession();
+            showNotification('Mode berubah ke Online', 'info');
         }
 
         function updateLastActivity() {
             if (!currentUser.isMachineMode || !currentUser.machine) return;
             if (machineSessionToken) {
+                const newExpiry = Date.now() + MACHINE_SESSION_DURATION;
+                machineSessionExpiry = newExpiry;
                 db.ref('/' + currentUser.machine + '/active_user').update({
                     last_activity: Date.now(),
                     session_token: machineSessionToken,
-                    session_expiry: machineSessionExpiry
+                    session_expiry: newExpiry
+                }).catch(err => {
+                    logDebug('Gagal update last_activity:', err);
                 });
             }
             if (autoLogoutTimer) {
@@ -1818,61 +1855,39 @@
         }
 
         // ===========================================
-        // MACHINE SESSION LISTENER
+        // MACHINE SESSION LISTENER - PERBAIKAN
         // ===========================================
         function startMachineSessionListener() {
             if (!currentUser.isMachineMode || !currentUser.machine) return;
             logDebug('Memulai listener sesi mesin...');
+            
             db.ref('/' + currentUser.machine + '/active_user').on('value', (snapshot) => {
                 const data = snapshot.val();
+                
+                // Jika data tidak ada, akhiri sesi
                 if (!data) {
-                    showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'error');
-                    currentUser.isMachineMode = false;
-                    currentUser.machine = "";
-                    machineSessionToken = null;
-                    machineSessionExpiry = null;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    if (window.history && window.history.replaceState) {
-                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                        window.history.replaceState({}, document.title, newUrl);
+                    if (currentUser.isMachineMode) {
+                        logDebug('Sesi mesin berakhir (data kosong)');
+                        endMachineSession();
                     }
                     return;
                 }
+                
+                // Jika ada data tapi token tidak cocok dan ini bukan update dari client sendiri
                 if (data.id !== currentUser.phone && data.source === "machine") {
-                    showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
-                    currentUser.isMachineMode = false;
-                    currentUser.machine = "";
-                    machineSessionToken = null;
-                    machineSessionExpiry = null;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    if (window.history && window.history.replaceState) {
-                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                        window.history.replaceState({}, document.title, newUrl);
-                    }
+                    logDebug('Sesi diambil alih oleh user lain:', data.id);
+                    showNotification(`⚠️ Mesin sedang digunakan oleh ${data.id.substr(0,5)}... Anda sekarang mode Online`, 'error');
+                    endMachineSession();
+                    return;
                 }
-                else if (data.session_token !== machineSessionToken && machineSessionToken !== null) {
-                    showNotification('⚠️ Sesi mesin diperbarui!', 'info');
+                
+                // Update token jika diperlukan (hanya jika token berbeda dan ini bukan self-update)
+                if (data.session_token !== machineSessionToken && machineSessionToken !== null && data.id === currentUser.phone) {
+                    logDebug('Token sesi diperbarui oleh sistem');
                     machineSessionToken = data.session_token;
                     machineSessionExpiry = data.session_expiry;
                     const sessionInfo = document.getElementById('session-token-info');
                     if (sessionInfo) sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
-                }
-                if (data.id === currentUser.phone && data.last_activity) {
-                    const inactiveTime = Date.now() - data.last_activity;
-                    if (inactiveTime > 300000) {
-                        showNotification('⏰ Sesi mesin habis karena tidak aktif', 'error');
-                        currentUser.isMachineMode = false;
-                        currentUser.machine = "";
-                        machineSessionToken = null;
-                        const machineInfo = document.getElementById('machine-info-dashboard');
-                        if (machineInfo) machineInfo.classList.add('hidden');
-                    }
                 }
             });
         }
@@ -1907,6 +1922,7 @@
             currentUser.rememberMe = true;
             machineSessionToken = session.sessionToken || null;
             machineSessionExpiry = session.sessionExpiry || null;
+            
             db.ref('/accounts/' + session.phone).once('value', (snap) => {
                 if (snap.exists()) {
                     currentUser.botol = snap.val().botol || 0;
@@ -1931,10 +1947,16 @@
             logDebug('Memulai listener saldo real-time...');
             saldoListenerActive = true;
             lastSaldo = currentUser.botol;
+            
             db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snapshot) => {
+                // Update last activity setiap kali ada perubahan saldo (memperpanjang sesi)
+                updateLastActivity();
+                
+                // Jika mode mesin, verifikasi sesi
                 if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                     db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (tokenSnap) => {
-                        if (tokenSnap.val() !== machineSessionToken) {
+                        const currentToken = tokenSnap.val();
+                        if (currentToken !== machineSessionToken) {
                             logDebug('Sesi tidak valid, skip update saldo');
                             return;
                         }
@@ -1961,11 +1983,9 @@
                 logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
                 
                 showCoinDropNotification(tambahBotol, tambahRupiah, oldSaldo, newSaldo, emisiBaru);
-                
                 highlightSaldoCards();
                 animateSaldoNumbers();
             }
-            updateLastActivity();
         }
 
         function updateSaldoDisplay() {
@@ -2055,6 +2075,7 @@
             if (currentUser.isMachineMode) {
                 const activeMachine = document.getElementById('active-machine');
                 if (activeMachine) activeMachine.innerText = currentUser.machine;
+                
                 db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                     const data = snap.val();
                     if (data && data.id && data.id !== currentUser.phone && data.source === "machine") {
@@ -2077,8 +2098,9 @@
                         startOrdersListener();
                         return;
                     }
+                    
                     machineSessionToken = generateSessionToken(currentUser.phone);
-                    machineSessionExpiry = Date.now() + (5 * 60 * 1000);
+                    machineSessionExpiry = Date.now() + MACHINE_SESSION_DURATION;
                     const sessionData = {
                         id: currentUser.phone,
                         login_time: Date.now(),
@@ -2087,9 +2109,10 @@
                         session_token: machineSessionToken,
                         session_expiry: machineSessionExpiry
                     };
+                    
                     db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
                         .then(() => {
-                            showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
+                            showNotification(`✅ Terhubung ke mesin (sesi ${MACHINE_SESSION_DURATION/1000} detik)`, 'success');
                             mulaiAutoLogoutTimer();
                             const machineInfo = document.getElementById('machine-info-dashboard');
                             const modeBadge = document.getElementById('mode-badge-dashboard');
@@ -2181,6 +2204,7 @@
             saldoListenerActive = false;
             machineSessionToken = null;
             machineSessionExpiry = null;
+            isSessionExpiring = false;
         }
 
         function showLoginPage() {
@@ -2752,7 +2776,8 @@
             msg += `📝 Pesanan: ${userOrders.length}\n`;
             msg += `🆕 Produk Baru: ${newProductsSet.size}\n`;
             msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
-            msg += `🎫 Session Token: ${machineSessionToken ? machineSessionToken.substr(0,20)+'...' : 'TIDAK ADA'}\n\n`;
+            msg += `🎫 Session Token: ${machineSessionToken ? machineSessionToken.substr(0,20)+'...' : 'TIDAK ADA'}\n`;
+            msg += `⏱️ Durasi Sesi: ${MACHINE_SESSION_DURATION/1000} detik\n\n`;
             msg += `🛒 Keranjang: ${cart.length} item\n`;
             merchants.forEach(m => {
                 const jml = products.filter(p => p.merchant_id === m.id).length;
@@ -2784,6 +2809,7 @@
             console.log('🔄 Fitur: Produk baru muncul OTOMATIS tanpa refresh');
             console.log('📦 Fitur: Pesanan update otomatis realtime tanpa refresh');
             console.log('💳 Fitur: Tombol Tarik Saldo otomatis aktif saat saldo >= Rp 5.000');
+            console.log(`⏱️ Fitur: Sesi mesin ${MACHINE_SESSION_DURATION/1000} detik, diperpanjang otomatis saat ada aktivitas`);
         };
     </script>
 </body>
