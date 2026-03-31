@@ -105,7 +105,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi, .btn-merchant {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -166,7 +166,12 @@
             color: white;
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-checkout:active {
+        .btn-merchant {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-checkout:active, .btn-merchant:active {
             transform: scale(0.98);
         }
         
@@ -261,12 +266,6 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.2); color: var(--primary); }
             100% { transform: scale(1); }
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0,184,148,0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(0,184,148,0); }
-            100% { box-shadow: 0 0 0 0 rgba(0,184,148,0); }
         }
         
         @keyframes popIn {
@@ -783,7 +782,7 @@
             color: var(--dark);
         }
         
-        #modal-overlay {
+        #modal-overlay, #merchant-popup-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -797,7 +796,7 @@
         }
         
         @media (min-width: 768px) {
-            #modal-overlay {
+            #modal-overlay, #merchant-popup-overlay {
                 align-items: center;
             }
         }
@@ -815,6 +814,50 @@
             .modal {
                 border-radius: 32px;
             }
+        }
+        
+        .merchant-popup {
+            background: linear-gradient(135deg, #fff, #fff8e7);
+            padding: 28px;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 450px;
+            animation: popIn 0.4s ease;
+            text-align: center;
+            position: relative;
+            border: 2px solid #f39c12;
+        }
+        
+        .merchant-popup h3 {
+            color: #e67e22;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .merchant-popup .popup-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .merchant-popup p {
+            color: #2d3436;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        
+        .close-popup {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #95a5a6;
+            transition: 0.3s;
+        }
+        
+        .close-popup:hover {
+            color: var(--danger);
         }
         
         .info-box {
@@ -1495,6 +1538,27 @@
         </div>
     </div>
 
+    <!-- MERCHANT POPUP -->
+    <div id="merchant-popup-overlay">
+        <div class="merchant-popup">
+            <span class="close-popup" onclick="closeMerchantPopup()">&times;</span>
+            <div class="popup-icon">🏪✨</div>
+            <h3>Jadi Mitra UMKM!</h3>
+            <p>
+                Kamu punya warung, toko, atau produk?<br>
+                <strong>Silahkan jadi mitra UMKM kami!</strong><br>
+                Produkmu akan terupload di sini dan menjangkau lebih banyak pembeli.<br><br>
+                📢 <strong>Daftar menjadi Mitra GRATIS!</strong>
+            </p>
+            <button class="btn-merchant" onclick="goToMerchantRegistration()">
+                <i class="fas fa-store"></i> GABUNG JADI MITRA
+            </button>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 15px;">
+                🎉 Daftar sekarang, jangkau lebih banyak pelanggan!
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===========================================
         // FIREBASE CONFIGURATION
@@ -1526,6 +1590,8 @@
 
         let machineSessionToken = null;
         let machineSessionExpiry = null;
+        let merchantPopupTimer = null;
+        let merchantPopupShown = false;
 
         const HARGA_PER_BOTOL = 50;
         const EMISI_PER_BOTOL = 60;
@@ -1550,6 +1616,49 @@
         let autoLogoutTimer = null;
 
         const DEBUG = true;
+
+        // ===========================================
+        // MERCHANT POPUP FUNCTIONS
+        // ===========================================
+        function startMerchantPopupTimer() {
+            // Hanya jalankan timer jika popup belum pernah ditampilkan
+            if (merchantPopupShown) return;
+            
+            // Hapus timer sebelumnya jika ada
+            if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
+            
+            // Set timer 10 detik untuk menampilkan popup
+            merchantPopupTimer = setTimeout(() => {
+                showMerchantPopup();
+            }, 10000);
+        }
+        
+        function showMerchantPopup() {
+            if (merchantPopupShown) return;
+            merchantPopupShown = true;
+            
+            const overlay = document.getElementById('merchant-popup-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+            }
+        }
+        
+        function closeMerchantPopup() {
+            const overlay = document.getElementById('merchant-popup-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+        
+        function goToMerchantRegistration() {
+            window.open('https://tohitmi669-ai.github.io/MERCHANT-RECOIN/', '_blank');
+            closeMerchantPopup();
+        }
+        
+        function resetMerchantPopupTimer() {
+            merchantPopupShown = false;
+            if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
+        }
 
         // ===========================================
         // FUNGSI KALKULATOR EMISI KARBON
@@ -1628,7 +1737,6 @@
         // NOTIFIKASI KOIN MEMBESAR
         // ===========================================
         function showCoinPopup(tambahBotol, tambahRupiah, emisi) {
-            // Hapus notifikasi lama jika ada
             const oldNotif = document.getElementById('coin-popup');
             if (oldNotif) oldNotif.remove();
             
@@ -1652,12 +1760,10 @@
             
             document.body.appendChild(coin);
             
-            // Auto hapus setelah animasi selesai
             setTimeout(() => {
                 if (coin && coin.remove) coin.remove();
             }, 600);
             
-            // Mainkan suara coin
             playCoinSound();
         }
         
@@ -2040,10 +2146,7 @@
                 const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
                 logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
                 
-                // HANYA 1 NOTIFIKASI KOIN MEMBESAR
                 showCoinPopup(tambahBotol, tambahRupiah, emisiBaru);
-                
-                // Animasi angka pada saldo
                 animateSaldoNumbers();
                 
                 const btnTarik = document.getElementById('btn-tarik');
@@ -2275,6 +2378,7 @@
                 db.ref('/' + currentUser.machine + '/active_user').off();
             }
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+            if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
             if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                 db.ref('/' + currentUser.machine + '/active_user').remove();
             }
@@ -2287,6 +2391,7 @@
             saldoListenerActive = false;
             machineSessionToken = null;
             machineSessionExpiry = null;
+            merchantPopupShown = false;
         }
 
         function showLoginPage() {
@@ -2838,6 +2943,8 @@
             if (dashboardPage) dashboardPage.classList.add('hidden');
             if (shopPage) shopPage.classList.remove('hidden');
             displayProducts();
+            // Start timer untuk popup merchant setelah 10 detik
+            startMerchantPopupTimer();
         }
 
         function hideShop() {
@@ -2845,6 +2952,8 @@
             const shopPage = document.getElementById('shop-page');
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (shopPage) shopPage.classList.add('hidden');
+            // Reset timer saat keluar dari halaman belanja
+            resetMerchantPopupTimer();
         }
 
         // ===========================================
@@ -2892,6 +3001,7 @@
             console.log('🌱 Fitur: Kalkulator emisi karbon - setiap botol menyelamatkan 60 gram CO₂e!');
             console.log('🔄 Fitur: Produk baru muncul OTOMATIS tanpa refresh');
             console.log('📦 Fitur: Pesanan update otomatis realtime tanpa refresh');
+            console.log('🏪 Fitur: Popup mitra UMKM muncul 10 detik setelah halaman belanja terbuka');
         };
     </script>
 </body>
