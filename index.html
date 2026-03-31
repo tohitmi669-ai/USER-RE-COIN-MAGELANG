@@ -1821,61 +1821,89 @@
         // MACHINE SESSION LISTENER
         // ===========================================
         function startMachineSessionListener() {
-            if (!currentUser.isMachineMode || !currentUser.machine) return;
-            logDebug('Memulai listener sesi mesin...');
-            db.ref('/' + currentUser.machine + '/active_user').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) {
-                    showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'error');
-                    currentUser.isMachineMode = false;
-                    currentUser.machine = "";
-                    machineSessionToken = null;
-                    machineSessionExpiry = null;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    if (window.history && window.history.replaceState) {
-                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                        window.history.replaceState({}, document.title, newUrl);
-                    }
-                    return;
+    if (!currentUser.isMachineMode || !currentUser.machine) return;
+    logDebug('Memulai listener sesi mesin...');
+    
+    db.ref('/' + currentUser.machine + '/active_user').on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (!data) {
+            // Sesi mesin dihapus
+            if (currentUser.isMachineMode) {
+                showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'error');
+                currentUser.isMachineMode = false;
+                currentUser.machine = "";
+                machineSessionToken = null;
+                machineSessionExpiry = null;
+                
+                const machineInfo = document.getElementById('machine-info-dashboard');
+                const modeBadge = document.getElementById('mode-badge-dashboard');
+                const sessionInfo = document.getElementById('session-token-info');
+                
+                if (machineInfo) machineInfo.classList.add('hidden');
+                if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+                if (sessionInfo) sessionInfo.classList.add('hidden');
+                
+                // Update URL
+                if (window.history && window.history.replaceState) {
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
                 }
-                if (data.id !== currentUser.phone && data.source === "machine") {
-                    showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
-                    currentUser.isMachineMode = false;
-                    currentUser.machine = "";
-                    machineSessionToken = null;
-                    machineSessionExpiry = null;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    if (window.history && window.history.replaceState) {
-                        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                        window.history.replaceState({}, document.title, newUrl);
-                    }
-                }
-                else if (data.session_token !== machineSessionToken && machineSessionToken !== null) {
-                    showNotification('⚠️ Sesi mesin diperbarui!', 'info');
-                    machineSessionToken = data.session_token;
-                    machineSessionExpiry = data.session_expiry;
-                    const sessionInfo = document.getElementById('session-token-info');
-                    if (sessionInfo) sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
-                }
-                if (data.id === currentUser.phone && data.last_activity) {
-                    const inactiveTime = Date.now() - data.last_activity;
-                    if (inactiveTime > 300000) {
-                        showNotification('⏰ Sesi mesin habis karena tidak aktif', 'error');
-                        currentUser.isMachineMode = false;
-                        currentUser.machine = "";
-                        machineSessionToken = null;
-                        const machineInfo = document.getElementById('machine-info-dashboard');
-                        if (machineInfo) machineInfo.classList.add('hidden');
-                    }
-                }
-            });
+            }
+            return;
         }
+        
+        // Cek apakah user yang berbeda menggunakan mesin
+        if (data.id !== currentUser.phone && data.source === "machine") {
+            showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
+            currentUser.isMachineMode = false;
+            currentUser.machine = "";
+            machineSessionToken = null;
+            machineSessionExpiry = null;
+            
+            const machineInfo = document.getElementById('machine-info-dashboard');
+            const modeBadge = document.getElementById('mode-badge-dashboard');
+            if (machineInfo) machineInfo.classList.add('hidden');
+            if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+            
+            if (window.history && window.history.replaceState) {
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+        // HAPUS validasi session token yang memicu notifikasi
+        // Hanya update token jika berbeda tanpa menampilkan notifikasi
+        else if (data.id === currentUser.phone && data.session_token !== machineSessionToken && machineSessionToken !== null) {
+            logDebug('Session token diperbarui secara otomatis');
+            machineSessionToken = data.session_token;
+            machineSessionExpiry = data.session_expiry;
+            
+            const sessionInfo = document.getElementById('session-token-info');
+            if (sessionInfo) {
+                sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
+            }
+            
+            // Reset timer
+            if (autoLogoutTimer) {
+                clearTimeout(autoLogoutTimer);
+                mulaiAutoLogoutTimer();
+            }
+        }
+        
+        // Update last activity
+        if (data.id === currentUser.phone && data.last_activity) {
+            const inactiveTime = Date.now() - data.last_activity;
+            if (inactiveTime > 300000) {
+                showNotification('⏰ Sesi mesin habis karena tidak aktif', 'error');
+                currentUser.isMachineMode = false;
+                currentUser.machine = "";
+                machineSessionToken = null;
+                const machineInfo = document.getElementById('machine-info-dashboard');
+                if (machineInfo) machineInfo.classList.add('hidden');
+            }
+        }
+    });
+}
 
         // ===========================================
         // AUTO LOGIN
@@ -1922,29 +1950,72 @@
         // ===========================================
         // SALDO REAL-TIME
         // ===========================================
-        function startSaldoListener() {
-            if (!currentUser.phone || saldoListenerActive) return;
-            if (currentUser.isMachineMode && !machineSessionToken) {
-                logDebug('Mode mesin aktif tapi tidak ada token, skip listener');
-                return;
-            }
-            logDebug('Memulai listener saldo real-time...');
-            saldoListenerActive = true;
-            lastSaldo = currentUser.botol;
-            db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snapshot) => {
-                if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
-                    db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (tokenSnap) => {
-                        if (tokenSnap.val() !== machineSessionToken) {
-                            logDebug('Sesi tidak valid, skip update saldo');
-                            return;
+       function startSaldoListener() {
+    if (!currentUser.phone || saldoListenerActive) return;
+    if (currentUser.isMachineMode && !machineSessionToken) {
+        logDebug('Mode mesin aktif tapi tidak ada token, skip listener');
+        return;
+    }
+    logDebug('Memulai listener saldo real-time...');
+    saldoListenerActive = true;
+    lastSaldo = currentUser.botol;
+    
+    db.ref('/accounts/' + currentUser.phone + '/botol').on('value', (snapshot) => {
+        // Validasi sesi mesin dengan pendekatan yang lebih baik
+        if (currentUser.isMachineMode && currentUser.machine) {
+            db.ref('/' + currentUser.machine + '/active_user').once('value', (activeSnap) => {
+                const activeData = activeSnap.val();
+                
+                // Cek apakah user ini masih menjadi active user di mesin
+                if (activeData && activeData.id === currentUser.phone) {
+                    // Update session token jika berbeda (sinkronisasi)
+                    if (activeData.session_token !== machineSessionToken) {
+                        logDebug('Session token diperbarui:', activeData.session_token);
+                        machineSessionToken = activeData.session_token;
+                        machineSessionExpiry = activeData.session_expiry;
+                        
+                        // Update tampilan token info
+                        const sessionInfo = document.getElementById('session-token-info');
+                        if (sessionInfo) {
+                            sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
                         }
-                        processSaldoUpdate(snapshot.val());
-                    });
-                } else {
+                        
+                        // Reset timer auto logout
+                        if (autoLogoutTimer) {
+                            clearTimeout(autoLogoutTimer);
+                            mulaiAutoLogoutTimer();
+                        }
+                    }
+                    
+                    // Proses update saldo
                     processSaldoUpdate(snapshot.val());
+                } else {
+                    // User tidak lagi terhubung ke mesin
+                    logDebug('User tidak lagi terhubung ke mesin, beralih ke mode online');
+                    currentUser.isMachineMode = false;
+                    currentUser.machine = "";
+                    machineSessionToken = null;
+                    machineSessionExpiry = null;
+                    
+                    const machineInfo = document.getElementById('machine-info-dashboard');
+                    const modeBadge = document.getElementById('mode-badge-dashboard');
+                    const sessionInfo = document.getElementById('session-token-info');
+                    
+                    if (machineInfo) machineInfo.classList.add('hidden');
+                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+                    if (sessionInfo) sessionInfo.classList.add('hidden');
+                    
+                    // Tetap proses update saldo
+                    processSaldoUpdate(snapshot.val());
+                    
+                    showNotification('⚠️ Sesi mesin berakhir, beralih ke mode Online', 'info');
                 }
             });
+        } else {
+            processSaldoUpdate(snapshot.val());
         }
+    });
+}
 
         function processSaldoUpdate(newSaldo) {
             const oldSaldo = lastSaldo;
