@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>RE-COIN | Tukar Botol Jadi Belanja + Hijaukan Bumi</title>
+    <title>RE-COIN | Tukar Botol Jadi Belanja + Sedekah + Hijaukan Bumi</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -40,7 +40,15 @@
             --warning: #f39c12;
             --success: #27ae60;
             --gray: #95a5a6;
-            --new-badge: #e84342;
+            --sedekah: #6c5ce7;
+            --fakir: #636e72;
+            --miskin: #e84393;
+            --amil: #6c5ce7;
+            --muallaf: #00cec9;
+            --riqab: #d63031;
+            --gharim: #fdcb6e;
+            --fisabilillah: #00b894;
+            --ibnusabil: #0984e3;
             --eco: #2ecc71;
         }
         
@@ -105,7 +113,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi, .btn-merchant {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-sedekah, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi, .btn-merchant {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -133,6 +141,11 @@
         
         .btn-belanja {
             background: linear-gradient(to right, #6c5ce7, #a363d9);
+            color: white;
+        }
+        
+        .btn-sedekah {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white;
         }
         
@@ -171,11 +184,11 @@
             color: white;
         }
         
-        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-checkout:active, .btn-merchant:active {
+        .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-sedekah:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-checkout:active, .btn-merchant:active {
             transform: scale(0.98);
         }
         
-        .btn-main:disabled, .btn-tarik:disabled, .btn-checkout:disabled {
+        .btn-main:disabled, .btn-tarik:disabled, .btn-checkout:disabled, .btn-sedekah:disabled {
             background: #dfe6e9;
             cursor: not-allowed;
             opacity: 0.5;
@@ -208,6 +221,24 @@
             pointer-events: none;
         }
         
+        .sedekah-card {
+            background: linear-gradient(135deg, #f3e8ff, #e8d5ff);
+            border-left: 5px solid var(--sedekah);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .sedekah-card::before {
+            content: '🤲';
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            font-size: 80px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        
         .stat-label {
             font-size: 12px;
             font-weight: 700;
@@ -217,6 +248,13 @@
         
         .eco-label {
             color: #2e7d32;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .sedekah-label {
+            color: #6c5ce7;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
@@ -244,11 +282,6 @@
             transition: all 0.3s ease;
         }
         
-        .val-eco.increase {
-            animation: numberPop 0.5s ease;
-            color: #1b5e20;
-        }
-        
         .val-rupiah {
             font-size: 32px;
             font-weight: 800;
@@ -266,28 +299,6 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.2); color: var(--primary); }
             100% { transform: scale(1); }
-        }
-        
-        @keyframes popIn {
-            0% {
-                transform: translate(-50%, -50%) scale(0.5);
-                opacity: 0;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes popOut {
-            0% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(0.5);
-                opacity: 0;
-            }
         }
         
         .machine-info {
@@ -466,26 +477,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .new-badge {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: var(--new-badge);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            z-index: 2;
-            animation: blink 2s infinite;
-        }
-        
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
         
         .product-image {
@@ -782,7 +773,7 @@
             color: var(--dark);
         }
         
-        #modal-overlay, #merchant-popup-overlay {
+        #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -796,7 +787,7 @@
         }
         
         @media (min-width: 768px) {
-            #modal-overlay, #merchant-popup-overlay {
+            #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay {
                 align-items: center;
             }
         }
@@ -826,24 +817,6 @@
             text-align: center;
             position: relative;
             border: 2px solid #f39c12;
-        }
-        
-        .merchant-popup h3 {
-            color: #e67e22;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        
-        .merchant-popup .popup-icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-        }
-        
-        .merchant-popup p {
-            color: #2d3436;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            font-size: 15px;
         }
         
         .close-popup {
@@ -911,10 +884,6 @@
             background: #e8f8f5;
         }
         
-        .order-item:last-child {
-            border-bottom: none;
-        }
-        
         .order-merchant {
             font-size: 12px;
             color: var(--primary);
@@ -929,25 +898,10 @@
             display: inline-block;
         }
         
-        .status-diproses {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-dikirim {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-selesai {
-            background: #cce5ff;
-            color: #004085;
-        }
-        
-        .status-batal {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        .status-diproses { background: #fff3cd; color: #856404; }
+        .status-dikirim { background: #d4edda; color: #155724; }
+        .status-selesai { background: #cce5ff; color: #004085; }
+        .status-batal { background: #f8d7da; color: #721c24; }
         
         .order-card {
             background: #f8f9fa;
@@ -1105,20 +1059,9 @@
             font-size: 14px;
         }
         
-        .order-item-name {
-            flex: 2;
-        }
-        
-        .order-item-qty {
-            flex: 1;
-            text-align: center;
-        }
-        
-        .order-item-price {
-            flex: 1;
-            text-align: right;
-            font-weight: 600;
-        }
+        .order-item-name { flex: 2; }
+        .order-item-qty { flex: 1; text-align: center; }
+        .order-item-price { flex: 1; text-align: right; font-weight: 600; }
         
         .btn-debug {
             background: none;
@@ -1130,11 +1073,6 @@
             padding: 8px;
             border-radius: 20px;
             width: 100%;
-        }
-        
-        .btn-debug:hover {
-            background: #0984e3;
-            color: white;
         }
         
         .saldo-header {
@@ -1174,23 +1112,6 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
         
-        .debug-panel {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 9999;
-            display: none;
-        }
-        
-        .debug-panel.show {
-            display: block;
-        }
-        
         .coin-animation {
             position: fixed;
             pointer-events: none;
@@ -1200,14 +1121,8 @@
         }
         
         @keyframes coinFall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(300px) rotate(720deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
         }
         
         .coin-pop {
@@ -1223,22 +1138,10 @@
         }
         
         @keyframes coinPop {
-            0% {
-                transform: translate(-50%, -50%) scale(0.2);
-                opacity: 0;
-            }
-            30% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 1;
-            }
-            70% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 0;
-            }
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
         }
         
         .session-info {
@@ -1282,12 +1185,152 @@
             text-align: center;
             margin-top: 8px;
         }
+        
+        /* Asnaf Grid untuk Modal Sedekah */
+        .asnaf-grid-modal {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .asnaf-option {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .asnaf-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .asnaf-option.selected {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        }
+        
+        .asnaf-option .asnaf-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .asnaf-option .asnaf-name {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .asnaf-option .asnaf-desc {
+            font-size: 10px;
+            color: #7f8c8d;
+        }
+        
+        .doa-container {
+            background: #f0f0f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        
+        .doa-text {
+            font-style: italic;
+            color: #6c5ce7;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .doa-source {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .sedekah-amount-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .amount-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .amount-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .custom-amount-input {
+            margin-top: 10px;
+        }
+        
+        .custom-amount-input input {
+            margin-bottom: 0;
+        }
+      /* Tambahkan atau ganti CSS ini di bagian style */
+.button-row {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.button-row .btn-tarik,
+.button-row .btn-belanja {
+    flex: 1;
+    margin-bottom: 0;
+    padding: 14px 8px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* HAPUS atau KOMENTARI bagian media query yang membuat tombol vertikal */
+/* @media (max-width: 480px) {
+    .button-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+} */
+
+/* Atau ganti dengan ini agar tetap horizontal di mobile */
+@media (max-width: 480px) {
+    .button-row {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .button-row .btn-tarik,
+    .button-row .btn-belanja {
+        font-size: 12px;
+        padding: 12px 6px;
+        white-space: normal;
+        word-break: keep-all;
+    }
+    
+    .button-row .btn-tarik i,
+    .button-row .btn-belanja i {
+        font-size: 14px;
+    }
+}
+      
     </style>
 </head>
 <body>
     <div id="notification"></div>
     <div id="product-toast" class="product-update-toast hidden"></div>
-    <div id="debug-panel" class="debug-panel hidden">Debug Mode</div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -1298,7 +1341,7 @@
         </div>
         
         <h2 id="auth-title">RECOIN</h2>
-        <span id="auth-subtitle" class="subtitle">Tukar Botol Jadi Belanja + Hijaukan Bumi 🌱</span>
+        <span id="auth-subtitle" class="subtitle">Tukar Botol Jadi Belanja + Sedekah + Hijaukan Bumi 🌱</span>
         
         <div id="machine-info-login" class="machine-info hidden">
             <span>Mode Mesin: <span id="machine-id-display" class="machine-id"></span></span>
@@ -1313,8 +1356,6 @@
             <label for="remember-me">Ingat saya (7 hari)</label>
         </div>
         
-        <div id="pass-warning" class="password-warning hidden">Password minimal 4 karakter</div>
-        
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
         
         <div class="info-box">
@@ -1322,85 +1363,100 @@
             • 1 botol plastik = 60 gram emisi CO₂e<br>
             • Setiap botol yang didaur ulang menyelamatkan bumi!<br>
             • Kumpulkan botol, dapatkan saldo, dan selamatkan lingkungan<br>
-            • Lihat dampak hijau Anda di dashboard!
+            • 💚 Donasi sebagian saldo Anda untuk 8 golongan penerima manfaat
         </div>
     </div>
 
     <!-- DASHBOARD PAGE -->
-    <div id="dashboard-page" class="card hidden">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-            <div class="user-badge" id="user-display"></div>
-            <span id="mode-badge-dashboard" class="mode-badge"></span>
-        </div>
-        
-        <div id="machine-info-dashboard" class="machine-info hidden">
-            <div>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></div>
-            <div id="session-token-info" class="session-info hidden"></div>
-            <span id="source-info-dashboard" class="qr-badge hidden"></span>
-        </div>
-        
-        <div class="saldo-header">
-            <div></div>
-            <button class="refresh-btn" onclick="refreshSaldo()" title="Refresh Saldo">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-        </div>
-        
-        <div class="stat-card" id="botol-stat-card">
-            <div class="stat-label">TOTAL BOTOL</div>
-            <div class="val-botol" id="count">0</div>
-        </div>
-        
-        <div class="stat-card" id="rupiah-stat-card">
-            <div class="stat-label">SALDO REKENING SAMPAH</div>
-            <div class="val-rupiah" id="rupiah">Rp 0</div>
-        </div>
-        
-        <!-- KARTU DAMPAK LINGKUNGAN -->
-        <div class="eco-card stat-card" id="eco-card">
-            <div class="eco-label">🌱 DAMPAK LINGKUNGAN ANDA</div>
-            <div class="val-eco" id="co2-saved">0 kg</div>
-            <div id="eco-equivalents" style="font-size: 13px; margin-top: 8px;">
-                🌳 Menanam <span id="trees-equivalent">0</span> pohon/tahun<br>
-                💡 Hemat <span id="energy-equivalent">0</span> kWh listrik
-            </div>
-            <div id="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="eco-progress"></div>
-                </div>
-                <div class="milestone-text" id="next-milestone"></div>
-            </div>
-            <div id="eco-badge" class="badge-eco">🌿 Eco Warrior in Progress</div>
-        </div>
-        
-        <button id="btn-tarik" class="btn-tarik" onclick="openWithdrawalModal()" disabled>
-            TARIK SALDO
-        </button>
-        
-        <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
-            BUAT BELANJA
-        </button>
-        
-        <div class="my-orders" id="my-orders-summary">
-            <h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4>
-            <div id="recent-orders">
-                <p style="color: #7f8c8d; font-size: 13px; text-align: center;">Memuat pesanan...</p>
-            </div>
-            <button class="btn-secondary" style="margin-top: 10px; font-size: 13px;" onclick="showAllOrders()">
-                Lihat Semua Pesanan
-            </button>
-        </div>
-        
-        <div id="msg-limit" class="warning-text">
-            Minimal saldo Rp 5.000 untuk tarik tunai
-        </div>
-        
-        <button class="btn-logout" onclick="logout()">LOGOUT</button>
-        
-        <button class="btn-debug" onclick="debugDatabase()">
-            🔍 DEBUG DATABASE
+    <!-- DASHBOARD PAGE - URUTAN YANG DIPERBAIKI -->
+<div id="dashboard-page" class="card hidden">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div class="user-badge" id="user-display"></div>
+        <span id="mode-badge-dashboard" class="mode-badge"></span>
+    </div>
+    
+    <div id="machine-info-dashboard" class="machine-info hidden">
+        <div>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></div>
+        <div id="session-token-info" class="session-info hidden"></div>
+        <span id="source-info-dashboard" class="qr-badge hidden"></span>
+    </div>
+    
+    <div class="saldo-header">
+        <div></div>
+        <button class="refresh-btn" onclick="refreshSaldo()" title="Refresh Saldo">
+            <i class="fas fa-sync-alt"></i>
         </button>
     </div>
+    
+    <!-- 1. TOTAL BOTOL -->
+    <div class="stat-card" id="botol-stat-card">
+        <div class="stat-label">TOTAL BOTOL</div>
+        <div class="val-botol" id="count">0</div>
+    </div>
+    
+    <!-- 2. SALDO REKENING SAMPAH -->
+    <div class="stat-card" id="rupiah-stat-card">
+        <div class="stat-label">SALDO REKENING SAMPAH</div>
+        <div class="val-rupiah" id="rupiah">Rp 0</div>
+    </div>
+    
+    <!-- 3. TOMBOL TARIK SALDO & BUAT BELANJA (BERDAMPINGAN) -->
+    <div class="button-row">
+        <button id="btn-tarik" class="btn-tarik" onclick="openWithdrawalModal()" disabled>
+            <i class="fas fa-money-bill-wave"></i> TARIK SALDO
+        </button>
+        <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
+            <i class="fas fa-shopping-cart"></i> BUAT BELANJA
+        </button>
+    </div>
+    
+    <!-- 4. KARTU SEDEKAH -->
+    <div class="sedekah-card stat-card" onclick="openSedekahModal()">
+        <div class="sedekah-label">🤲 SEDEKAH / ZISWAF</div>
+        <div class="val-rupiah" style="font-size: 24px; color: var(--sedekah);" id="total-donasi-user">Rp 0</div>
+        <div style="font-size: 12px; color: #6c5ce7; margin-top: 5px;">
+            <i class="fas fa-hand-holding-heart"></i> Salurkan ke 8 Asnaf
+        </div>
+        <div style="font-size: 11px; color: #7f8c8d; margin-top: 8px;">
+            Fakir • Miskin • Amil • Muallaf • Riqab • Gharim • Fisabilillah • Ibnu Sabil
+        </div>
+    </div>
+    
+    <!-- 5. KARTU DAMPAK LINGKUNGAN -->
+    <div class="eco-card stat-card">
+        <div class="eco-label">🌱 DAMPAK LINGKUNGAN ANDA</div>
+        <div class="val-eco" id="co2-saved">0 kg</div>
+        <div id="eco-equivalents" style="font-size: 13px; margin-top: 8px;">
+            🌳 Menanam <span id="trees-equivalent">0</span> pohon/tahun<br>
+            💡 Hemat <span id="energy-equivalent">0</span> kWh listrik
+        </div>
+        <div id="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="eco-progress"></div>
+            </div>
+            <div class="milestone-text" id="next-milestone"></div>
+        </div>
+        <div id="eco-badge" class="badge-eco">🌿 Eco Warrior in Progress</div>
+    </div>
+    
+    <!-- 6. PESANAN SAYA -->
+    <div class="my-orders" id="my-orders-summary">
+        <h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4>
+        <div id="recent-orders">
+            <p style="color: #7f8c8d; font-size: 13px; text-align: center;">Memuat pesanan...</p>
+        </div>
+        <button class="btn-secondary" style="margin-top: 10px; font-size: 13px;" onclick="showAllOrders()">
+            Lihat Semua Pesanan
+        </button>
+    </div>
+    
+    <div id="msg-limit" class="warning-text">
+        Minimal saldo Rp 5.000 untuk tarik tunai
+    </div>
+    
+    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    <button class="btn-debug" onclick="debugDatabase()">🔍 DEBUG DATABASE</button>
+</div>
 
     <!-- SHOP PAGE -->
     <div id="shop-page" class="card card-full hidden">
@@ -1538,6 +1594,57 @@
         </div>
     </div>
 
+    <!-- SEDEKAH MODAL - 8 ASNAF -->
+    <div id="sedekah-modal-overlay">
+        <div class="modal" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;"><i class="fas fa-hand-holding-heart" style="color: #6c5ce7;"></i> Sedekah / ZISWAF</h3>
+                <button onclick="closeSedekahModal()" style="background:none; border:none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="background: #f3e8ff; padding: 12px; border-radius: 12px; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: #6c5ce7;">Saldo Anda saat ini</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--primary);" id="sedekah-modal-saldo">Rp 0</div>
+            </div>
+            
+            <p style="margin-bottom: 12px; font-weight: 600;">Pilih Kategori Penerima (8 Asnaf):</p>
+            
+            <div class="asnaf-grid-modal" id="asnaf-grid-modal">
+                <!-- Akan diisi JavaScript -->
+            </div>
+            
+            <div class="doa-container">
+                <div class="doa-text" id="doa-text">
+                    "Barang siapa bersedekah, maka Allah akan menggantinya dengan sepuluh kali lipat." (HR. Muslim)
+                </div>
+                <div class="doa-source" id="doa-source">📖 Hadits Riwayat Muslim</div>
+            </div>
+            
+            <p style="margin-bottom: 8px; font-weight: 600;">Nominal Sedekah:</p>
+            <div class="sedekah-amount-buttons">
+                <button class="amount-btn" onclick="setSedekahAmount(5000)">Rp 5.000</button>
+                <button class="amount-btn" onclick="setSedekahAmount(10000)">Rp 10.000</button>
+                <button class="amount-btn" onclick="setSedekahAmount(25000)">Rp 25.000</button>
+                <button class="amount-btn" onclick="setSedekahAmount(50000)">Rp 50.000</button>
+            </div>
+            <div class="custom-amount-input">
+                <input type="number" id="custom-amount" placeholder="Atau masukkan nominal lain (min Rp 1.000)" min="1000" step="1000">
+            </div>
+            
+            <div style="background: #e8f8f5; padding: 12px; border-radius: 12px; margin: 15px 0;">
+                <div style="font-size: 12px; color: var(--info);">
+                    <i class="fas fa-info-circle"></i> 
+                    Sedekah Anda akan dikelola oleh Amil untuk disalurkan kepada 8 golongan penerima manfaat (Fakir, Miskin, Amil, Muallaf, Riqab, Gharim, Fisabilillah, Ibnu Sabil).
+                </div>
+            </div>
+            
+            <button class="btn-sedekah" onclick="processSedekah()" id="btn-sedekah-submit">
+                <i class="fas fa-hand-holding-heart"></i> SALURKAN SEDEKAH
+            </button>
+            <button class="btn-secondary" onclick="closeSedekahModal()" style="margin-top: 10px;">Batal</button>
+        </div>
+    </div>
+
     <!-- MERCHANT POPUP -->
     <div id="merchant-popup-overlay">
         <div class="merchant-popup">
@@ -1577,6 +1684,20 @@
     const db = firebase.database();
 
     // ===========================================
+    // DATA ASNAF (8 GOLONGAN)
+    // ===========================================
+    const ASNAF_LIST = [
+        { id: 'fakir', name: 'Fakir', icon: '😔', desc: 'Orang yang hampir tidak memiliki apa-apa', color: '#636e72', doa: '"Dan berikanlah kepada orang-orang fakir dari harta yang Allah berikan kepadamu." (QS An-Nur: 33)', source: 'Q.S. An-Nur ayat 33' },
+        { id: 'miskin', name: 'Miskin', icon: '😟', desc: 'Orang yang kekurangan kebutuhan dasar', color: '#e84393', doa: '"Sesungguhnya zakat-zakat itu hanyalah untuk orang-orang fakir, orang-orang miskin..." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' },
+        { id: 'amil', name: 'Amil', icon: '👨‍💼', desc: 'Pengelola zakat/sedekah', color: '#6c5ce7', doa: '"Dan berikanlah kepada amil zakat bagian mereka." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' },
+        { id: 'muallaf', name: 'Muallaf', icon: '🕌', desc: 'Orang yang baru masuk Islam', color: '#00cec9', doa: '"Dan lunakkanlah hati mereka (para muallaf) dengan zakat." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' },
+        { id: 'riqab', name: 'Riqab', icon: '🔓', desc: 'Membebaskan budak/hamba sahaya', color: '#d63031', doa: '"Dan untuk memerdekakan budak." (QS Al-Baqarah: 177)', source: 'Q.S. Al-Baqarah ayat 177' },
+        { id: 'gharim', name: 'Gharim', icon: '💳', desc: 'Orang yang berhutang untuk kebutuhan halal', color: '#fdcb6e', doa: '"Dan untuk orang-orang yang berhutang." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' },
+        { id: 'fisabilillah', name: 'Fisabilillah', icon: '⚔️', desc: 'Perjuangan di jalan Allah', color: '#00b894', doa: '"Dan untuk fisabilillah." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' },
+        { id: 'ibnusabil', name: 'Ibnu Sabil', icon: '🚶', desc: 'Musafir yang kehabisan bekal', color: '#0984e3', doa: '"Dan untuk ibnu sabil (musafir)." (QS At-Taubah: 60)', source: 'Q.S. At-Taubah ayat 60' }
+    ];
+
+    // ===========================================
     // FONNTE API CONFIGURATION
     // ===========================================
     const FONNTE_CONFIG = {
@@ -1611,6 +1732,9 @@
     let merchants = [];
     let products = [];
     let userOrders = [];
+    let userDonations = [];
+    let selectedAsnaf = null;
+    let selectedAmount = null;
 
     let lastProductCount = 0;
     let newProductsSet = new Set();
@@ -1627,6 +1751,7 @@
     let ordersListenerRef = null;
     let productsListenerRef = null;
     let merchantsListenerRef = null;
+    let donationsListenerRef = null;
 
     const DEBUG = true;
 
@@ -1634,10 +1759,6 @@
     // FONNTE NOTIFICATION FUNCTIONS
     // ===========================================
     async function sendFonnteNotification(target, message, type = 'order') {
-        if (!FONNTE_CONFIG.API_KEY || FONNTE_CONFIG.API_KEY === '2Ft1pffdgdax3yJhMd82') {
-            console.warn('Fonnte API Key configured');
-        }
-        
         if (!target || target.length < 10) {
             console.error('Invalid target number:', target);
             return { success: false, error: 'Invalid target number' };
@@ -1664,130 +1785,202 @@
             const result = await response.json();
             
             if (result.status === true) {
-                console.log(`✅ Fonnte notification sent to ${target} (${type})`);
+                console.log(`✅ Fonnte notification sent to ${target}`);
                 return { success: true, data: result };
             } else {
                 console.error('Fonnte API error:', result);
                 return { success: false, error: result.reason || 'Unknown error' };
             }
-            
         } catch (error) {
             console.error('Failed to send Fonnte notification:', error);
             return { success: false, error: error.message };
         }
     }
 
-    function formatOrderNotification(orderData, type = 'customer') {
-        const { orderId, items, subtotal, delivery, timestamp } = orderData;
-        const date = formatDate(timestamp);
-        
-        if (type === 'customer') {
-            let message = `🛍️ *PESANAN BERHASIL DIBUAT*\n\n`;
-            message += `Halo *${orderData.userName || 'Pelanggan'}*, pesanan Anda telah kami terima!\n\n`;
-            message += `📋 *Detail Pesanan:*\n`;
-            message += `━━━━━━━━━━━━━━━━━━━━\n`;
-            message += `🆔 Order ID: *${orderId.slice(-8)}*\n`;
-            message += `📅 Tanggal: *${date}*\n`;
-            
-            message += `\n📦 *Item Pesanan:*\n`;
-            items.forEach((item, idx) => {
-                message += `${idx + 1}. ${item.name} x${item.quantity} = ${formatRupiah(item.price * item.quantity)}\n`;
-            });
-            
-            message += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-            message += `💰 *Total: ${formatRupiah(subtotal)}*\n`;
-            
-            if (delivery) {
-                if (delivery.type === 'gps') {
-                    message += `📍 *Pengiriman:* GPS - ${delivery.lat}, ${delivery.lng}\n`;
-                } else if (delivery.type === 'manual') {
-                    message += `📍 *Pengiriman:* ${delivery.address}\n`;
-                }
-                message += `🚚 *Ongkir:* GRATIS\n`;
-            }
-            
-            message += `\n✨ Status: *DIPROSES*\n`;
-            message += `\nTerima kasih telah berkontribusi menghijaukan bumi! 🌱\n`;
-            message += `\n📱 Pantau pesanan Anda di aplikasi RE-COIN.`;
-            
-            return message;
-            
-        } else if (type === 'merchant') {
-            let message = `🏪 *PESANAN MASUK!*\n\n`;
-            message += `Halo *${orderData.merchantName}*, ada pesanan baru nih!\n\n`;
-            message += `📋 *Detail Pesanan:*\n`;
-            message += `━━━━━━━━━━━━━━━━━━━━\n`;
-            message += `🆔 Order ID: *${orderId.slice(-8)}*\n`;
-            message += `👤 Customer: *${orderData.userName || orderData.userPhone}*\n`;
-            message += `📅 Tanggal: *${date}*\n`;
-            
-            const merchantItems = items.filter(i => i.merchant_id === orderData.merchantId);
-            if (merchantItems.length > 0) {
-                message += `\n📦 *Item yang dipesan:*\n`;
-                merchantItems.forEach((item, idx) => {
-                    message += `${idx + 1}. ${item.name} x${item.quantity} = ${formatRupiah(item.price * item.quantity)}\n`;
-                });
-                
-                const merchantTotal = merchantItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-                message += `\n💰 *Total: ${formatRupiah(merchantTotal)}*\n`;
-            }
-            
-            if (delivery) {
-                message += `\n🚚 *Pengiriman:* `;
-                if (delivery.type === 'gps') {
-                    message += `Lokasi GPS\n`;
-                    if (delivery.maps_url) {
-                        message += `📍 *Link:* ${delivery.maps_url}\n`;
-                    }
-                } else if (delivery.type === 'manual') {
-                    message += `Alamat: ${delivery.address}\n`;
-                }
-            }
-            
-            message += `\n⚡ *Segera proses pesanan ini!*\n`;
-            message += `\n📱 Buka aplikasi RE-COIN untuk konfirmasi pesanan.`;
-            
-            return message;
-            
-        } else if (type === 'admin') {
-            let message = `📊 *NOTIFIKASI ORDER BARU*\n\n`;
-            message += `Order ID: *${orderId.slice(-8)}*\n`;
-            message += `Customer: ${orderData.userPhone}\n`;
-            message += `Total: ${formatRupiah(subtotal)}\n`;
-            message += `Items: ${items.length} item\n`;
-            message += `Merchants: ${[...new Set(items.map(i => i.merchant_id))].length} merchant\n`;
-            message += `Waktu: ${date}\n`;
-            
-            if (delivery) {
-                message += `Pengiriman: ${delivery.type === 'gps' ? 'GPS' : 'Manual Address'}\n`;
-            }
-            
-            return message;
-        }
+    function formatSedekahNotification(asnafId, amount, userName) {
+        const asnaf = ASNAF_LIST.find(a => a.id === asnafId);
+        const message = `🤲 *NOTIFIKASI SEDEKAH* 🤲\n\n` +
+            `Assalamu'alaikum warahmatullahi wabarakatuh,\n\n` +
+            `Telah masuk sedekah dari:\n` +
+            `👤 Nama: *${userName || 'Donatur'}*\n` +
+            `📱 No HP: *${currentUser.phone}*\n\n` +
+            `📋 *Detail Sedekah:*\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🎯 Kategori: *${asnaf.icon} ${asnaf.name}*\n` +
+            `💰 Nominal: *${formatRupiah(amount)}*\n` +
+            `📅 Waktu: *${formatDate(Date.now())}*\n\n` +
+            `📖 *Doa untuk donatur:*\n` +
+            `"${asnaf.doa}"\n\n` +
+            `✨ Semoga Allah menerima amal ibadah kita semua.\n` +
+            `🤲 Aamiin ya Rabbal'alamin.\n\n` +
+            `🌱 #RECOIN #Sedekah #ZISWAF #HijaukanBumi`;
         
         return message;
     }
 
-    function formatStatusUpdateNotification(orderId, oldStatus, newStatus, orderData) {
-        let message = `📦 *UPDATE STATUS PESANAN*\n\n`;
-        message += `🆔 Order ID: *${orderId.slice(-8)}*\n`;
-        message += `📅 Tanggal: *${formatDate(Date.now())}*\n`;
-        message += `\nStatus sebelumnya: *${oldStatus}* → *${newStatus}*\n`;
-        
-        if (newStatus === 'dikirim') {
-            message += `\n🚚 Pesanan Anda sedang dalam perjalanan!\n`;
-            message += `✨ Mohon ditunggu ya, pesanan akan segera sampai.\n`;
-        } else if (newStatus === 'selesai') {
-            message += `\n✅ Pesanan telah selesai!\n`;
-            message += `Terima kasih telah berbelanja di RE-COIN! 🌱\n`;
-        } else if (newStatus === 'batal') {
-            message += `\n❌ Pesanan dibatalkan.\n`;
-            message += `Jika ada kendala, silakan hubungi customer service.\n`;
+    // ===========================================
+    // FUNGSI SEDEKAH
+    // ===========================================
+    function openSedekahModal() {
+        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
+        if (saldoRupiah < 1000) {
+            showNotification('Minimal saldo Rp 1.000 untuk bersedekah', 'error');
+            return;
         }
         
-        message += `\n📱 Pantau terus update di aplikasi RE-COIN.`;
+        // Reset pilihan
+        selectedAsnaf = null;
+        selectedAmount = null;
+        document.getElementById('custom-amount').value = '';
         
-        return message;
+        // Update modal saldo
+        const modalSaldo = document.getElementById('sedekah-modal-saldo');
+        if (modalSaldo) modalSaldo.innerText = formatRupiah(saldoRupiah);
+        
+        // Generate asnaf grid
+        const asnafGrid = document.getElementById('asnaf-grid-modal');
+        if (asnafGrid) {
+            let html = '';
+            ASNAF_LIST.forEach(asnaf => {
+                html += `
+                    <div class="asnaf-option" onclick="selectAsnaf('${asnaf.id}')" id="asnaf-${asnaf.id}">
+                        <span class="asnaf-icon">${asnaf.icon}</span>
+                        <div class="asnaf-name">${asnaf.name}</div>
+                        <div class="asnaf-desc">${asnaf.desc.substring(0, 30)}...</div>
+                    </div>
+                `;
+            });
+            asnafGrid.innerHTML = html;
+        }
+        
+        document.getElementById('sedekah-modal-overlay').style.display = 'flex';
+    }
+    
+    function closeSedekahModal() {
+        document.getElementById('sedekah-modal-overlay').style.display = 'none';
+        selectedAsnaf = null;
+        selectedAmount = null;
+    }
+    
+    function selectAsnaf(asnafId) {
+        // Hapus class selected dari semua
+        ASNAF_LIST.forEach(a => {
+            const el = document.getElementById(`asnaf-${a.id}`);
+            if (el) el.classList.remove('selected');
+        });
+        
+        // Tambah class selected ke yang dipilih
+        const selectedEl = document.getElementById(`asnaf-${asnafId}`);
+        if (selectedEl) selectedEl.classList.add('selected');
+        
+        selectedAsnaf = asnafId;
+        
+        // Update doa
+        const asnaf = ASNAF_LIST.find(a => a.id === asnafId);
+        const doaText = document.getElementById('doa-text');
+        const doaSource = document.getElementById('doa-source');
+        if (doaText) doaText.innerText = `"${asnaf.doa}"`;
+        if (doaSource) doaSource.innerText = `📖 ${asnaf.source}`;
+    }
+    
+    function setSedekahAmount(amount) {
+        selectedAmount = amount;
+        document.getElementById('custom-amount').value = '';
+        
+        // Highlight tombol yang dipilih
+        const amountBtns = document.querySelectorAll('.amount-btn');
+        amountBtns.forEach(btn => {
+            btn.style.background = '#f0f0f0';
+            btn.style.color = '#333';
+        });
+        event.target.style.background = '#00b894';
+        event.target.style.color = 'white';
+    }
+    
+    async function processSedekah() {
+        if (!selectedAsnaf) {
+            showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
+            return;
+        }
+        
+        let amount = selectedAmount;
+        const customAmount = parseInt(document.getElementById('custom-amount').value);
+        if (customAmount && customAmount > 0) {
+            amount = customAmount;
+        }
+        
+        if (!amount || amount < 1000) {
+            showNotification('Minimal sedekah Rp 1.000', 'error');
+            return;
+        }
+        
+        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
+        if (amount > saldoRupiah) {
+            showNotification('Saldo tidak cukup!', 'error');
+            return;
+        }
+        
+        const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
+        
+        showNotification('Memproses sedekah...', 'info');
+        
+        const donationId = 'DON' + Date.now();
+        const donationData = {
+            asnaf: selectedAsnaf,
+            amount: amount,
+            botol: botolTerpakai,
+            timestamp: Date.now(),
+            doa: ASNAF_LIST.find(a => a.id === selectedAsnaf).doa,
+            status: 'completed'
+        };
+        
+        const updates = {};
+        updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - botolTerpakai;
+        updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
+        
+        try {
+            await db.ref().update(updates);
+            
+            currentUser.botol -= botolTerpakai;
+            updateSaldoDisplay();
+            updateEcoDisplay();
+            
+            // Animasi
+            showCoinPopup(botolTerpakai, amount, hitungEmisiTerselamatkan(botolTerpakai));
+            
+            const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
+            showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! Semoga menjadi amal jariyah. 🤲`, 'success');
+            
+            // Kirim notifikasi ke admin via Fonnte
+            const adminMessage = formatSedekahNotification(selectedAsnaf, amount, currentUser.phone);
+            await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'sedekah');
+            
+            closeSedekahModal();
+            selectedAsnaf = null;
+            selectedAmount = null;
+            
+            // Refresh total donasi user
+            loadUserDonations();
+            
+        } catch (error) {
+            console.error('Sedekah error:', error);
+            showNotification('Gagal memproses sedekah: ' + error.message, 'error');
+        }
+    }
+    
+    function loadUserDonations() {
+        db.ref(`/donations/${currentUser.phone}`).once('value', (snap) => {
+            const donations = snap.val() || {};
+            userDonations = [];
+            let totalAmount = 0;
+            for (let id in donations) {
+                const don = donations[id];
+                userDonations.push({ id, ...don });
+                totalAmount += don.amount || 0;
+            }
+            const totalDonasiEl = document.getElementById('total-donasi-user');
+            if (totalDonasiEl) totalDonasiEl.innerText = formatRupiah(totalAmount);
+        });
     }
 
     // ===========================================
@@ -2423,6 +2616,7 @@
         startOrdersListener();
         startProductListener();
         startSaldoListener();
+        loadUserDonations();
     }
 
     function loginSuccess() {
@@ -2515,6 +2709,7 @@
         if (merchantsListenerRef) merchantsListenerRef.off();
         if (saldoListenerRef) saldoListenerRef.off();
         if (ordersListenerRef) ordersListenerRef.off();
+        if (donationsListenerRef) donationsListenerRef.off();
         
         if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
         if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
@@ -2799,265 +2994,143 @@
     }
 
     // ===========================================
-// PERBAIKAN FUNGSI CHECKOUT - MENGIRIM NOTIFIKASI KE NOMOR MERCHANT YANG BENAR
-// ===========================================
-async function checkout() {
-    if (!navigator.onLine) {
-        showNotification('Tidak ada koneksi internet!', 'error');
-        return;
-    }
-    
-    await refreshSaldoPromise();
-    
-    const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-    
-    if (subtotal > currentUser.botol * HARGA_PER_BOTOL) {
-        showNotification('Saldo tidak cukup!', 'error');
-        return;
-    }
-    
-    if (cart.length === 0) {
-        showNotification('Keranjang belanja kosong!', 'error');
-        return;
-    }
-    
-    if (deliveryEnabled && !userLocation && !manualAddress) {
-        showNotification('Harap tentukan alamat pengiriman!', 'error');
-        return;
-    }
-    
-    showNotification('Memproses pesanan...', 'info');
-    
-    const transId = 'TRX' + Date.now();
-    const transaction = {
-        user_id: currentUser.phone,
-        user_name: currentUser.phone,
-        items: cart.map(i => ({ 
-            id: i.id, 
-            name: i.name, 
-            quantity: i.quantity, 
-            price: i.price, 
-            merchant_id: i.merchant_id, 
-            merchant_name: i.merchant_name 
-        })),
-        subtotal: subtotal,
-        total: subtotal,
-        timestamp: Date.now(),
-        status: 'diproses'
-    };
-    
-    if (deliveryEnabled) {
-        if (userLocation) {
-            transaction.delivery = { 
-                type: 'gps', 
-                lat: userLocation.lat, 
-                lng: userLocation.lng, 
-                accuracy: userLocation.accuracy, 
-                maps_url: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}` 
-            };
-        } else if (manualAddress) {
-            transaction.delivery = { 
-                type: 'manual', 
-                address: manualAddress, 
-                maps_url: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}` 
-            };
+    // CHECKOUT FUNCTION
+    // ===========================================
+    async function checkout() {
+        if (!navigator.onLine) {
+            showNotification('Tidak ada koneksi internet!', 'error');
+            return;
         }
-    }
-    
-    const updates = {};
-    updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - Math.ceil(subtotal / HARGA_PER_BOTOL);
-    updates[`/transactions/${currentUser.phone}/${transId}`] = transaction;
-    
-    cart.forEach(i => { 
-        updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity); 
-    });
-    
-    const merchantOrders = {};
-    cart.forEach(item => {
-        const merchantId = item.merchant_id;
-        if (!merchantOrders[merchantId]) {
-            merchantOrders[merchantId] = { 
-                items: [], 
+        
+        await refreshSaldoPromise();
+        
+        const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+        
+        if (subtotal > currentUser.botol * HARGA_PER_BOTOL) {
+            showNotification('Saldo tidak cukup!', 'error');
+            return;
+        }
+        
+        if (cart.length === 0) {
+            showNotification('Keranjang belanja kosong!', 'error');
+            return;
+        }
+        
+        if (deliveryEnabled && !userLocation && !manualAddress) {
+            showNotification('Harap tentukan alamat pengiriman!', 'error');
+            return;
+        }
+        
+        showNotification('Memproses pesanan...', 'info');
+        
+        const transId = 'TRX' + Date.now();
+        const transaction = {
+            user_id: currentUser.phone,
+            user_name: currentUser.phone,
+            items: cart.map(i => ({ 
+                id: i.id, 
+                name: i.name, 
+                quantity: i.quantity, 
+                price: i.price, 
+                merchant_id: i.merchant_id, 
+                merchant_name: i.merchant_name 
+            })),
+            subtotal: subtotal,
+            total: subtotal,
+            timestamp: Date.now(),
+            status: 'diproses'
+        };
+        
+        if (deliveryEnabled) {
+            if (userLocation) {
+                transaction.delivery = { 
+                    type: 'gps', 
+                    lat: userLocation.lat, 
+                    lng: userLocation.lng, 
+                    accuracy: userLocation.accuracy, 
+                    maps_url: `https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}` 
+                };
+            } else if (manualAddress) {
+                transaction.delivery = { 
+                    type: 'manual', 
+                    address: manualAddress, 
+                    maps_url: `https://www.google.com/maps?q=${encodeURIComponent(manualAddress)}` 
+                };
+            }
+        }
+        
+        const updates = {};
+        updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - Math.ceil(subtotal / HARGA_PER_BOTOL);
+        updates[`/transactions/${currentUser.phone}/${transId}`] = transaction;
+        
+        cart.forEach(i => { 
+            updates[`/products/${i.id}/stock`] = firebase.database.ServerValue.increment(-i.quantity); 
+        });
+        
+        const merchantOrders = {};
+        cart.forEach(item => {
+            const merchantId = item.merchant_id;
+            if (!merchantOrders[merchantId]) {
+                merchantOrders[merchantId] = { 
+                    items: [], 
+                    user_id: currentUser.phone,
+                    user_phone: currentUser.phone,
+                    timestamp: Date.now(), 
+                    status: 'diproses',
+                    delivery: transaction.delivery
+                };
+            }
+            merchantOrders[merchantId].items.push({ 
+                id: item.id, 
+                name: item.name, 
+                quantity: item.quantity, 
+                price: item.price, 
+                merchant_id: merchantId, 
+                merchant_name: item.merchant_name 
+            });
+        });
+        
+        for (const [merchantId, orderData] of Object.entries(merchantOrders)) {
+            updates[`/merchant_orders/${merchantId}/${transId}`] = {
+                id: transId,
                 user_id: currentUser.phone,
                 user_phone: currentUser.phone,
-                timestamp: Date.now(), 
-                status: 'diproses',
-                delivery: transaction.delivery
+                items: orderData.items,
+                subtotal: orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                delivery: transaction.delivery,
+                timestamp: orderData.timestamp,
+                status: orderData.status,
+                delivery_cost: 0
             };
         }
-        merchantOrders[merchantId].items.push({ 
-            id: item.id, 
-            name: item.name, 
-            quantity: item.quantity, 
-            price: item.price, 
-            merchant_id: merchantId, 
-            merchant_name: item.merchant_name 
-        });
-    });
-    
-    for (const [merchantId, orderData] of Object.entries(merchantOrders)) {
-        updates[`/merchant_orders/${merchantId}/${transId}`] = {
-            id: transId,
-            user_id: currentUser.phone,
-            user_phone: currentUser.phone,
-            items: orderData.items,
-            subtotal: orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            delivery: transaction.delivery,
-            timestamp: orderData.timestamp,
-            status: orderData.status,
-            delivery_cost: 0
-        };
-        logDebug(`Order saved to merchant_orders/${merchantId}/${transId}`);
-    }
-    
-    try {
-        await db.ref().update(updates);
         
-        showNotification('✅ Pesanan berhasil dibuat!', 'success');
-        
-        // ===========================================
-        // KIRIM NOTIFIKASI VIA FONNTE
-        // ===========================================
-        
-        // 1. Notifikasi ke customer
-        const customerMessage = formatOrderNotification({
-            orderId: transId,
-            userName: currentUser.phone,
-            userPhone: currentUser.phone,
-            items: cart,
-            subtotal: subtotal,
-            delivery: transaction.delivery,
-            timestamp: Date.now()
-        }, 'customer');
-        
-        await sendFonnteNotification(currentUser.phone, customerMessage, 'order_customer');
-        
-        // 2. Notifikasi ke masing-masing merchant (AMBIL LANGSUNG DARI DATA MERCHANT)
-        const uniqueMerchants = [...new Map(cart.map(item => [item.merchant_id, item])).values()];
-        
-        for (const merchantItem of uniqueMerchants) {
-            const merchantId = merchantItem.merchant_id;
-            const merchantName = merchantItem.merchant_name;
+        try {
+            await db.ref().update(updates);
             
-            // 🔥 AMBIL NOMOR LANGSUNG DARI DATA MERCHANT 🔥
-            let merchantPhone = null;
+            showNotification('✅ Pesanan berhasil dibuat!', 'success');
             
-            // Langkah 1: Coba ambil dari data merchant utama
-            const merchantSnapshot = await db.ref(`/merchants/${merchantId}`).once('value');
-            const merchantData = merchantSnapshot.val();
+            // Reset cart dan delivery
+            cart = [];
+            deliveryEnabled = false;
+            userLocation = null;
+            manualAddress = "";
             
-            if (merchantData && merchantData.phone) {
-                // Format nomor telepon (hapus spasi, strip, dan pastikan format 62)
-                let rawPhone = merchantData.phone.toString();
-                merchantPhone = rawPhone.replace(/[^0-9]/g, '');
-                
-                // Jika format 08xxx, ubah jadi 628xxx
-                if (merchantPhone.startsWith('0')) {
-                    merchantPhone = '62' + merchantPhone.substring(1);
-                }
-                // Jika format 8xxx (tanpa 0), tambahkan 62
-                else if (merchantPhone.startsWith('8') && !merchantPhone.startsWith('62')) {
-                    merchantPhone = '62' + merchantPhone;
-                }
-                // Jika format +628xxx, hapus +
-                else if (merchantPhone.startsWith('628') && merchantPhone.length > 11) {
-                    // Sudah benar, biarkan
-                }
-                
-                console.log(`📱 Merchant ${merchantName} (${merchantId}) - Phone: ${merchantPhone}`);
-            }
+            const deliveryCheckbox = document.getElementById('delivery-checkbox');
+            const deliveryOptions = document.getElementById('delivery-options');
+            const cartPanel = document.getElementById('cart-panel');
             
-            // Langkah 2: Jika tidak ada, cek di merchant_contacts (fallback)
-            if (!merchantPhone) {
-                const contactSnapshot = await db.ref(`/merchant_contacts/${merchantId}/phone`).once('value');
-                merchantPhone = contactSnapshot.val();
-                if (merchantPhone) {
-                    merchantPhone = merchantPhone.replace(/[^0-9]/g, '');
-                    if (merchantPhone.startsWith('0')) merchantPhone = '62' + merchantPhone.substring(1);
-                    console.log(`📱 (Fallback) Phone for ${merchantName}: ${merchantPhone}`);
-                }
-            }
+            if (deliveryCheckbox) deliveryCheckbox.checked = false;
+            if (deliveryOptions) deliveryOptions.classList.add('hidden');
+            if (cartPanel) cartPanel.classList.add('hidden');
             
-            // Kirim notifikasi jika ada nomor
-            if (merchantPhone && merchantPhone.length >= 10) {
-                // Hitung total untuk merchant ini saja
-                const merchantItems = cart.filter(i => i.merchant_id === merchantId);
-                const merchantTotal = merchantItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-                
-                const merchantMessage = formatOrderNotification({
-                    orderId: transId,
-                    merchantId: merchantId,
-                    merchantName: merchantName,
-                    userName: currentUser.phone,
-                    userPhone: currentUser.phone,
-                    items: merchantItems,
-                    subtotal: merchantTotal,
-                    delivery: transaction.delivery,
-                    timestamp: Date.now()
-                }, 'merchant');
-                
-                const result = await sendFonnteNotification(merchantPhone, merchantMessage, 'order_merchant');
-                if (result.success) {
-                    logDebug(`✅ Notification sent to ${merchantName} (${merchantPhone})`);
-                } else {
-                    logDebug(`❌ Failed to send to ${merchantName}: ${result.error}`);
-                }
-            } else {
-                // Kirim peringatan ke admin jika merchant tidak punya nomor
-                logDebug(`⚠️ No valid phone number for merchant ${merchantId} (${merchantName})`);
-                const warningMsg = `⚠️ *PESANAN TANPA NOTIFIKASI MERCHANT*\n\n` +
-                    `Order: #${transId.slice(-8)}\n` +
-                    `Merchant: ${merchantName}\n` +
-                    `ID Merchant: ${merchantId}\n` +
-                    `Customer: ${currentUser.phone}\n` +
-                    `Total: ${formatRupiah(subtotal)}\n\n` +
-                    `⚠️ Merchant tidak memiliki nomor telepon terdaftar!\n` +
-                    `📌 Segera update data merchant dengan menambahkan field "phone"`;
-                
-                await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, warningMsg, 'warning');
-            }
+            updateCartDisplay();
+            refreshSaldo();
+            
+        } catch (error) {
+            console.error('Checkout error:', error);
+            showNotification('Error: ' + error.message, 'error');
         }
-        
-        // 3. Notifikasi ke admin
-        const adminMessage = formatOrderNotification({
-            orderId: transId,
-            userPhone: currentUser.phone,
-            items: cart,
-            subtotal: subtotal,
-            delivery: transaction.delivery,
-            timestamp: Date.now()
-        }, 'admin');
-        
-        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'order_admin');
-        
-        // Reset cart dan delivery
-        cart = [];
-        deliveryEnabled = false;
-        userLocation = null;
-        manualAddress = "";
-        
-        const deliveryCheckbox = document.getElementById('delivery-checkbox');
-        const deliveryOptions = document.getElementById('delivery-options');
-        const cartPanel = document.getElementById('cart-panel');
-        
-        if (deliveryCheckbox) deliveryCheckbox.checked = false;
-        if (deliveryOptions) deliveryOptions.classList.add('hidden');
-        if (cartPanel) cartPanel.classList.add('hidden');
-        
-        updateCartDisplay();
-        refreshSaldo();
-        
-        showNotification('✅ Pesanan berhasil! Notifikasi sudah dikirim ke merchant.', 'success');
-        logDebug('✅ Checkout completed with Fonnte notifications');
-        
-    } catch (error) {
-        console.error('Checkout error:', error);
-        showNotification('Error: ' + error.message, 'error');
-        
-        const errorMessage = `⚠️ *ERROR CHECKOUT*\n\nUser: ${currentUser.phone}\nError: ${error.message}\nTime: ${formatDate(Date.now())}`;
-        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, errorMessage, 'error');
     }
-}
 
     // ===========================================
     // ORDERS FUNCTIONS
@@ -3115,133 +3188,61 @@ async function checkout() {
         ordersListFull.innerHTML = html;
     }
 
-    // ===========================================
-// FUNGSI KONFIRMASI PESANAN - VERSI FIX
-// ===========================================
-async function confirmOrderReceived(orderId) {
-    const order = userOrders.find(o => o.id === orderId);
-    if (!order) { 
-        showNotification('Order tidak ditemukan!', 'error'); 
-        return; 
-    }
-    if (order.status !== 'dikirim') { 
-        showNotification('Pesanan belum dikirim!', 'error'); 
-        return; 
-    }
-    
-    showNotification('Memproses konfirmasi...', 'info');
-    
-    const updates = {};
-    updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
-    updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
-    
-    // Kumpulkan informasi merchant yang akan menerima saldo
-    const affectedMerchants = [];
-    
-    order.items.forEach(item => {
-        const merchantId = item.merchant_id;
-        const itemTotal = item.price * item.quantity;
-        updates[`/merchants/${merchantId}/saldo`] = firebase.database.ServerValue.increment(itemTotal);
-        updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
-        updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
-        
-        // Cek apakah merchant sudah masuk daftar
-        const existingMerchant = affectedMerchants.find(m => m.id === merchantId);
-        if (existingMerchant) {
-            existingMerchant.amount += itemTotal;
-        } else {
-            affectedMerchants.push({
-                id: merchantId,
-                name: item.merchant_name,
-                amount: itemTotal
-            });
+    async function confirmOrderReceived(orderId) {
+        const order = userOrders.find(o => o.id === orderId);
+        if (!order) { 
+            showNotification('Order tidak ditemukan!', 'error'); 
+            return; 
         }
-    });
-    
-    updates[`/confirmations/${orderId}`] = { 
-        user_id: currentUser.phone, 
-        order_id: orderId, 
-        timestamp: Date.now(), 
-        items: order.items, 
-        total: order.total 
-    };
-    
-    try {
-        await db.ref().update(updates);
+        if (order.status !== 'dikirim') { 
+            showNotification('Pesanan belum dikirim!', 'error'); 
+            return; 
+        }
         
-        showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
-        order.status = 'selesai';
+        showNotification('Memproses konfirmasi...', 'info');
         
-        // ===========================================
-        // KIRIM NOTIFIKASI VIA FONNTE KE MERCHANT
-        // ===========================================
+        const updates = {};
+        updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
+        updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
         
-        for (const merchant of affectedMerchants) {
-            // Ambil nomor merchant dari database
-            const merchantSnapshot = await db.ref(`/merchants/${merchant.id}`).once('value');
-            const merchantData = merchantSnapshot.val();
-            let merchantPhone = merchantData?.phone;
+        const affectedMerchants = [];
+        
+        order.items.forEach(item => {
+            const merchantId = item.merchant_id;
+            const itemTotal = item.price * item.quantity;
+            updates[`/merchants/${merchantId}/saldo`] = firebase.database.ServerValue.increment(itemTotal);
+            updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
+            updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
             
-            if (merchantPhone) {
-                // Format nomor menggunakan fungsi yang sudah ada
-                let cleanPhone = merchantPhone.toString().replace(/[^0-9]/g, '');
-                
-                // Format ke 62xxx
-                if (cleanPhone.startsWith('0')) {
-                    cleanPhone = '62' + cleanPhone.substring(1);
-                } else if (cleanPhone.startsWith('8') && !cleanPhone.startsWith('62')) {
-                    cleanPhone = '62' + cleanPhone;
-                } else if (cleanPhone.startsWith('+62')) {
-                    cleanPhone = '62' + cleanPhone.substring(3);
-                }
-                
-                // Validasi panjang nomor
-                if (cleanPhone.length >= 10 && cleanPhone.length <= 15) {
-                    const message = `✅ *KONFIRMASI PESANAN DITERIMA*\n\n` +
-                        `Halo *${merchant.name || merchantData?.nama_toko || 'Merchant'}*!\n\n` +
-                        `Pesanan #${orderId.slice(-8)} telah dikonfirmasi diterima oleh pembeli.\n\n` +
-                        `💰 *Saldo masuk: ${formatRupiah(merchant.amount)}*\n` +
-                        `📅 Tanggal: ${formatDate(Date.now())}\n\n` +
-                        `Saldo merchant Anda telah otomatis bertambah.\n\n` +
-                        `Terima kasih telah berjualan di RE-COIN! 🎉\n\n` +
-                        `🌱 #RECOIN #HijaukanBumi`;
-                    
-                    await sendFonnteNotification(cleanPhone, message, 'order_confirmation');
-                    console.log(`✅ Confirmation sent to ${merchant.name} (${cleanPhone})`);
-                } else {
-                    console.log(`⚠️ Invalid phone number format for ${merchant.name}: ${cleanPhone}`);
-                }
+            const existingMerchant = affectedMerchants.find(m => m.id === merchantId);
+            if (existingMerchant) {
+                existingMerchant.amount += itemTotal;
             } else {
-                console.log(`⚠️ No phone number for merchant ${merchant.id}`);
+                affectedMerchants.push({
+                    id: merchantId,
+                    name: item.merchant_name,
+                    amount: itemTotal
+                });
             }
+        });
+        
+        updates[`/confirmations/${orderId}`] = { 
+            user_id: currentUser.phone, 
+            order_id: orderId, 
+            timestamp: Date.now(), 
+            items: order.items, 
+            total: order.total 
+        };
+        
+        try {
+            await db.ref().update(updates);
+            showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
+            order.status = 'selesai';
+        } catch (error) { 
+            console.error('Confirmation error:', error);
+            showNotification('Gagal konfirmasi: ' + error.message, 'error');
         }
-        
-        // Kirim notifikasi ke admin
-        const adminMessage = `📊 *KONFIRMASI PESANAN*\n\n` +
-            `Order ID: #${orderId.slice(-8)}\n` +
-            `Customer: ${currentUser.phone}\n` +
-            `Total: ${formatRupiah(order.total)}\n` +
-            `Merchants: ${affectedMerchants.length} merchant\n` +
-            `Total Saldo Masuk: ${formatRupiah(affectedMerchants.reduce((s, m) => s + m.amount, 0))}\n` +
-            `Waktu: ${formatDate(Date.now())}\n\n` +
-            `✅ Pesanan telah selesai dan saldo merchant sudah ditambahkan.`;
-        
-        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'admin_confirmation');
-        
-    } catch (error) { 
-        console.error('Confirmation error:', error);
-        showNotification('Gagal konfirmasi: ' + error.message, 'error');
-        
-        // Kirim notifikasi error ke admin
-        const errorMessage = `⚠️ *ERROR KONFIRMASI PESANAN*\n\n` +
-            `Order ID: #${orderId.slice(-8)}\n` +
-            `User: ${currentUser.phone}\n` +
-            `Error: ${error.message}\n` +
-            `Time: ${formatDate(Date.now())}`;
-        
-        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, errorMessage, 'error');
     }
-}
 
     function showOrderDetail(orderId) {
         const order = userOrders.find(o => o.id === orderId);
@@ -3414,23 +3415,17 @@ async function confirmOrderReceived(orderId) {
     // ===========================================
     function debugDatabase() {
         const emisi = hitungEmisiTerselamatkan(currentUser.botol);
+        const totalDonasi = userDonations.reduce((s, d) => s + d.amount, 0);
         let msg = `👤 User: ${currentUser.phone}\n`;
         msg += `💰 Saldo: ${formatRupiah(currentUser.botol * HARGA_PER_BOTOL)}\n`;
+        msg += `🤲 Total Sedekah: ${formatRupiah(totalDonasi)}\n`;
         msg += `🌱 Emisi Terselamatkan: ${emisi.kg.toFixed(1)} kg CO₂e\n`;
         msg += `🌳 Setara Menanam: ${emisi.setaraPohon.toFixed(1)} pohon\n`;
         msg += `🏪 Merchant: ${merchants.length}\n`;
         msg += `📦 Produk: ${products.length}\n`;
         msg += `📝 Pesanan: ${userOrders.length}\n`;
-        msg += `🆕 Produk Baru: ${newProductsSet.size}\n`;
         msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
-        msg += `🎫 Session Token: ${machineSessionToken ? machineSessionToken.substr(0,20)+'...' : 'TIDAK ADA'}\n\n`;
-        msg += `🛒 Keranjang: ${cart.length} item\n`;
-        merchants.forEach(m => {
-            const jml = products.filter(p => p.merchant_id === m.id).length;
-            msg += `\n${m.nama_toko || m.id}: ${jml} produk`;
-        });
         alert(msg);
-        logDebug('Debug info:', { currentUser, merchants, products, userOrders, cart, newProductsSet, machineSessionToken });
     }
 
     // ===========================================
@@ -3449,8 +3444,8 @@ async function confirmOrderReceived(orderId) {
         if (!checkAutoLogin()) {
             showLoginPage();
         }
-        console.log('🔥 RE-COIN App siap dengan Fonnte Integration!');
+        console.log('🔥 RE-COIN App siap dengan Fitur Sedekah 8 Asnaf!');
     };
-</script>
+    </script>
 </body>
 </html>
