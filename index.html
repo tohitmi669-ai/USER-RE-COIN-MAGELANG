@@ -1898,74 +1898,79 @@
     }
     
     async function processSedekah() {
-        if (!selectedAsnaf) {
-            showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
-            return;
-        }
+    async function processSedekah() {
+    if (!selectedAsnaf) {
+        showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
+        return;
+    }
+    
+    let amount = selectedAmount;
+    const customAmount = parseInt(document.getElementById('custom-amount').value);
+    if (customAmount && customAmount > 0) {
+        amount = customAmount;
+    }
+    
+    if (!amount || amount < 1000) {
+        showNotification('Minimal sedekah Rp 1.000', 'error');
+        return;
+    }
+    
+    const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
+    if (amount > saldoRupiah) {
+        showNotification('Saldo tidak cukup!', 'error');
+        return;
+    }
+    
+    const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
+    
+    showNotification('Memproses sedekah...', 'info');
+    
+    const donationId = 'DON' + Date.now();
+    const donationData = {
+        asnaf: selectedAsnaf,
+        amount: amount,
+        botol: botolTerpakai,
+        timestamp: Date.now(),
+        doa: ASNAF_LIST.find(a => a.id === selectedAsnaf).doa,
+        status: 'completed'
+    };
+    
+    const updates = {};
+    updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - botolTerpakai;
+    updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
+    
+    try {
+        await db.ref().update(updates);
         
-        let amount = selectedAmount;
-        const customAmount = parseInt(document.getElementById('custom-amount').value);
-        if (customAmount && customAmount > 0) {
-            amount = customAmount;
-        }
+        // ❌ HAPUS BARIS INI! Jangan potong lagi di local!
+        // currentUser.botol -= botolTerpakai;  // <--- INI YANG HARUS DIHAPUS
         
-        if (!amount || amount < 1000) {
-            showNotification('Minimal sedekah Rp 1.000', 'error');
-            return;
-        }
+        // ✅ Cukup refresh saldo dari database (listener akan update otomatis)
+        refreshSaldo();
+        updateEcoDisplay();
         
-        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
-        if (amount > saldoRupiah) {
-            showNotification('Saldo tidak cukup!', 'error');
-            return;
-        }
+        // Animasi (tanpa mengurangi saldo lagi)
+        showCoinPopup(botolTerpakai, amount, hitungEmisiTerselamatkan(botolTerpakai));
         
-        const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
+        const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
+        showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! Semoga menjadi amal jariyah. 🤲`, 'success');
         
-        showNotification('Memproses sedekah...', 'info');
+        // Kirim notifikasi ke admin via Fonnte
+        const adminMessage = formatSedekahNotification(selectedAsnaf, amount, currentUser.phone);
+        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'sedekah');
         
-        const donationId = 'DON' + Date.now();
-        const donationData = {
-            asnaf: selectedAsnaf,
-            amount: amount,
-            botol: botolTerpakai,
-            timestamp: Date.now(),
-            doa: ASNAF_LIST.find(a => a.id === selectedAsnaf).doa,
-            status: 'completed'
-        };
+        closeSedekahModal();
+        selectedAsnaf = null;
+        selectedAmount = null;
         
-        const updates = {};
-        updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - botolTerpakai;
-        updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
+        // Refresh total donasi user
+        loadUserDonations();
         
-        try {
-            await db.ref().update(updates);
-            
-            currentUser.botol -= botolTerpakai;
-            updateSaldoDisplay();
-            updateEcoDisplay();
-            
-            // Animasi
-            showCoinPopup(botolTerpakai, amount, hitungEmisiTerselamatkan(botolTerpakai));
-            
-            const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
-            showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! Semoga menjadi amal jariyah. 🤲`, 'success');
-            
-            // Kirim notifikasi ke admin via Fonnte
-            const adminMessage = formatSedekahNotification(selectedAsnaf, amount, currentUser.phone);
-            await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'sedekah');
-            
-            closeSedekahModal();
-            selectedAsnaf = null;
-            selectedAmount = null;
-            
-            // Refresh total donasi user
-            loadUserDonations();
-            
-        } catch (error) {
-            console.error('Sedekah error:', error);
-            showNotification('Gagal memproses sedekah: ' + error.message, 'error');
-        }
+    } catch (error) {
+        console.error('Sedekah error:', error);
+        showNotification('Gagal memproses sedekah: ' + error.message, 'error');
+    }
+}
     }
     
     function loadUserDonations() {
