@@ -1898,7 +1898,6 @@
     }
     
     async function processSedekah() {
-    async function processSedekah() {
     if (!selectedAsnaf) {
         showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
         return;
@@ -1923,6 +1922,13 @@
     
     const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
     
+    // Disable tombol sementara
+    const btnSubmit = document.getElementById('btn-sedekah-submit');
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    }
+    
     showNotification('Memproses sedekah...', 'info');
     
     const donationId = 'DON' + Date.now();
@@ -1935,29 +1941,35 @@
         status: 'completed'
     };
     
+    const newBotolValue = currentUser.botol - botolTerpakai;
+    
     const updates = {};
-    updates[`/accounts/${currentUser.phone}/botol`] = currentUser.botol - botolTerpakai;
+    updates[`/accounts/${currentUser.phone}/botol`] = newBotolValue;
     updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
     
     try {
         await db.ref().update(updates);
         
-        // ❌ HAPUS BARIS INI! Jangan potong lagi di local!
-        // currentUser.botol -= botolTerpakai;  // <--- INI YANG HARUS DIHAPUS
+        // Update local variable (HANYA SEKALI, tidak double)
+        currentUser.botol = newBotolValue;
         
-        // ✅ Cukup refresh saldo dari database (listener akan update otomatis)
-        refreshSaldo();
+        // Update tampilan
+        updateSaldoDisplay();
         updateEcoDisplay();
         
-        // Animasi (tanpa mengurangi saldo lagi)
+        // Animasi
         showCoinPopup(botolTerpakai, amount, hitungEmisiTerselamatkan(botolTerpakai));
         
         const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
         showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! Semoga menjadi amal jariyah. 🤲`, 'success');
         
-        // Kirim notifikasi ke admin via Fonnte
-        const adminMessage = formatSedekahNotification(selectedAsnaf, amount, currentUser.phone);
-        await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'sedekah');
+        // Kirim notifikasi ke admin via Fonnte (opsional, jangan biarkan mengganggu)
+        try {
+            const adminMessage = formatSedekahNotification(selectedAsnaf, amount, currentUser.phone);
+            await sendFonnteNotification(FONNTE_CONFIG.DEFAULT_TARGET, adminMessage, 'sedekah');
+        } catch(e) {
+            console.log('Notifikasi gagal:', e);
+        }
         
         closeSedekahModal();
         selectedAsnaf = null;
@@ -1969,9 +1981,14 @@
     } catch (error) {
         console.error('Sedekah error:', error);
         showNotification('Gagal memproses sedekah: ' + error.message, 'error');
+    } finally {
+        // Enable tombol kembali
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fas fa-hand-holding-heart"></i> SALURKAN SEDEKAH';
+        }
     }
 }
-    }
     
     function loadUserDonations() {
         db.ref(`/donations/${currentUser.phone}`).once('value', (snap) => {
