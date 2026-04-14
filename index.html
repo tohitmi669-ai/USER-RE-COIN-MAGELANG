@@ -41,14 +41,6 @@
             --success: #27ae60;
             --gray: #95a5a6;
             --sedekah: #6c5ce7;
-            --fakir: #636e72;
-            --miskin: #e84393;
-            --amil: #6c5ce7;
-            --muallaf: #00cec9;
-            --riqab: #d63031;
-            --gharim: #fdcb6e;
-            --fisabilillah: #00b894;
-            --ibnusabil: #0984e3;
             --eco: #2ecc71;
         }
         
@@ -333,8 +325,17 @@
             text-align: center;
         }
         
+        .notification.botol-masuk {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            font-size: 16px;
+        }
+        
         .notification.error {
             border-color: var(--danger);
+            background: #fff5f5;
+            color: var(--danger);
         }
         
         @keyframes slideDown {
@@ -1333,11 +1334,36 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .sound-toggle input {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sound-toggle label {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="notification"></div>
     <div id="product-toast" class="product-update-toast hidden"></div>
+
+    <!-- Audio untuk notifikasi -->
+    <audio id="notification-sound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -1379,6 +1405,12 @@
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
             <div class="user-badge" id="user-display"></div>
             <span id="mode-badge-dashboard" class="mode-badge"></span>
+        </div>
+        
+        <div class="sound-toggle">
+            <i class="fas fa-volume-up"></i>
+            <input type="checkbox" id="sound-enabled" checked>
+            <label for="sound-enabled">Suara Notifikasi</label>
         </div>
         
         <div id="machine-info-dashboard" class="machine-info hidden">
@@ -1737,7 +1769,7 @@
     let lastProductCount = 0;
     let newProductsSet = new Set();
 
-    let lastSaldo = 0;
+    let lastBotolValue = 0;
     let saldoListenerActive = false;
 
     let userLocation = null;
@@ -1753,8 +1785,88 @@
 
     const DEBUG = true;
 
+    // Audio notifikasi
+    let notificationAudio = null;
+    let soundEnabled = true;
+
     // ===========================================
-    // FONNTE NOTIFICATION FUNCTIONS
+    // FUNGSI SUARA NOTIFIKASI
+    // ===========================================
+    function initAudio() {
+        notificationAudio = document.getElementById('notification-sound');
+        if (notificationAudio) {
+            notificationAudio.volume = 0.7;
+            // Load audio
+            notificationAudio.load();
+        }
+        
+        // Cek preference sound dari localStorage
+        const savedSoundPref = localStorage.getItem('recoin_sound_enabled');
+        if (savedSoundPref !== null) {
+            soundEnabled = savedSoundPref === 'true';
+            const soundCheckbox = document.getElementById('sound-enabled');
+            if (soundCheckbox) soundCheckbox.checked = soundEnabled;
+        }
+        
+        // Event listener untuk toggle sound
+        const soundCheckbox = document.getElementById('sound-enabled');
+        if (soundCheckbox) {
+            soundCheckbox.addEventListener('change', function(e) {
+                soundEnabled = e.target.checked;
+                localStorage.setItem('recoin_sound_enabled', soundEnabled);
+                if (soundEnabled) {
+                    playNotificationSound(); // Test sound
+                }
+            });
+        }
+    }
+    
+    function playNotificationSound() {
+        if (!soundEnabled) return;
+        
+        if (notificationAudio) {
+            notificationAudio.currentTime = 0;
+            notificationAudio.play().catch(e => {
+                console.log('Audio play failed:', e);
+                // Fallback: try to create a beep using Web Audio API
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.value = 0.3;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    audioCtx.resume();
+                } catch (err) {
+                    console.log('Web Audio fallback failed:', err);
+                }
+            });
+        } else {
+            // Fallback beep menggunakan Web Audio API
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.3;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                oscillator.stop(audioCtx.currentTime + 0.5);
+                audioCtx.resume();
+            } catch (err) {
+                console.log('Web Audio fallback failed:', err);
+            }
+        }
+    }
+
+    // ===========================================
+    // FUNGSI FONNTE NOTIFICATION
     // ===========================================
     async function sendFonnteNotification(target, message, type = 'order') {
         if (!target || target.length < 10) {
@@ -1828,11 +1940,6 @@
             `🚚 *Pengiriman:*\n` +
             `${deliveryText}\n\n` +
             `📌 *Status: Sedang Diproses*\n\n` +
-            `💡 *Petunjuk:*\n` +
-            `1. Segera siapkan pesanan\n` +
-            `2. Hubungi pembeli jika perlu konfirmasi\n` +
-            `3. Update status pesanan di aplikasi masuk aplikasi klik link https://tohitmi669-ai.github.io/MERCHANT-RECOIN/\n\n` +
-              
             `💚 Terima kasih telah berjualan di RE-COIN!\n` +
             `🌱 #RECOIN #UMKM #PesananBaru`;
         
@@ -1964,6 +2071,7 @@
             await db.ref().update(updates);
             
             currentUser.botol = newBotolValue;
+            lastBotolValue = newBotolValue;
             
             updateSaldoDisplay();
             updateEcoDisplay();
@@ -2117,9 +2225,11 @@
         const notif = document.createElement('div');
         notif.className = 'notification';
         if (type === 'error') {
-            notif.style.borderColor = '#ff7675';
-        } else if (type === 'info') {
-            notif.style.borderColor = '#0984e3';
+            notif.classList.add('error');
+        } else if (type === 'botol') {
+            notif.classList.add('botol-masuk');
+            // Play sound for botol masuk notification
+            playNotificationSound();
         }
         notif.innerHTML = message;
         
@@ -2129,7 +2239,7 @@
         setTimeout(() => {
             notif.style.animation = 'slideUp 0.3s ease';
             setTimeout(() => notif.remove(), 300);
-        }, 3000);
+        }, 4000);
     }
 
     function formatDate(timestamp) {
@@ -2232,7 +2342,7 @@
         const deliveryInfo = document.getElementById('delivery-info');
         const manualInput = document.getElementById('manual-address-input');
         
-        if (deliveryAddress) deliveryAddress.innerHTML = `<strong>${address}</strong>`;
+        if (deliveryAddress) deliveryAddress.innerHTML = `<strong>${escapeHtml(address)}</strong>`;
         if (mapsLink) {
             mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
             mapsLink.classList.remove('hidden');
@@ -2371,6 +2481,7 @@
         db.ref('/accounts/' + session.phone).once('value', (snap) => {
             if (snap.exists()) {
                 currentUser.botol = snap.val().botol || 0;
+                lastBotolValue = currentUser.botol;
                 completeLogin();
             } else {
                 clearUserSession();
@@ -2381,7 +2492,7 @@
     }
 
     // ===========================================
-    // SALDO REAL-TIME
+    // SALDO REAL-TIME DENGAN NOTIFIKASI SUARA
     // ===========================================
     function startSaldoListener() {
         if (!currentUser.phone || saldoListenerActive) return;
@@ -2391,7 +2502,7 @@
         }
         logDebug('Memulai listener saldo real-time...');
         saldoListenerActive = true;
-        lastSaldo = currentUser.botol;
+        lastBotolValue = currentUser.botol;
         
         if (saldoListenerRef) saldoListenerRef.off();
         saldoListenerRef = db.ref('/accounts/' + currentUser.phone + '/botol');
@@ -2415,6 +2526,7 @@
         return new Promise((resolve) => {
             db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
                 currentUser.botol = snap.val() || 0;
+                lastBotolValue = currentUser.botol;
                 updateSaldoDisplay();
                 resolve();
             });
@@ -2422,32 +2534,86 @@
     }
 
     function processSaldoUpdate(newSaldo) {
-        const oldSaldo = lastSaldo;
+        const oldSaldo = lastBotolValue;
         logDebug('Saldo berubah:', { old: oldSaldo, new: newSaldo });
-        lastSaldo = newSaldo;
-        currentUser.botol = newSaldo;
-        updateSaldoDisplay();
-        updateEcoDisplay();
         
         if (newSaldo > oldSaldo) {
             const tambahBotol = newSaldo - oldSaldo;
             const tambahRupiah = tambahBotol * HARGA_PER_BOTOL;
             const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
-            logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
             
-            const btnTarik = document.getElementById('btn-tarik');
-            if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
+            // ANIMASI Koin
+            showCoinAnimation();
+            
+            // ANIMASI angka naik
+            const botolElement = document.getElementById('count');
+            const rupiahElement = document.getElementById('rupiah');
+            if (botolElement) botolElement.classList.add('increase');
+            if (rupiahElement) rupiahElement.classList.add('increase');
+            setTimeout(() => {
+                if (botolElement) botolElement.classList.remove('increase');
+                if (rupiahElement) rupiahElement.classList.remove('increase');
+            }, 500);
+            
+            // NOTIFIKASI BOTOL MASUK DENGAN SUARA
+            let pesanNotif = '';
+            if (tambahBotol === 1) {
+                pesanNotif = `🎉 +1 BOTOL MASUK! 🪙\nSaldo Anda bertambah ${formatRupiah(tambahRupiah)}\n🌱 Mengurangi ${emisiBaru.kg.toFixed(1)} kg CO₂e!`;
+            } else {
+                pesanNotif = `🎉 +${tambahBotol} BOTOL MASUK! 🪙\nSaldo Anda bertambah ${formatRupiah(tambahRupiah)}\n🌱 Mengurangi ${emisiBaru.kg.toFixed(1)} kg CO₂e!`;
+            }
+            showNotification(pesanNotif, 'botol');
+            
+            logDebug(`✅ BOTOL MASUK: +${tambahBotol} botol, +${formatRupiah(tambahRupiah)}`);
         }
+        
+        lastBotolValue = newSaldo;
+        currentUser.botol = newSaldo;
+        updateSaldoDisplay();
+        updateEcoDisplay();
         updateLastActivity();
+    }
+
+    function showCoinAnimation() {
+        const coinPop = document.createElement('div');
+        coinPop.className = 'coin-pop';
+        coinPop.innerHTML = '🪙✨';
+        document.body.appendChild(coinPop);
+        
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const coin = document.createElement('div');
+                coin.className = 'coin-animation';
+                coin.innerHTML = '🪙';
+                coin.style.left = Math.random() * window.innerWidth + 'px';
+                document.body.appendChild(coin);
+                setTimeout(() => coin.remove(), 1500);
+            }, i * 100);
+        }
+        
+        setTimeout(() => coinPop.remove(), 600);
     }
 
     function updateSaldoDisplay() {
         const countEl = document.getElementById('count');
         const rupiahEl = document.getElementById('rupiah');
         const modalSaldo = document.getElementById('modal-saldo');
+        const btnTarik = document.getElementById('btn-tarik');
+        
         if (countEl) countEl.innerText = currentUser.botol;
         if (rupiahEl) rupiahEl.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
         if (modalSaldo) modalSaldo.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
+        if (btnTarik) btnTarik.disabled = (currentUser.botol * HARGA_PER_BOTOL) < 5000;
+    }
+    
+    function refreshSaldo() {
+        if (!currentUser.phone) return;
+        db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
+            currentUser.botol = snap.val() || 0;
+            lastBotolValue = currentUser.botol;
+            updateSaldoDisplay();
+            showNotification('Saldo diperbarui!', 'success');
+        });
     }
 
     // ===========================================
@@ -2457,19 +2623,38 @@
         const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
         const password = document.getElementById('pass-input').value;
         const mode = getModeFromUrl();
+        
         if (phone.length < 10 || password.length < 4) {
-            showNotification('HP 10 digit, password 4 karakter', 'error');
+            showNotification('HP minimal 10 digit, password minimal 4 karakter', 'error');
             return;
         }
-        currentUser = { ...currentUser, phone, rememberMe: document.getElementById('remember-me').checked, 
-            loginSource: mode.loginSource, machine: mode.machineId, isMachineMode: mode.mode === 'machine' };
+        
+        currentUser = { 
+            ...currentUser, 
+            phone, 
+            rememberMe: document.getElementById('remember-me').checked, 
+            loginSource: mode.loginSource, 
+            machine: mode.machineId, 
+            isMachineMode: mode.mode === 'machine' 
+        };
+        
         db.ref('/accounts/' + phone).once('value', (snap) => {
             if (snap.exists()) {
-                if (snap.val().password === password) loginSuccess();
-                else showNotification('Password salah!', 'error');
+                if (snap.val().password === password) {
+                    currentUser.botol = snap.val().botol || 0;
+                    lastBotolValue = currentUser.botol;
+                    loginSuccess();
+                } else {
+                    showNotification('Password salah!', 'error');
+                }
             } else {
                 db.ref('/accounts/' + phone).set({ password, botol: 0, created_at: Date.now() })
-                    .then(() => { showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success'); loginSuccess(); })
+                    .then(() => { 
+                        currentUser.botol = 0;
+                        lastBotolValue = 0;
+                        showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success'); 
+                        loginSuccess(); 
+                    })
                     .catch(() => showNotification('Gagal buat akun', 'error'));
             }
         });
@@ -2559,12 +2744,14 @@
         startProductListener();
         startSaldoListener();
         loadUserDonations();
+        initAudio();
     }
 
     function loginSuccess() {
         db.ref('/accounts/' + currentUser.phone).once('value', (snap) => {
             if (snap.exists()) {
                 currentUser.botol = snap.val().botol || 0;
+                lastBotolValue = currentUser.botol;
                 completeLogin();
             } else {
                 showNotification('Error: Data user tidak ditemukan', 'error');
@@ -2590,101 +2777,6 @@
             displayAllOrders();
             logDebug('Orders updated:', userOrders.length);
         });
-    }
-
-    // ===========================================
-    // REFRESH FUNCTIONS
-    // ===========================================
-    function refreshSaldo() {
-        if (currentUser.isMachineMode && currentUser.machine) {
-            if (!machineSessionToken) {
-                showNotification('Sesi mesin tidak valid!', 'error');
-                currentUser.isMachineMode = false;
-                const machineInfo = document.getElementById('machine-info-dashboard');
-                const modeBadge = document.getElementById('mode-badge-dashboard');
-                if (machineInfo) machineInfo.classList.add('hidden');
-                if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                return;
-            }
-            db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (snap) => {
-                const currentToken = snap.val();
-                if (currentToken !== machineSessionToken) {
-                    showNotification('Sesi mesin telah berubah!', 'error');
-                    currentUser.isMachineMode = false;
-                    machineSessionToken = null;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    return;
-                }
-                doRefreshSaldo();
-            });
-        } else {
-            doRefreshSaldo();
-        }
-    }
-
-    function doRefreshSaldo() {
-        db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
-            const newVal = snap.val() || 0;
-            if (newVal !== currentUser.botol) {
-                currentUser.botol = newVal;
-                showNotification('Saldo diperbarui!', 'success');
-            }
-            currentUser.botol = newVal;
-            const countEl = document.getElementById('count');
-            const rupiahEl = document.getElementById('rupiah');
-            const modalSaldo = document.getElementById('modal-saldo');
-            const btnTarik = document.getElementById('btn-tarik');
-            if (countEl) countEl.innerText = newVal;
-            if (rupiahEl) rupiahEl.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-            if (modalSaldo) modalSaldo.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-            if (btnTarik) btnTarik.disabled = newVal * HARGA_PER_BOTOL < 5000;
-            updateEcoDisplay();
-            updateLastActivity();
-        });
-    }
-
-    function logout() {
-        if (productsListenerRef) productsListenerRef.off();
-        if (merchantsListenerRef) merchantsListenerRef.off();
-        if (saldoListenerRef) saldoListenerRef.off();
-        if (ordersListenerRef) ordersListenerRef.off();
-        if (donationsListenerRef) donationsListenerRef.off();
-        
-        if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
-        if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
-        if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
-            db.ref('/' + currentUser.machine + '/active_user').remove();
-        }
-        clearUserSession();
-        showLoginPage();
-        currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
-        cart = [];
-        deliveryEnabled = false;
-        newProductsSet.clear();
-        saldoListenerActive = false;
-        machineSessionToken = null;
-        machineSessionExpiry = null;
-        merchantPopupShown = false;
-    }
-
-    function showLoginPage() {
-        const loginPage = document.getElementById('login-page');
-        const dashboardPage = document.getElementById('dashboard-page');
-        const shopPage = document.getElementById('shop-page');
-        const ordersPage = document.getElementById('orders-page');
-        const orderDetailPage = document.getElementById('order-detail-page');
-        const phoneInput = document.getElementById('phone-input');
-        const passInput = document.getElementById('pass-input');
-        if (loginPage) loginPage.classList.remove('hidden');
-        if (dashboardPage) dashboardPage.classList.add('hidden');
-        if (shopPage) shopPage.classList.add('hidden');
-        if (ordersPage) ordersPage.classList.add('hidden');
-        if (orderDetailPage) orderDetailPage.classList.add('hidden');
-        if (phoneInput) phoneInput.value = '';
-        if (passInput) passInput.value = '';
     }
 
     // ===========================================
@@ -2922,7 +3014,7 @@
     }
 
     // ===========================================
-    // CHECKOUT FUNCTION (dengan notifikasi ke merchant)
+    // CHECKOUT FUNCTION
     // ===========================================
     async function checkout() {
         if (!navigator.onLine) {
@@ -3045,10 +3137,9 @@
             
             showNotification('✅ Pesanan berhasil dibuat!', 'success');
             
-            // === KIRIM NOTIFIKASI WHATSAPP KE MERCHANT ===
+            // Kirim notifikasi ke merchant
             try {
                 let notifSentCount = 0;
-                let merchantsWithNoPhone = [];
                 
                 for (const [merchantId, orderData] of Object.entries(merchantOrdersMap)) {
                     const merchantSnapshot = await db.ref(`/merchants/${merchantId}/phone`).once('value');
@@ -3078,53 +3169,16 @@
                         
                         if (result.success) {
                             notifSentCount++;
-                            console.log(`✅ Notifikasi ke merchant ${merchantId} (${formattedPhone}) terkirim`);
-                            
-                            await db.ref(`/merchant_orders/${merchantId}/${transId}/notifikasi`).set({
-                                sent: true,
-                                phone: formattedPhone,
-                                timestamp: Date.now()
-                            });
-                        } else {
-                            console.log(`❌ Gagal kirim notifikasi ke merchant ${merchantId}:`, result.error);
-                            merchantsWithNoPhone.push({
-                                id: merchantId,
-                                name: orderData.merchant_name,
-                                phone: merchantPhone,
-                                error: result.error
-                            });
+                            console.log(`✅ Notifikasi ke merchant ${merchantId} terkirim`);
                         }
-                    } else {
-                        console.log(`⚠️ Merchant ${merchantId} tidak memiliki nomor phone yang valid`);
-                        merchantsWithNoPhone.push({
-                            id: merchantId,
-                            name: orderData.merchant_name,
-                            phone: merchantPhone || 'tidak tersedia',
-                            error: 'No HP tidak valid'
-                        });
-                        
-                        await db.ref(`/merchant_orders/${merchantId}/${transId}/notifikasi`).set({
-                            sent: false,
-                            reason: 'No WhatsApp tidak terdaftar',
-                            timestamp: Date.now()
-                        });
                     }
                 }
                 
                 if (notifSentCount > 0) {
                     showNotification(`✅ Pesanan berhasil! Notifikasi telah dikirim ke ${notifSentCount} merchant`, 'success');
-                } else {
-                    if (merchantsWithNoPhone.length > 0) {
-                        const merchantNames = merchantsWithNoPhone.map(m => m.name).join(', ');
-                        showNotification(`⚠️ Pesanan berhasil, tetapi merchant (${merchantNames}) belum mendaftarkan nomor WhatsApp`, 'info');
-                    } else {
-                        showNotification('✅ Pesanan berhasil dibuat!', 'success');
-                    }
                 }
-                
             } catch (notifError) {
                 console.error('Gagal mengirim notifikasi ke merchant:', notifError);
-                showNotification('⚠️ Pesanan berhasil, tetapi notifikasi ke merchant gagal dikirim', 'info');
             }
             
             cart = [];
@@ -3222,25 +3276,12 @@
         updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
         updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
         
-        const affectedMerchants = [];
-        
         order.items.forEach(item => {
             const merchantId = item.merchant_id;
             const itemTotal = item.price * item.quantity;
             updates[`/merchants/${merchantId}/saldo`] = firebase.database.ServerValue.increment(itemTotal);
             updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
             updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
-            
-            const existingMerchant = affectedMerchants.find(m => m.id === merchantId);
-            if (existingMerchant) {
-                existingMerchant.amount += itemTotal;
-            } else {
-                affectedMerchants.push({
-                    id: merchantId,
-                    name: item.merchant_name,
-                    amount: itemTotal
-                });
-            }
         });
         
         updates[`/confirmations/${orderId}`] = { 
@@ -3428,6 +3469,50 @@
     }
 
     // ===========================================
+    // LOGOUT
+    // ===========================================
+    function logout() {
+        if (productsListenerRef) productsListenerRef.off();
+        if (merchantsListenerRef) merchantsListenerRef.off();
+        if (saldoListenerRef) saldoListenerRef.off();
+        if (ordersListenerRef) ordersListenerRef.off();
+        if (donationsListenerRef) donationsListenerRef.off();
+        
+        if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+        if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
+        if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
+            db.ref('/' + currentUser.machine + '/active_user').remove();
+        }
+        clearUserSession();
+        showLoginPage();
+        currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
+        cart = [];
+        deliveryEnabled = false;
+        newProductsSet.clear();
+        saldoListenerActive = false;
+        machineSessionToken = null;
+        machineSessionExpiry = null;
+        merchantPopupShown = false;
+    }
+
+    function showLoginPage() {
+        const loginPage = document.getElementById('login-page');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const shopPage = document.getElementById('shop-page');
+        const ordersPage = document.getElementById('orders-page');
+        const orderDetailPage = document.getElementById('order-detail-page');
+        const phoneInput = document.getElementById('phone-input');
+        const passInput = document.getElementById('pass-input');
+        if (loginPage) loginPage.classList.remove('hidden');
+        if (dashboardPage) dashboardPage.classList.add('hidden');
+        if (shopPage) shopPage.classList.add('hidden');
+        if (ordersPage) ordersPage.classList.add('hidden');
+        if (orderDetailPage) orderDetailPage.classList.add('hidden');
+        if (phoneInput) phoneInput.value = '';
+        if (passInput) passInput.value = '';
+    }
+
+    // ===========================================
     // DEBUG
     // ===========================================
     function debugDatabase() {
@@ -3442,6 +3527,7 @@
         msg += `📦 Produk: ${products.length}\n`;
         msg += `📝 Pesanan: ${userOrders.length}\n`;
         msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
+        msg += `🔊 Suara Notifikasi: ${soundEnabled ? 'ON' : 'OFF'}\n`;
         alert(msg);
     }
 
@@ -3461,7 +3547,9 @@
         if (!checkAutoLogin()) {
             showLoginPage();
         }
-        console.log('🔥 RE-COIN App siap dengan Notifikasi WhatsApp ke Merchant!');
+        initAudio();
+        console.log('🔥 RE-COIN App siap dengan NOTIFIKASI BOTOL MASUK + SUARA!');
+        console.log('📢 Aplikasi akan menampilkan notifikasi dan suara saat ada penambahan botol di Firebase');
     };
     </script>
 </body>
