@@ -41,6 +41,14 @@
             --success: #27ae60;
             --gray: #95a5a6;
             --sedekah: #6c5ce7;
+            --fakir: #636e72;
+            --miskin: #e84393;
+            --amil: #6c5ce7;
+            --muallaf: #00cec9;
+            --riqab: #d63031;
+            --gharim: #fdcb6e;
+            --fisabilillah: #00b894;
+            --ibnusabil: #0984e3;
             --eco: #2ecc71;
         }
         
@@ -325,23 +333,8 @@
             text-align: center;
         }
         
-        .notification.botol-masuk {
-            background: linear-gradient(135deg, #00b894, #00cec9);
-            color: white;
-            border: none;
-            font-size: 16px;
-        }
-        
         .notification.error {
             border-color: var(--danger);
-            background: #fff5f5;
-            color: var(--danger);
-        }
-        
-        .notification.warning {
-            border-color: var(--warning);
-            background: #fff8e7;
-            color: var(--warning);
         }
         
         @keyframes slideDown {
@@ -1340,46 +1333,57 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        
-        .sound-toggle {
+
+        /* NOTIFIKASI POPUP BOTOL */
+        .botol-notif {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            padding: 16px 28px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10020;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #7f8c8d;
+            gap: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            font-family: monospace;
+            letter-spacing: 1px;
         }
         
-        .sound-toggle input {
-            width: auto;
-            margin: 0;
-            padding: 0;
+        .botol-notif.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
         }
         
-        .sound-toggle label {
-            cursor: pointer;
+        .botol-notif i {
+            font-size: 28px;
+            animation: shake 0.5s ease;
         }
         
-        .session-timer {
-            font-size: 11px;
-            color: var(--warning);
-            text-align: center;
-            margin-top: 5px;
-            padding: 4px;
-            background: #fff3cd;
-            border-radius: 8px;
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
         }
     </style>
 </head>
 <body>
     <div id="notification"></div>
     <div id="product-toast" class="product-update-toast hidden"></div>
-
-    <!-- Audio untuk notifikasi -->
-    <audio id="notification-sound" preload="auto">
-        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
-    </audio>
+    <!-- ELEMEN NOTIFIKASI BOTOL -->
+    <div id="botol-notif" class="botol-notif">
+        <i class="fas fa-recycle"></i>
+        <span id="botol-notif-text">+1 Botol!</span>
+    </div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page" class="card">
@@ -1423,16 +1427,9 @@
             <span id="mode-badge-dashboard" class="mode-badge"></span>
         </div>
         
-        <div class="sound-toggle">
-            <i class="fas fa-volume-up"></i>
-            <input type="checkbox" id="sound-enabled" checked>
-            <label for="sound-enabled">Suara Notifikasi</label>
-        </div>
-        
         <div id="machine-info-dashboard" class="machine-info hidden">
             <div>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></div>
             <div id="session-token-info" class="session-info hidden"></div>
-            <div id="session-timer" class="session-timer hidden"></div>
             <span id="source-info-dashboard" class="qr-badge hidden"></span>
         </div>
         
@@ -1774,7 +1771,6 @@
     const EMISI_PER_BOTOL = 60;
     const ADMIN_WA = "6289524538835";
     const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
-    const MACHINE_SESSION_DURATION = 3 * 60 * 1000; // 3 MENIT
 
     let cart = [];
     let merchants = [];
@@ -1787,7 +1783,7 @@
     let lastProductCount = 0;
     let newProductsSet = new Set();
 
-    let lastBotolValue = 0;
+    let lastSaldo = 0;
     let saldoListenerActive = false;
 
     let userLocation = null;
@@ -1795,7 +1791,6 @@
     let manualAddress = "";
 
     let autoLogoutTimer = null;
-    let sessionTimerInterval = null;
     let saldoListenerRef = null;
     let ordersListenerRef = null;
     let productsListenerRef = null;
@@ -1804,330 +1799,72 @@
 
     const DEBUG = true;
 
-    // Audio notifikasi
-    let notificationAudio = null;
-    let soundEnabled = true;
-
     // ===========================================
-    // FUNGSI SUARA NOTIFIKASI
+    // FUNGSI NOTIFIKASI BOTOL + SUARA LONCENG
     // ===========================================
-    function initAudio() {
-        notificationAudio = document.getElementById('notification-sound');
-        if (notificationAudio) {
-            notificationAudio.volume = 0.7;
-            notificationAudio.load();
-        }
-        
-        const savedSoundPref = localStorage.getItem('recoin_sound_enabled');
-        if (savedSoundPref !== null) {
-            soundEnabled = savedSoundPref === 'true';
-            const soundCheckbox = document.getElementById('sound-enabled');
-            if (soundCheckbox) soundCheckbox.checked = soundEnabled;
-        }
-        
-        const soundCheckbox = document.getElementById('sound-enabled');
-        if (soundCheckbox) {
-            soundCheckbox.addEventListener('change', function(e) {
-                soundEnabled = e.target.checked;
-                localStorage.setItem('recoin_sound_enabled', soundEnabled);
-                if (soundEnabled) {
-                    playNotificationSound();
-                }
-            });
-        }
-    }
+    let audioContext = null;
     
-    function playNotificationSound() {
-        if (!soundEnabled) return;
-        
-        if (notificationAudio) {
-            notificationAudio.currentTime = 0;
-            notificationAudio.play().catch(e => {
-                console.log('Audio play failed:', e);
-                try {
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                    oscillator.frequency.value = 880;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-                    oscillator.stop(audioCtx.currentTime + 0.5);
-                    audioCtx.resume();
-                } catch (err) {
-                    console.log('Web Audio fallback failed:', err);
-                }
-            });
-        } else {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 880;
-                gainNode.gain.value = 0.3;
-                oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-                oscillator.stop(audioCtx.currentTime + 0.5);
-                audioCtx.resume();
-            } catch (err) {
-                console.log('Web Audio fallback failed:', err);
-            }
-        }
-    }
-
-    // ===========================================
-    // FUNGSI FONNTE NOTIFICATION
-    // ===========================================
-    async function sendFonnteNotification(target, message, type = 'order') {
-        if (!target || target.length < 10) {
-            console.error('Invalid target number:', target);
-            return { success: false, error: 'Invalid target number' };
-        }
-        
-        const formattedNumber = target.replace(/[^0-9]/g, '');
-        
+    function playBellSound() {
         try {
-            const response = await fetch(`${FONNTE_CONFIG.BASE_URL}/send`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': FONNTE_CONFIG.API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    target: formattedNumber,
-                    message: message,
-                    delay: '2',
-                    countryCode: '62',
-                    type: 'text'
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.status === true) {
-                console.log(`✅ Fonnte notification sent to ${target}`);
-                return { success: true, data: result };
-            } else {
-                console.error('Fonnte API error:', result);
-                return { success: false, error: result.reason || 'Unknown error' };
+            // Gunakan Web Audio API untuk suara lonceng sederhana
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-        } catch (error) {
-            console.error('Failed to send Fonnte notification:', error);
-            return { success: false, error: error.message };
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 880; // Nada A5 (tinggi seperti lonceng)
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.8);
+            oscillator.stop(audioContext.currentTime + 0.8);
+            
+            // Resumes AudioContext jika suspended (karena kebijakan browser)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        } catch(e) {
+            console.log('Audio tidak dapat dimainkan:', e);
         }
     }
-
-    function formatMerchantOrderNotification(merchantOrder, merchantName, userPhone) {
-        const itemsList = merchantOrder.items.map(item => 
-            `  • ${item.name} x${item.quantity} = ${formatRupiah(item.price * item.quantity)}`
-        ).join('\n');
+    
+    function showBotolNotification(botolCount, addedAmount) {
+        const notifEl = document.getElementById('botol-notif');
+        const textSpan = document.getElementById('botol-notif-text');
         
-        let deliveryText = '';
-        if (merchantOrder.delivery) {
-            if (merchantOrder.delivery.type === 'gps') {
-                deliveryText = `📍 Lokasi GPS: ${merchantOrder.delivery.lat}, ${merchantOrder.delivery.lng}\n🔗 Maps: ${merchantOrder.delivery.maps_url}`;
-            } else if (merchantOrder.delivery.type === 'manual') {
-                deliveryText = `📍 Alamat: ${merchantOrder.delivery.address}\n🔗 Maps: ${merchantOrder.delivery.maps_url}`;
-            }
+        if (!notifEl || !textSpan) return;
+        
+        // Update teks notifikasi
+        if (addedAmount > 0) {
+            textSpan.innerHTML = `<i class="fas fa-plus-circle"></i> +${addedAmount} Botol! Total: ${botolCount} botol 🌟`;
         } else {
-            deliveryText = '🏪 Ambil di Toko (Pembeli akan datang ke toko)';
+            textSpan.innerHTML = `<i class="fas fa-recycle"></i> Total Botol: ${botolCount}`;
         }
         
-        const totalAmount = merchantOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // Tampilkan notifikasi
+        notifEl.classList.add('show');
         
-        const message = `🏪 *NOTIFIKASI PESANAN MASUK* 🏪\n\n` +
-            `Yth. *${merchantName}*,\n\n` +
-            `Ada pesanan baru untuk toko Anda!\n\n` +
-            `👤 *Detail Pemesan:*\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `📱 No HP: *${userPhone}*\n` +
-            `📅 Waktu: *${formatDate(merchantOrder.timestamp)}*\n\n` +
-            `📋 *Daftar Pesanan:*\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `${itemsList}\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `💰 *Total: ${formatRupiah(totalAmount)}*\n\n` +
-            `🚚 *Pengiriman:*\n` +
-            `${deliveryText}\n\n` +
-            `📌 *Status: Sedang Diproses*\n\n` +
-            `💚 Terima kasih telah berjualan di RE-COIN!\n` +
-            `🌱 #RECOIN #UMKM #PesananBaru`;
+        // Mainkan suara lonceng
+        playBellSound();
         
-        return message;
-    }
-
-    // ===========================================
-    // FUNGSI SEDEKAH
-    // ===========================================
-    function openSedekahModal() {
-        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
-        if (saldoRupiah < 1000) {
-            showNotification('Minimal saldo Rp 1.000 untuk bersedekah', 'error');
-            return;
+        // Sembunyikan setelah 2.5 detik
+        setTimeout(() => {
+            notifEl.classList.remove('show');
+        }, 2500);
+        
+        // Animasi tambahan pada angka botol
+        const botolElement = document.getElementById('count');
+        if (botolElement) {
+            botolElement.classList.add('increase');
+            setTimeout(() => {
+                botolElement.classList.remove('increase');
+            }, 500);
         }
-        
-        selectedAsnaf = null;
-        selectedAmount = null;
-        document.getElementById('custom-amount').value = '';
-        
-        const modalSaldo = document.getElementById('sedekah-modal-saldo');
-        if (modalSaldo) modalSaldo.innerText = formatRupiah(saldoRupiah);
-        
-        const asnafGrid = document.getElementById('asnaf-grid-modal');
-        if (asnafGrid) {
-            let html = '';
-            ASNAF_LIST.forEach(asnaf => {
-                html += `
-                    <div class="asnaf-option" onclick="selectAsnaf('${asnaf.id}')" id="asnaf-${asnaf.id}">
-                        <span class="asnaf-icon">${asnaf.icon}</span>
-                        <div class="asnaf-name">${asnaf.name}</div>
-                        <div class="asnaf-desc">${asnaf.desc.substring(0, 30)}...</div>
-                    </div>
-                `;
-            });
-            asnafGrid.innerHTML = html;
-        }
-        
-        document.getElementById('sedekah-modal-overlay').style.display = 'flex';
-    }
-    
-    function closeSedekahModal() {
-        document.getElementById('sedekah-modal-overlay').style.display = 'none';
-        selectedAsnaf = null;
-        selectedAmount = null;
-    }
-    
-    function selectAsnaf(asnafId) {
-        ASNAF_LIST.forEach(a => {
-            const el = document.getElementById(`asnaf-${a.id}`);
-            if (el) el.classList.remove('selected');
-        });
-        
-        const selectedEl = document.getElementById(`asnaf-${asnafId}`);
-        if (selectedEl) selectedEl.classList.add('selected');
-        
-        selectedAsnaf = asnafId;
-        
-        const asnaf = ASNAF_LIST.find(a => a.id === asnafId);
-        const doaText = document.getElementById('doa-text');
-        const doaSource = document.getElementById('doa-source');
-        if (doaText) doaText.innerText = `"${asnaf.doa}"`;
-        if (doaSource) doaSource.innerText = `📖 ${asnaf.source}`;
-    }
-    
-    function setSedekahAmount(amount) {
-        selectedAmount = amount;
-        document.getElementById('custom-amount').value = '';
-        
-        const amountBtns = document.querySelectorAll('.amount-btn');
-        amountBtns.forEach(btn => {
-            btn.style.background = '#f0f0f0';
-            btn.style.color = '#333';
-        });
-        event.target.style.background = '#00b894';
-        event.target.style.color = 'white';
-    }
-    
-    async function processSedekah() {
-        if (!selectedAsnaf) {
-            showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
-            return;
-        }
-        
-        let amount = selectedAmount;
-        const customAmount = parseInt(document.getElementById('custom-amount').value);
-        if (customAmount && customAmount > 0) {
-            amount = customAmount;
-        }
-        
-        if (!amount || amount < 1000) {
-            showNotification('Minimal sedekah Rp 1.000', 'error');
-            return;
-        }
-        
-        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
-        if (amount > saldoRupiah) {
-            showNotification('Saldo tidak cukup!', 'error');
-            return;
-        }
-        
-        const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
-        
-        const btnSubmit = document.getElementById('btn-sedekah-submit');
-        if (btnSubmit) {
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-        }
-        
-        showNotification('Memproses sedekah...', 'info');
-        
-        const donationId = 'DON' + Date.now();
-        const donationData = {
-            asnaf: selectedAsnaf,
-            amount: amount,
-            botol: botolTerpakai,
-            timestamp: Date.now(),
-            doa: ASNAF_LIST.find(a => a.id === selectedAsnaf).doa,
-            status: 'completed'
-        };
-        
-        const newBotolValue = currentUser.botol - botolTerpakai;
-        
-        const updates = {};
-        updates[`/accounts/${currentUser.phone}/botol`] = newBotolValue;
-        updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
-        
-        try {
-            await db.ref().update(updates);
-            
-            currentUser.botol = newBotolValue;
-            lastBotolValue = newBotolValue;
-            
-            updateSaldoDisplay();
-            updateEcoDisplay();
-            
-            const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
-            showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! 🤲`, 'success');
-            
-            closeSedekahModal();
-            selectedAsnaf = null;
-            selectedAmount = null;
-            
-            loadUserDonations();
-            
-            // Reset session timer jika dalam mode mesin
-            if (currentUser.isMachineMode && currentUser.machine) {
-                resetMachineSession();
-            }
-            
-        } catch (error) {
-            console.error('Sedekah error:', error);
-            showNotification('Gagal memproses sedekah: ' + error.message, 'error');
-        } finally {
-            if (btnSubmit) {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<i class="fas fa-hand-holding-heart"></i> SALURKAN SEDEKAH';
-            }
-        }
-    }
-    
-    function loadUserDonations() {
-        db.ref(`/donations/${currentUser.phone}`).once('value', (snap) => {
-            const donations = snap.val() || {};
-            userDonations = [];
-            let totalAmount = 0;
-            for (let id in donations) {
-                const don = donations[id];
-                userDonations.push({ id, ...don });
-                totalAmount += don.amount || 0;
-            }
-            const totalDonasiEl = document.getElementById('total-donasi-user');
-            if (totalDonasiEl) totalDonasiEl.innerText = formatRupiah(totalAmount);
-        });
     }
 
     // ===========================================
@@ -2244,12 +1981,9 @@
         const notif = document.createElement('div');
         notif.className = 'notification';
         if (type === 'error') {
-            notif.classList.add('error');
-        } else if (type === 'botol') {
-            notif.classList.add('botol-masuk');
-            playNotificationSound();
-        } else if (type === 'warning') {
-            notif.classList.add('warning');
+            notif.style.borderColor = '#ff7675';
+        } else if (type === 'info') {
+            notif.style.borderColor = '#0984e3';
         }
         notif.innerHTML = message;
         
@@ -2259,7 +1993,7 @@
         setTimeout(() => {
             notif.style.animation = 'slideUp 0.3s ease';
             setTimeout(() => notif.remove(), 300);
-        }, 4000);
+        }, 3000);
     }
 
     function formatDate(timestamp) {
@@ -2288,81 +2022,124 @@
         });
     }
 
-    // ===========================================
-    // SESSION TIMER FUNCTIONS (3 MENIT)
-    // ===========================================
-    function startSessionTimer() {
-        if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-        
-        const timerElement = document.getElementById('session-timer');
-        if (!timerElement) return;
-        
-        timerElement.classList.remove('hidden');
-        
-        sessionTimerInterval = setInterval(() => {
-            if (!currentUser.isMachineMode || !machineSessionExpiry) {
-                if (timerElement) timerElement.classList.add('hidden');
-                if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-                return;
+    function mulaiAutoLogoutTimer() {
+        if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+        autoLogoutTimer = setTimeout(() => {
+            if (currentUser.isMachineMode && currentUser.machine) {
+                db.ref('/' + currentUser.machine + '/active_user').remove();
             }
-            
-            const remaining = machineSessionExpiry - Date.now();
-            if (remaining <= 0) {
-                // Session habis
-                if (timerElement) timerElement.classList.add('hidden');
-                if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-                
-                showNotification('⏰ Sesi mesin 3 menit telah habis!', 'warning');
-                
-                // Hapus sesi mesin
-                if (currentUser.machine) {
-                    db.ref('/' + currentUser.machine + '/active_user').remove();
-                }
-                currentUser.isMachineMode = false;
-                currentUser.machine = "";
-                machineSessionToken = null;
-                machineSessionExpiry = null;
-                
-                const machineInfo = document.getElementById('machine-info-dashboard');
-                const modeBadge = document.getElementById('mode-badge-dashboard');
-                if (machineInfo) machineInfo.classList.add('hidden');
-                if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                
-                return;
-            }
-            
-            const minutes = Math.floor(remaining / 60000);
-            const seconds = Math.floor((remaining % 60000) / 1000);
-            timerElement.innerHTML = `⏱️ Sesi mesin: ${minutes}:${seconds.toString().padStart(2, '0')} tersisa`;
-            timerElement.classList.remove('hidden');
-        }, 1000);
+            currentUser.isMachineMode = false;
+            currentUser.machine = "";
+            machineSessionToken = null;
+            machineSessionExpiry = null;
+            const machineInfo = document.getElementById('machine-info-dashboard');
+            const modeBadge = document.getElementById('mode-badge-dashboard');
+            if (machineInfo) machineInfo.classList.add('hidden');
+            if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+            showNotification('⏰ Auto logout setelah 5 menit', 'info');
+        }, 300000);
     }
-    
-    function resetMachineSession() {
+
+    function updateLastActivity() {
         if (!currentUser.isMachineMode || !currentUser.machine) return;
-        
-        // Perpanjang sesi menjadi 3 menit lagi
-        machineSessionExpiry = Date.now() + MACHINE_SESSION_DURATION;
-        
-        // Update di database
-        db.ref('/' + currentUser.machine + '/active_user').update({
-            last_activity: Date.now(),
-            session_expiry: machineSessionExpiry
-        });
-        
-        // Restart timer display
-        startSessionTimer();
-        
-        logDebug('Session diperpanjang, expiry:', new Date(machineSessionExpiry));
-    }
-    
-    function stopSessionTimer() {
-        if (sessionTimerInterval) {
-            clearInterval(sessionTimerInterval);
-            sessionTimerInterval = null;
+        if (machineSessionToken) {
+            db.ref('/' + currentUser.machine + '/active_user').update({
+                last_activity: Date.now(),
+                session_token: machineSessionToken,
+                session_expiry: machineSessionExpiry
+            });
         }
-        const timerElement = document.getElementById('session-timer');
-        if (timerElement) timerElement.classList.add('hidden');
+        if (autoLogoutTimer) {
+            clearTimeout(autoLogoutTimer);
+            mulaiAutoLogoutTimer();
+        }
+    }
+
+    // ===========================================
+    // GPS FUNCTIONS
+    // ===========================================
+    function toggleDelivery() {
+        const checkbox = document.getElementById('delivery-checkbox');
+        deliveryEnabled = checkbox.checked;
+        const deliveryOptions = document.getElementById('delivery-options');
+        if (deliveryOptions) deliveryOptions.classList.toggle('hidden', !deliveryEnabled);
+        if (!deliveryEnabled) resetLocation();
+        updateCartDisplay();
+    }
+
+    function resetLocation() {
+        userLocation = null;
+        manualAddress = "";
+        const deliveryInfo = document.getElementById('delivery-info');
+        const mapsLink = document.getElementById('maps-link');
+        const manualAddressInput = document.getElementById('manual-address-input');
+        if (deliveryInfo) deliveryInfo.classList.add('hidden');
+        if (mapsLink) mapsLink.classList.add('hidden');
+        if (manualAddressInput) manualAddressInput.classList.add('hidden');
+    }
+
+    function showManualAddressInput() {
+        const manualInput = document.getElementById('manual-address-input');
+        if (manualInput) manualInput.classList.remove('hidden');
+    }
+
+    function submitManualAddress() {
+        const address = document.getElementById('manual-address').value.trim();
+        if (!address || address.length < 10) {
+            showNotification('Masukkan alamat lengkap!', 'error');
+            return;
+        }
+        manualAddress = address;
+        userLocation = null;
+        const deliveryAddress = document.getElementById('delivery-address');
+        const mapsLink = document.getElementById('maps-link');
+        const deliveryInfo = document.getElementById('delivery-info');
+        const manualInput = document.getElementById('manual-address-input');
+        
+        if (deliveryAddress) deliveryAddress.innerHTML = `<strong>${address}</strong>`;
+        if (mapsLink) {
+            mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+            mapsLink.classList.remove('hidden');
+        }
+        if (deliveryInfo) deliveryInfo.classList.remove('hidden');
+        if (manualInput) manualInput.classList.add('hidden');
+        updateCartDisplay();
+        showNotification('✅ Alamat disimpan', 'success');
+    }
+
+    function getUserLocation() {
+        showNotification('📍 Mengakses GPS...', 'info');
+        if (!navigator.geolocation) {
+            showNotification('❌ GPS tidak didukung', 'error');
+            showManualAddressInput();
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude: lat, longitude: lng, accuracy } = position.coords;
+                userLocation = { lat, lng, accuracy, timestamp: Date.now() };
+                const deliveryAddress = document.getElementById('delivery-address');
+                const mapsLink = document.getElementById('maps-link');
+                const deliveryInfo = document.getElementById('delivery-info');
+                if (deliveryAddress) deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
+                if (mapsLink) {
+                    mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                    mapsLink.classList.remove('hidden');
+                }
+                if (deliveryInfo) deliveryInfo.classList.remove('hidden');
+                showNotification('📍 GPS berhasil!', 'success');
+                updateCartDisplay();
+            },
+            (error) => {
+                let msg = 'Gagal GPS';
+                if (error.code === 1) msg = 'Izin GPS ditolak';
+                else if (error.code === 2) msg = 'Sinyal GPS tidak tersedia';
+                else if (error.code === 3) msg = 'Waktu GPS habis';
+                showNotification(`❌ ${msg}`, 'error');
+                showManualAddressInput();
+            },
+            { enableHighAccuracy: true, timeout: 15000 }
+        );
     }
 
     // ===========================================
@@ -2374,12 +2151,11 @@
         db.ref('/' + currentUser.machine + '/active_user').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
-                showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'warning');
+                showNotification('⚠️ Sesi mesin berakhir! Anda dalam mode Online', 'error');
                 currentUser.isMachineMode = false;
                 currentUser.machine = "";
                 machineSessionToken = null;
                 machineSessionExpiry = null;
-                stopSessionTimer();
                 const machineInfo = document.getElementById('machine-info-dashboard');
                 const modeBadge = document.getElementById('mode-badge-dashboard');
                 if (machineInfo) machineInfo.classList.add('hidden');
@@ -2391,12 +2167,11 @@
                 return;
             }
             if (data.id !== currentUser.phone && data.source === "machine") {
-                showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'warning');
+                showNotification(`⚠️ Mesin diambil alih oleh ${data.id.substr(0,5)}! Anda sekarang mode Online`, 'error');
                 currentUser.isMachineMode = false;
                 currentUser.machine = "";
                 machineSessionToken = null;
                 machineSessionExpiry = null;
-                stopSessionTimer();
                 const machineInfo = document.getElementById('machine-info-dashboard');
                 const modeBadge = document.getElementById('mode-badge-dashboard');
                 if (machineInfo) machineInfo.classList.add('hidden');
@@ -2412,13 +2187,16 @@
                 machineSessionExpiry = data.session_expiry;
                 const sessionInfo = document.getElementById('session-token-info');
                 if (sessionInfo) sessionInfo.innerHTML = `Token: ${machineSessionToken.substr(0,15)}...`;
-                startSessionTimer();
             }
             if (data.id === currentUser.phone && data.last_activity) {
-                // Update expiry jika perlu
-                if (data.session_expiry && data.session_expiry > Date.now()) {
-                    machineSessionExpiry = data.session_expiry;
-                    startSessionTimer();
+                const inactiveTime = Date.now() - data.last_activity;
+                if (inactiveTime > 300000) {
+                    showNotification('⏰ Sesi mesin habis karena tidak aktif', 'error');
+                    currentUser.isMachineMode = false;
+                    currentUser.machine = "";
+                    machineSessionToken = null;
+                    const machineInfo = document.getElementById('machine-info-dashboard');
+                    if (machineInfo) machineInfo.classList.add('hidden');
                 }
             }
         });
@@ -2457,7 +2235,6 @@
         db.ref('/accounts/' + session.phone).once('value', (snap) => {
             if (snap.exists()) {
                 currentUser.botol = snap.val().botol || 0;
-                lastBotolValue = currentUser.botol;
                 completeLogin();
             } else {
                 clearUserSession();
@@ -2468,7 +2245,7 @@
     }
 
     // ===========================================
-    // SALDO REAL-TIME DENGAN NOTIFIKASI SUARA & RESET SESSION
+    // SALDO REAL-TIME (dengan notifikasi botol)
     // ===========================================
     function startSaldoListener() {
         if (!currentUser.phone || saldoListenerActive) return;
@@ -2478,7 +2255,7 @@
         }
         logDebug('Memulai listener saldo real-time...');
         saldoListenerActive = true;
-        lastBotolValue = currentUser.botol;
+        lastSaldo = currentUser.botol;
         
         if (saldoListenerRef) saldoListenerRef.off();
         saldoListenerRef = db.ref('/accounts/' + currentUser.phone + '/botol');
@@ -2502,7 +2279,6 @@
         return new Promise((resolve) => {
             db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
                 currentUser.botol = snap.val() || 0;
-                lastBotolValue = currentUser.botol;
                 updateSaldoDisplay();
                 resolve();
             });
@@ -2510,95 +2286,40 @@
     }
 
     function processSaldoUpdate(newSaldo) {
-        const oldSaldo = lastBotolValue;
+        const oldSaldo = lastSaldo;
         logDebug('Saldo berubah:', { old: oldSaldo, new: newSaldo });
+        
+        const addedAmount = newSaldo - oldSaldo;
+        
+        lastSaldo = newSaldo;
+        currentUser.botol = newSaldo;
+        updateSaldoDisplay();
+        updateEcoDisplay();
+        
+        // === FITUR NOTIFIKASI BOTOL BERTAMBAH ===
+        if (addedAmount > 0) {
+            showBotolNotification(newSaldo, addedAmount);
+        }
         
         if (newSaldo > oldSaldo) {
             const tambahBotol = newSaldo - oldSaldo;
             const tambahRupiah = tambahBotol * HARGA_PER_BOTOL;
             const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
+            logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
             
-            // RESET SESSION TIMER karena ada aktivitas (botol masuk)
-            if (currentUser.isMachineMode && currentUser.machine) {
-                resetMachineSession();
-            }
-            
-            // ANIMASI Koin
-            showCoinAnimation();
-            
-            // ANIMASI angka naik
-            const botolElement = document.getElementById('count');
-            const rupiahElement = document.getElementById('rupiah');
-            if (botolElement) botolElement.classList.add('increase');
-            if (rupiahElement) rupiahElement.classList.add('increase');
-            setTimeout(() => {
-                if (botolElement) botolElement.classList.remove('increase');
-                if (rupiahElement) rupiahElement.classList.remove('increase');
-            }, 500);
-            
-            // NOTIFIKASI BOTOL MASUK DENGAN SUARA
-            let pesanNotif = '';
-            if (tambahBotol === 1) {
-                pesanNotif = `🎉 +1 BOTOL MASUK! 🪙\nSaldo Anda bertambah ${formatRupiah(tambahRupiah)}\n🌱 Mengurangi ${emisiBaru.kg.toFixed(1)} kg CO₂e!`;
-            } else {
-                pesanNotif = `🎉 +${tambahBotol} BOTOL MASUK! 🪙\nSaldo Anda bertambah ${formatRupiah(tambahRupiah)}\n🌱 Mengurangi ${emisiBaru.kg.toFixed(1)} kg CO₂e!`;
-            }
-            showNotification(pesanNotif, 'botol');
-            
-            logDebug(`✅ BOTOL MASUK: +${tambahBotol} botol, +${formatRupiah(tambahRupiah)}`);
+            const btnTarik = document.getElementById('btn-tarik');
+            if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
         }
-        
-        lastBotolValue = newSaldo;
-        currentUser.botol = newSaldo;
-        updateSaldoDisplay();
-        updateEcoDisplay();
-    }
-
-    function showCoinAnimation() {
-        const coinPop = document.createElement('div');
-        coinPop.className = 'coin-pop';
-        coinPop.innerHTML = '🪙✨';
-        document.body.appendChild(coinPop);
-        
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => {
-                const coin = document.createElement('div');
-                coin.className = 'coin-animation';
-                coin.innerHTML = '🪙';
-                coin.style.left = Math.random() * window.innerWidth + 'px';
-                document.body.appendChild(coin);
-                setTimeout(() => coin.remove(), 1500);
-            }, i * 100);
-        }
-        
-        setTimeout(() => coinPop.remove(), 600);
+        updateLastActivity();
     }
 
     function updateSaldoDisplay() {
         const countEl = document.getElementById('count');
         const rupiahEl = document.getElementById('rupiah');
         const modalSaldo = document.getElementById('modal-saldo');
-        const btnTarik = document.getElementById('btn-tarik');
-        
         if (countEl) countEl.innerText = currentUser.botol;
         if (rupiahEl) rupiahEl.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
         if (modalSaldo) modalSaldo.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
-        if (btnTarik) btnTarik.disabled = (currentUser.botol * HARGA_PER_BOTOL) < 5000;
-    }
-    
-    function refreshSaldo() {
-        if (!currentUser.phone) return;
-        db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
-            currentUser.botol = snap.val() || 0;
-            lastBotolValue = currentUser.botol;
-            updateSaldoDisplay();
-            showNotification('Saldo diperbarui!', 'success');
-            
-            // Reset session timer jika ada aktivitas refresh
-            if (currentUser.isMachineMode && currentUser.machine) {
-                resetMachineSession();
-            }
-        });
     }
 
     // ===========================================
@@ -2608,38 +2329,19 @@
         const phone = document.getElementById('phone-input').value.replace(/\D/g, '');
         const password = document.getElementById('pass-input').value;
         const mode = getModeFromUrl();
-        
         if (phone.length < 10 || password.length < 4) {
-            showNotification('HP minimal 10 digit, password minimal 4 karakter', 'error');
+            showNotification('HP 10 digit, password 4 karakter', 'error');
             return;
         }
-        
-        currentUser = { 
-            ...currentUser, 
-            phone, 
-            rememberMe: document.getElementById('remember-me').checked, 
-            loginSource: mode.loginSource, 
-            machine: mode.machineId, 
-            isMachineMode: mode.mode === 'machine' 
-        };
-        
+        currentUser = { ...currentUser, phone, rememberMe: document.getElementById('remember-me').checked, 
+            loginSource: mode.loginSource, machine: mode.machineId, isMachineMode: mode.mode === 'machine' };
         db.ref('/accounts/' + phone).once('value', (snap) => {
             if (snap.exists()) {
-                if (snap.val().password === password) {
-                    currentUser.botol = snap.val().botol || 0;
-                    lastBotolValue = currentUser.botol;
-                    loginSuccess();
-                } else {
-                    showNotification('Password salah!', 'error');
-                }
+                if (snap.val().password === password) loginSuccess();
+                else showNotification('Password salah!', 'error');
             } else {
                 db.ref('/accounts/' + phone).set({ password, botol: 0, created_at: Date.now() })
-                    .then(() => { 
-                        currentUser.botol = 0;
-                        lastBotolValue = 0;
-                        showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success'); 
-                        loginSuccess(); 
-                    })
+                    .then(() => { showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success'); loginSuccess(); })
                     .catch(() => showNotification('Gagal buat akun', 'error'));
             }
         });
@@ -2659,7 +2361,7 @@
             db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                 const data = snap.val();
                 if (data && data.id && data.id !== currentUser.phone && data.source === "machine") {
-                    showNotification(`⚠️ Mesin sedang digunakan oleh ${data.id.substr(0,5)}...`, 'warning');
+                    showNotification(`⚠️ Mesin sedang digunakan oleh ${data.id.substr(0,5)}...`, 'error');
                     currentUser.isMachineMode = false;
                     currentUser.machine = "";
                     machineSessionToken = null;
@@ -2678,7 +2380,7 @@
                     return;
                 }
                 machineSessionToken = generateSessionToken(currentUser.phone);
-                machineSessionExpiry = Date.now() + MACHINE_SESSION_DURATION; // 3 MENIT
+                machineSessionExpiry = Date.now() + (5 * 60 * 1000);
                 const sessionData = {
                     id: currentUser.phone,
                     login_time: Date.now(),
@@ -2689,7 +2391,8 @@
                 };
                 db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
                     .then(() => {
-                        showNotification('✅ Terhubung ke mesin (sesi 3 menit)', 'success');
+                        showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
+                        mulaiAutoLogoutTimer();
                         const machineInfo = document.getElementById('machine-info-dashboard');
                         const modeBadge = document.getElementById('mode-badge-dashboard');
                         const sessionInfo = document.getElementById('session-token-info');
@@ -2701,7 +2404,6 @@
                         }
                         logDebug('Session Token dibuat:', machineSessionToken);
                         startMachineSessionListener();
-                        startSessionTimer();
                     })
                     .catch(error => {
                         console.error('Gagal update mesin:', error);
@@ -2720,7 +2422,6 @@
             if (machineInfo) machineInfo.classList.add('hidden');
             machineSessionToken = null;
             machineSessionExpiry = null;
-            stopSessionTimer();
         }
         saveUserSession();
         refreshSaldo();
@@ -2730,14 +2431,12 @@
         startProductListener();
         startSaldoListener();
         loadUserDonations();
-        initAudio();
     }
 
     function loginSuccess() {
         db.ref('/accounts/' + currentUser.phone).once('value', (snap) => {
             if (snap.exists()) {
                 currentUser.botol = snap.val().botol || 0;
-                lastBotolValue = currentUser.botol;
                 completeLogin();
             } else {
                 showNotification('Error: Data user tidak ditemukan', 'error');
@@ -2763,6 +2462,101 @@
             displayAllOrders();
             logDebug('Orders updated:', userOrders.length);
         });
+    }
+
+    // ===========================================
+    // REFRESH FUNCTIONS
+    // ===========================================
+    function refreshSaldo() {
+        if (currentUser.isMachineMode && currentUser.machine) {
+            if (!machineSessionToken) {
+                showNotification('Sesi mesin tidak valid!', 'error');
+                currentUser.isMachineMode = false;
+                const machineInfo = document.getElementById('machine-info-dashboard');
+                const modeBadge = document.getElementById('mode-badge-dashboard');
+                if (machineInfo) machineInfo.classList.add('hidden');
+                if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+                return;
+            }
+            db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (snap) => {
+                const currentToken = snap.val();
+                if (currentToken !== machineSessionToken) {
+                    showNotification('Sesi mesin telah berubah!', 'error');
+                    currentUser.isMachineMode = false;
+                    machineSessionToken = null;
+                    const machineInfo = document.getElementById('machine-info-dashboard');
+                    const modeBadge = document.getElementById('mode-badge-dashboard');
+                    if (machineInfo) machineInfo.classList.add('hidden');
+                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+                    return;
+                }
+                doRefreshSaldo();
+            });
+        } else {
+            doRefreshSaldo();
+        }
+    }
+
+    function doRefreshSaldo() {
+        db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
+            const newVal = snap.val() || 0;
+            if (newVal !== currentUser.botol) {
+                currentUser.botol = newVal;
+                showNotification('Saldo diperbarui!', 'success');
+            }
+            currentUser.botol = newVal;
+            const countEl = document.getElementById('count');
+            const rupiahEl = document.getElementById('rupiah');
+            const modalSaldo = document.getElementById('modal-saldo');
+            const btnTarik = document.getElementById('btn-tarik');
+            if (countEl) countEl.innerText = newVal;
+            if (rupiahEl) rupiahEl.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
+            if (modalSaldo) modalSaldo.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
+            if (btnTarik) btnTarik.disabled = newVal * HARGA_PER_BOTOL < 5000;
+            updateEcoDisplay();
+            updateLastActivity();
+        });
+    }
+
+    function logout() {
+        if (productsListenerRef) productsListenerRef.off();
+        if (merchantsListenerRef) merchantsListenerRef.off();
+        if (saldoListenerRef) saldoListenerRef.off();
+        if (ordersListenerRef) ordersListenerRef.off();
+        if (donationsListenerRef) donationsListenerRef.off();
+        
+        if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+        if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
+        if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
+            db.ref('/' + currentUser.machine + '/active_user').remove();
+        }
+        clearUserSession();
+        showLoginPage();
+        currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
+        cart = [];
+        deliveryEnabled = false;
+        newProductsSet.clear();
+        saldoListenerActive = false;
+        machineSessionToken = null;
+        machineSessionExpiry = null;
+        merchantPopupShown = false;
+    }
+
+    function showLoginPage() {
+        const loginPage = document.getElementById('login-page');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const shopPage = document.getElementById('shop-page');
+        const ordersPage = document.getElementById('orders-page');
+        const orderDetailPage = document.getElementById('order-detail-page');
+        const phoneInput = document.getElementById('phone-input');
+        const passInput = document.getElementById('pass-input');
+        if (loginPage) loginPage.classList.remove('hidden');
+        if (dashboardPage) dashboardPage.classList.add('hidden');
+        if (shopPage) shopPage.classList.add('hidden');
+        if (ordersPage) ordersPage.classList.add('hidden');
+        if (orderDetailPage) orderDetailPage.classList.add('hidden');
+        if (phoneInput) phoneInput.value = '';
+        if (passInput) passInput.value = '';
     }
 
     // ===========================================
@@ -2939,11 +2733,6 @@
         }
         updateCartDisplay();
         showNotification(`${p.name} ditambahkan ke keranjang`, 'success');
-        
-        // Reset session timer jika ada aktivitas
-        if (currentUser.isMachineMode && currentUser.machine) {
-            resetMachineSession();
-        }
     }
 
     function updateCartDisplay() {
@@ -2992,21 +2781,11 @@
             cart.splice(index, 1);
         }
         updateCartDisplay();
-        
-        // Reset session timer jika ada aktivitas
-        if (currentUser.isMachineMode && currentUser.machine) {
-            resetMachineSession();
-        }
     }
 
     function removeFromCart(id) {
         cart = cart.filter(i => i.id !== id);
         updateCartDisplay();
-        
-        // Reset session timer jika ada aktivitas
-        if (currentUser.isMachineMode && currentUser.machine) {
-            resetMachineSession();
-        }
     }
 
     function toggleCart() {
@@ -3015,7 +2794,7 @@
     }
 
     // ===========================================
-    // CHECKOUT FUNCTION
+    // CHECKOUT FUNCTION (dengan notifikasi ke merchant)
     // ===========================================
     async function checkout() {
         if (!navigator.onLine) {
@@ -3138,14 +2917,10 @@
             
             showNotification('✅ Pesanan berhasil dibuat!', 'success');
             
-            // Reset session timer setelah checkout
-            if (currentUser.isMachineMode && currentUser.machine) {
-                resetMachineSession();
-            }
-            
-            // Kirim notifikasi ke merchant
+            // === KIRIM NOTIFIKASI WHATSAPP KE MERCHANT ===
             try {
                 let notifSentCount = 0;
+                let merchantsWithNoPhone = [];
                 
                 for (const [merchantId, orderData] of Object.entries(merchantOrdersMap)) {
                     const merchantSnapshot = await db.ref(`/merchants/${merchantId}/phone`).once('value');
@@ -3175,16 +2950,53 @@
                         
                         if (result.success) {
                             notifSentCount++;
-                            console.log(`✅ Notifikasi ke merchant ${merchantId} terkirim`);
+                            console.log(`✅ Notifikasi ke merchant ${merchantId} (${formattedPhone}) terkirim`);
+                            
+                            await db.ref(`/merchant_orders/${merchantId}/${transId}/notifikasi`).set({
+                                sent: true,
+                                phone: formattedPhone,
+                                timestamp: Date.now()
+                            });
+                        } else {
+                            console.log(`❌ Gagal kirim notifikasi ke merchant ${merchantId}:`, result.error);
+                            merchantsWithNoPhone.push({
+                                id: merchantId,
+                                name: orderData.merchant_name,
+                                phone: merchantPhone,
+                                error: result.error
+                            });
                         }
+                    } else {
+                        console.log(`⚠️ Merchant ${merchantId} tidak memiliki nomor phone yang valid`);
+                        merchantsWithNoPhone.push({
+                            id: merchantId,
+                            name: orderData.merchant_name,
+                            phone: merchantPhone || 'tidak tersedia',
+                            error: 'No HP tidak valid'
+                        });
+                        
+                        await db.ref(`/merchant_orders/${merchantId}/${transId}/notifikasi`).set({
+                            sent: false,
+                            reason: 'No WhatsApp tidak terdaftar',
+                            timestamp: Date.now()
+                        });
                     }
                 }
                 
                 if (notifSentCount > 0) {
                     showNotification(`✅ Pesanan berhasil! Notifikasi telah dikirim ke ${notifSentCount} merchant`, 'success');
+                } else {
+                    if (merchantsWithNoPhone.length > 0) {
+                        const merchantNames = merchantsWithNoPhone.map(m => m.name).join(', ');
+                        showNotification(`⚠️ Pesanan berhasil, tetapi merchant (${merchantNames}) belum mendaftarkan nomor WhatsApp`, 'info');
+                    } else {
+                        showNotification('✅ Pesanan berhasil dibuat!', 'success');
+                    }
                 }
+                
             } catch (notifError) {
                 console.error('Gagal mengirim notifikasi ke merchant:', notifError);
+                showNotification('⚠️ Pesanan berhasil, tetapi notifikasi ke merchant gagal dikirim', 'info');
             }
             
             cart = [];
@@ -3282,12 +3094,25 @@
         updates[`/transactions/${currentUser.phone}/${orderId}/status`] = 'selesai';
         updates[`/transactions/${currentUser.phone}/${orderId}/confirmed_at`] = Date.now();
         
+        const affectedMerchants = [];
+        
         order.items.forEach(item => {
             const merchantId = item.merchant_id;
             const itemTotal = item.price * item.quantity;
             updates[`/merchants/${merchantId}/saldo`] = firebase.database.ServerValue.increment(itemTotal);
             updates[`/merchant_orders/${merchantId}/${orderId}/status`] = 'selesai';
             updates[`/merchant_orders/${merchantId}/${orderId}/confirmed_at`] = Date.now();
+            
+            const existingMerchant = affectedMerchants.find(m => m.id === merchantId);
+            if (existingMerchant) {
+                existingMerchant.amount += itemTotal;
+            } else {
+                affectedMerchants.push({
+                    id: merchantId,
+                    name: item.merchant_name,
+                    amount: itemTotal
+                });
+            }
         });
         
         updates[`/confirmations/${orderId}`] = { 
@@ -3302,11 +3127,6 @@
             await db.ref().update(updates);
             showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
             order.status = 'selesai';
-            
-            // Reset session timer jika ada aktivitas
-            if (currentUser.isMachineMode && currentUser.machine) {
-                resetMachineSession();
-            }
         } catch (error) { 
             console.error('Confirmation error:', error);
             showNotification('Gagal konfirmasi: ' + error.message, 'error');
@@ -3480,137 +3300,6 @@
     }
 
     // ===========================================
-    // LOGOUT
-    // ===========================================
-    function logout() {
-        if (productsListenerRef) productsListenerRef.off();
-        if (merchantsListenerRef) merchantsListenerRef.off();
-        if (saldoListenerRef) saldoListenerRef.off();
-        if (ordersListenerRef) ordersListenerRef.off();
-        if (donationsListenerRef) donationsListenerRef.off();
-        
-        if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
-        if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
-            db.ref('/' + currentUser.machine + '/active_user').remove();
-        }
-        stopSessionTimer();
-        clearUserSession();
-        showLoginPage();
-        currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
-        cart = [];
-        deliveryEnabled = false;
-        newProductsSet.clear();
-        saldoListenerActive = false;
-        machineSessionToken = null;
-        machineSessionExpiry = null;
-        merchantPopupShown = false;
-    }
-
-    function showLoginPage() {
-        const loginPage = document.getElementById('login-page');
-        const dashboardPage = document.getElementById('dashboard-page');
-        const shopPage = document.getElementById('shop-page');
-        const ordersPage = document.getElementById('orders-page');
-        const orderDetailPage = document.getElementById('order-detail-page');
-        const phoneInput = document.getElementById('phone-input');
-        const passInput = document.getElementById('pass-input');
-        if (loginPage) loginPage.classList.remove('hidden');
-        if (dashboardPage) dashboardPage.classList.add('hidden');
-        if (shopPage) shopPage.classList.add('hidden');
-        if (ordersPage) ordersPage.classList.add('hidden');
-        if (orderDetailPage) orderDetailPage.classList.add('hidden');
-        if (phoneInput) phoneInput.value = '';
-        if (passInput) passInput.value = '';
-    }
-
-    // ===========================================
-    // GPS FUNCTIONS
-    // ===========================================
-    function toggleDelivery() {
-        const checkbox = document.getElementById('delivery-checkbox');
-        deliveryEnabled = checkbox.checked;
-        const deliveryOptions = document.getElementById('delivery-options');
-        if (deliveryOptions) deliveryOptions.classList.toggle('hidden', !deliveryEnabled);
-        if (!deliveryEnabled) resetLocation();
-        updateCartDisplay();
-    }
-
-    function resetLocation() {
-        userLocation = null;
-        manualAddress = "";
-        const deliveryInfo = document.getElementById('delivery-info');
-        const mapsLink = document.getElementById('maps-link');
-        const manualAddressInput = document.getElementById('manual-address-input');
-        if (deliveryInfo) deliveryInfo.classList.add('hidden');
-        if (mapsLink) mapsLink.classList.add('hidden');
-        if (manualAddressInput) manualAddressInput.classList.add('hidden');
-    }
-
-    function showManualAddressInput() {
-        const manualInput = document.getElementById('manual-address-input');
-        if (manualInput) manualInput.classList.remove('hidden');
-    }
-
-    function submitManualAddress() {
-        const address = document.getElementById('manual-address').value.trim();
-        if (!address || address.length < 10) {
-            showNotification('Masukkan alamat lengkap!', 'error');
-            return;
-        }
-        manualAddress = address;
-        userLocation = null;
-        const deliveryAddress = document.getElementById('delivery-address');
-        const mapsLink = document.getElementById('maps-link');
-        const deliveryInfo = document.getElementById('delivery-info');
-        const manualInput = document.getElementById('manual-address-input');
-        
-        if (deliveryAddress) deliveryAddress.innerHTML = `<strong>${escapeHtml(address)}</strong>`;
-        if (mapsLink) {
-            mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-            mapsLink.classList.remove('hidden');
-        }
-        if (deliveryInfo) deliveryInfo.classList.remove('hidden');
-        if (manualInput) manualInput.classList.add('hidden');
-        updateCartDisplay();
-        showNotification('✅ Alamat disimpan', 'success');
-    }
-
-    function getUserLocation() {
-        showNotification('📍 Mengakses GPS...', 'info');
-        if (!navigator.geolocation) {
-            showNotification('❌ GPS tidak didukung', 'error');
-            showManualAddressInput();
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude: lat, longitude: lng, accuracy } = position.coords;
-                userLocation = { lat, lng, accuracy, timestamp: Date.now() };
-                const deliveryAddress = document.getElementById('delivery-address');
-                const mapsLink = document.getElementById('maps-link');
-                const deliveryInfo = document.getElementById('delivery-info');
-                if (deliveryAddress) deliveryAddress.innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}<br><small>Akurasi: ${accuracy.toFixed(0)}m</small>`;
-                if (mapsLink) {
-                    mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                    mapsLink.classList.remove('hidden');
-                }
-                if (deliveryInfo) deliveryInfo.classList.remove('hidden');
-                showNotification('📍 GPS berhasil!', 'success');
-                updateCartDisplay();
-            },
-            (error) => {
-                let msg = 'Gagal GPS';
-                if (error.code === 1) msg = 'Izin GPS ditolak';
-                else if (error.code === 2) msg = 'Sinyal GPS tidak tersedia';
-                else if (error.code === 3) msg = 'Waktu GPS habis';
-                showNotification(`❌ ${msg}`, 'error');
-                showManualAddressInput();
-            },
-            { enableHighAccuracy: true, timeout: 15000 }
-        );
-    }
-
-    // ===========================================
     // DEBUG
     // ===========================================
     function debugDatabase() {
@@ -3625,9 +3314,256 @@
         msg += `📦 Produk: ${products.length}\n`;
         msg += `📝 Pesanan: ${userOrders.length}\n`;
         msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
-        msg += `🔊 Suara Notifikasi: ${soundEnabled ? 'ON' : 'OFF'}\n`;
-        msg += `⏱️ Sesi Mesin: ${currentUser.isMachineMode && machineSessionExpiry ? Math.max(0, Math.floor((machineSessionExpiry - Date.now()) / 1000)) + ' detik' : '-'}\n`;
         alert(msg);
+    }
+
+    // ===========================================
+    // SEDEKAH / DONASI FUNCTIONS
+    // ===========================================
+    function openSedekahModal() {
+        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
+        if (saldoRupiah < 1000) {
+            showNotification('Minimal saldo Rp 1.000 untuk bersedekah', 'error');
+            return;
+        }
+        
+        selectedAsnaf = null;
+        selectedAmount = null;
+        document.getElementById('custom-amount').value = '';
+        
+        const modalSaldo = document.getElementById('sedekah-modal-saldo');
+        if (modalSaldo) modalSaldo.innerText = formatRupiah(saldoRupiah);
+        
+        const asnafGrid = document.getElementById('asnaf-grid-modal');
+        if (asnafGrid) {
+            let html = '';
+            ASNAF_LIST.forEach(asnaf => {
+                html += `
+                    <div class="asnaf-option" onclick="selectAsnaf('${asnaf.id}')" id="asnaf-${asnaf.id}">
+                        <span class="asnaf-icon">${asnaf.icon}</span>
+                        <div class="asnaf-name">${asnaf.name}</div>
+                        <div class="asnaf-desc">${asnaf.desc.substring(0, 30)}...</div>
+                    </div>
+                `;
+            });
+            asnafGrid.innerHTML = html;
+        }
+        
+        document.getElementById('sedekah-modal-overlay').style.display = 'flex';
+    }
+    
+    function closeSedekahModal() {
+        document.getElementById('sedekah-modal-overlay').style.display = 'none';
+        selectedAsnaf = null;
+        selectedAmount = null;
+    }
+    
+    function selectAsnaf(asnafId) {
+        ASNAF_LIST.forEach(a => {
+            const el = document.getElementById(`asnaf-${a.id}`);
+            if (el) el.classList.remove('selected');
+        });
+        
+        const selectedEl = document.getElementById(`asnaf-${asnafId}`);
+        if (selectedEl) selectedEl.classList.add('selected');
+        
+        selectedAsnaf = asnafId;
+        
+        const asnaf = ASNAF_LIST.find(a => a.id === asnafId);
+        const doaText = document.getElementById('doa-text');
+        const doaSource = document.getElementById('doa-source');
+        if (doaText) doaText.innerText = `"${asnaf.doa}"`;
+        if (doaSource) doaSource.innerText = `📖 ${asnaf.source}`;
+    }
+    
+    function setSedekahAmount(amount) {
+        selectedAmount = amount;
+        document.getElementById('custom-amount').value = '';
+        
+        const amountBtns = document.querySelectorAll('.amount-btn');
+        amountBtns.forEach(btn => {
+            btn.style.background = '#f0f0f0';
+            btn.style.color = '#333';
+        });
+        event.target.style.background = '#00b894';
+        event.target.style.color = 'white';
+    }
+    
+    async function processSedekah() {
+        if (!selectedAsnaf) {
+            showNotification('Pilih kategori penerima sedekah terlebih dahulu!', 'error');
+            return;
+        }
+        
+        let amount = selectedAmount;
+        const customAmount = parseInt(document.getElementById('custom-amount').value);
+        if (customAmount && customAmount > 0) {
+            amount = customAmount;
+        }
+        
+        if (!amount || amount < 1000) {
+            showNotification('Minimal sedekah Rp 1.000', 'error');
+            return;
+        }
+        
+        const saldoRupiah = currentUser.botol * HARGA_PER_BOTOL;
+        if (amount > saldoRupiah) {
+            showNotification('Saldo tidak cukup!', 'error');
+            return;
+        }
+        
+        const botolTerpakai = Math.ceil(amount / HARGA_PER_BOTOL);
+        
+        const btnSubmit = document.getElementById('btn-sedekah-submit');
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        }
+        
+        showNotification('Memproses sedekah...', 'info');
+        
+        const donationId = 'DON' + Date.now();
+        const donationData = {
+            asnaf: selectedAsnaf,
+            amount: amount,
+            botol: botolTerpakai,
+            timestamp: Date.now(),
+            doa: ASNAF_LIST.find(a => a.id === selectedAsnaf).doa,
+            status: 'completed'
+        };
+        
+        const newBotolValue = currentUser.botol - botolTerpakai;
+        
+        const updates = {};
+        updates[`/accounts/${currentUser.phone}/botol`] = newBotolValue;
+        updates[`/donations/${currentUser.phone}/${donationId}`] = donationData;
+        
+        try {
+            await db.ref().update(updates);
+            
+            currentUser.botol = newBotolValue;
+            
+            updateSaldoDisplay();
+            updateEcoDisplay();
+            
+            const asnaf = ASNAF_LIST.find(a => a.id === selectedAsnaf);
+            showNotification(`✅ Sedekah ${formatRupiah(amount)} untuk ${asnaf.name} berhasil! 🤲`, 'success');
+            
+            closeSedekahModal();
+            selectedAsnaf = null;
+            selectedAmount = null;
+            
+            loadUserDonations();
+            
+        } catch (error) {
+            console.error('Sedekah error:', error);
+            showNotification('Gagal memproses sedekah: ' + error.message, 'error');
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fas fa-hand-holding-heart"></i> SALURKAN SEDEKAH';
+            }
+        }
+    }
+    
+    function loadUserDonations() {
+        db.ref(`/donations/${currentUser.phone}`).once('value', (snap) => {
+            const donations = snap.val() || {};
+            userDonations = [];
+            let totalAmount = 0;
+            for (let id in donations) {
+                const don = donations[id];
+                userDonations.push({ id, ...don });
+                totalAmount += don.amount || 0;
+            }
+            const totalDonasiEl = document.getElementById('total-donasi-user');
+            if (totalDonasiEl) totalDonasiEl.innerText = formatRupiah(totalAmount);
+        });
+    }
+
+    // ===========================================
+    // FONNTE NOTIFICATION FUNCTIONS
+    // ===========================================
+    async function sendFonnteNotification(target, message, type = 'order') {
+        if (!target || target.length < 10) {
+            console.error('Invalid target number:', target);
+            return { success: false, error: 'Invalid target number' };
+        }
+        
+        const formattedNumber = target.replace(/[^0-9]/g, '');
+        
+        try {
+            const response = await fetch(`${FONNTE_CONFIG.BASE_URL}/send`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': FONNTE_CONFIG.API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    target: formattedNumber,
+                    message: message,
+                    delay: '2',
+                    countryCode: '62',
+                    type: 'text'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === true) {
+                console.log(`✅ Fonnte notification sent to ${target}`);
+                return { success: true, data: result };
+            } else {
+                console.error('Fonnte API error:', result);
+                return { success: false, error: result.reason || 'Unknown error' };
+            }
+        } catch (error) {
+            console.error('Failed to send Fonnte notification:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    function formatMerchantOrderNotification(merchantOrder, merchantName, userPhone) {
+        const itemsList = merchantOrder.items.map(item => 
+            `  • ${item.name} x${item.quantity} = ${formatRupiah(item.price * item.quantity)}`
+        ).join('\n');
+        
+        let deliveryText = '';
+        if (merchantOrder.delivery) {
+            if (merchantOrder.delivery.type === 'gps') {
+                deliveryText = `📍 Lokasi GPS: ${merchantOrder.delivery.lat}, ${merchantOrder.delivery.lng}\n🔗 Maps: ${merchantOrder.delivery.maps_url}`;
+            } else if (merchantOrder.delivery.type === 'manual') {
+                deliveryText = `📍 Alamat: ${merchantOrder.delivery.address}\n🔗 Maps: ${merchantOrder.delivery.maps_url}`;
+            }
+        } else {
+            deliveryText = '🏪 Ambil di Toko (Pembeli akan datang ke toko)';
+        }
+        
+        const totalAmount = merchantOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        const message = `🏪 *NOTIFIKASI PESANAN MASUK* 🏪\n\n` +
+            `Yth. *${merchantName}*,\n\n` +
+            `Ada pesanan baru untuk toko Anda!\n\n` +
+            `👤 *Detail Pemesan:*\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `📱 No HP: *${userPhone}*\n` +
+            `📅 Waktu: *${formatDate(merchantOrder.timestamp)}*\n\n` +
+            `📋 *Daftar Pesanan:*\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `${itemsList}\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `💰 *Total: ${formatRupiah(totalAmount)}*\n\n` +
+            `🚚 *Pengiriman:*\n` +
+            `${deliveryText}\n\n` +
+            `📌 *Status: Sedang Diproses*\n\n` +
+            `💡 *Petunjuk:*\n` +
+            `1. Segera siapkan pesanan\n` +
+            `2. Hubungi pembeli jika perlu konfirmasi\n` +
+            `3. Update status pesanan di aplikasi masuk aplikasi klik link https://tohitmi669-ai.github.io/MERCHANT-RECOIN/\n\n` +
+            `💚 Terima kasih telah berjualan di RE-COIN!\n` +
+            `🌱 #RECOIN #UMKM #PesananBaru`;
+        
+        return message;
     }
 
     // ===========================================
@@ -3646,9 +3582,7 @@
         if (!checkAutoLogin()) {
             showLoginPage();
         }
-        initAudio();
-        console.log('🔥 RE-COIN App siap dengan Sesi Mesin 3 MENIT!');
-        console.log('📢 Setiap ada transaksi (botol masuk, belanja, dll) timer akan direset ke 3 menit lagi');
+        console.log('🔥 RE-COIN App siap dengan Notifikasi Botol + Suara Lonceng!');
     };
     </script>
 </body>
