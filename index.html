@@ -1374,6 +1374,89 @@
             25% { transform: rotate(15deg); }
             75% { transform: rotate(-15deg); }
         }
+
+        /* FLOATING CART STYLES */
+        .floating-cart {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid white;
+        }
+        
+        .floating-cart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .floating-cart i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .floating-cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+        
+        .floating-cart-total {
+            position: absolute;
+            bottom: -25px;
+            right: -10px;
+            background: white;
+            color: var(--dark);
+            border-radius: 20px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border: 1px solid var(--primary);
+        }
+        
+        @media (max-width: 480px) {
+            .floating-cart {
+                bottom: 70px;
+                right: 15px;
+                width: 55px;
+                height: 55px;
+            }
+            .floating-cart i {
+                font-size: 24px;
+            }
+            .floating-cart-total {
+                font-size: 9px;
+                padding: 2px 6px;
+                bottom: -22px;
+            }
+        }
+
+        /* Smooth scroll untuk seluruh halaman */
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body>
@@ -1455,7 +1538,7 @@
                 <i class="fas fa-money-bill-wave"></i> TARIK SALDO
             </button>
             <button id="btn-belanja" class="btn-belanja" onclick="showShop()">
-                <i class="fas fa-shopping-cart"></i> BUAT BELANJA
+                <i class="fas fa-shopping-cart"></i> BUAT JAJAN
             </button>
         </div>
         
@@ -1584,6 +1667,13 @@
                 <p>Memuat produk...</p>
             </div>
         </div>
+    </div>
+
+    <!-- FLOATING CART (only visible in shop page) -->
+    <div id="floating-cart" class="floating-cart hidden" onclick="toggleCartAndScroll()">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="floating-cart-count" id="floating-cart-count">0</span>
+        <span class="floating-cart-total" id="floating-cart-total">Rp 0</span>
     </div>
 
     <!-- MY ORDERS PAGE -->
@@ -1806,7 +1896,6 @@
     
     function playBellSound() {
         try {
-            // Gunakan Web Audio API untuk suara lonceng sederhana
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
@@ -1817,14 +1906,13 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = 880; // Nada A5 (tinggi seperti lonceng)
+            oscillator.frequency.value = 880;
             gainNode.gain.value = 0.3;
             
             oscillator.start();
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.8);
             oscillator.stop(audioContext.currentTime + 0.8);
             
-            // Resumes AudioContext jika suspended (karena kebijakan browser)
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
@@ -1839,25 +1927,19 @@
         
         if (!notifEl || !textSpan) return;
         
-        // Update teks notifikasi
         if (addedAmount > 0) {
             textSpan.innerHTML = `<i class="fas fa-plus-circle"></i> +${addedAmount} Botol! Total: ${botolCount} botol 🌟`;
         } else {
             textSpan.innerHTML = `<i class="fas fa-recycle"></i> Total Botol: ${botolCount}`;
         }
         
-        // Tampilkan notifikasi
         notifEl.classList.add('show');
-        
-        // Mainkan suara lonceng
         playBellSound();
         
-        // Sembunyikan setelah 2.5 detik
         setTimeout(() => {
             notifEl.classList.remove('show');
         }, 2500);
         
-        // Animasi tambahan pada angka botol
         const botolElement = document.getElementById('count');
         if (botolElement) {
             botolElement.classList.add('increase');
@@ -2296,7 +2378,6 @@
         updateSaldoDisplay();
         updateEcoDisplay();
         
-        // === FITUR NOTIFIKASI BOTOL BERTAMBAH ===
         if (addedAmount > 0) {
             showBotolNotification(newSaldo, addedAmount);
         }
@@ -2714,7 +2795,7 @@
     }
 
     // ===========================================
-    // CART FUNCTIONS
+    // CART FUNCTIONS (with floating cart update)
     // ===========================================
     function addToCart(id) {
         const p = products.find(p => p.id === id);
@@ -2764,7 +2845,15 @@
         const summarySubtotal = document.getElementById('summary-subtotal');
         const grandTotal = document.getElementById('grand-total');
         const btnCheckout = document.getElementById('btn-checkout');
-        if (cartCount) cartCount.innerText = cart.reduce((s, i) => s + i.quantity, 0);
+        
+        const floatingCartCount = document.getElementById('floating-cart-count');
+        const floatingCartTotal = document.getElementById('floating-cart-total');
+        const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+        
+        if (cartCount) cartCount.innerText = totalItems;
+        if (floatingCartCount) floatingCartCount.innerText = totalItems;
+        if (floatingCartTotal) floatingCartTotal.innerText = formatRupiah(subtotal);
+        
         if (cartItems) cartItems.innerHTML = html || '<p style="text-align:center">Keranjang kosong</p>';
         if (cartTotal) cartTotal.innerHTML = `Total: ${formatRupiah(subtotal)}`;
         if (summarySubtotal) summarySubtotal.innerHTML = formatRupiah(subtotal);
@@ -2792,6 +2881,32 @@
         const cartPanel = document.getElementById('cart-panel');
         if (cartPanel) cartPanel.classList.toggle('hidden');
     }
+
+    // ========== FUNGSI BARU UNTUK FLOATING CART SCROLL ==========
+    function scrollToCartPanel() {
+        const cartPanel = document.getElementById('cart-panel');
+        if (cartPanel) {
+            cartPanel.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }
+
+    function toggleCartAndScroll() {
+        const cartPanel = document.getElementById('cart-panel');
+        const isHidden = cartPanel.classList.contains('hidden');
+        
+        if (isHidden) {
+            toggleCart();
+            setTimeout(() => {
+                scrollToCartPanel();
+            }, 150);
+        } else {
+            scrollToCartPanel();
+        }
+    }
+    // ========== AKHIR FUNGSI BARU ==========
 
     // ===========================================
     // CHECKOUT FUNCTION (dengan notifikasi ke merchant)
@@ -2917,7 +3032,6 @@
             
             showNotification('✅ Pesanan berhasil dibuat!', 'success');
             
-            // === KIRIM NOTIFIKASI WHATSAPP KE MERCHANT ===
             try {
                 let notifSentCount = 0;
                 let merchantsWithNoPhone = [];
@@ -3250,7 +3364,7 @@
     }
 
     // ===========================================
-    // NAVIGATION & MERCHANT POPUP
+    // NAVIGATION & MERCHANT POPUP & FLOATING CART
     // ===========================================
     function startMerchantPopupTimer() {
         if (merchantPopupShown) return;
@@ -3282,6 +3396,18 @@
         if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
     }
 
+    function updateFloatingCartVisibility() {
+        const shopPage = document.getElementById('shop-page');
+        const floatingCart = document.getElementById('floating-cart');
+        if (shopPage && floatingCart) {
+            if (!shopPage.classList.contains('hidden')) {
+                floatingCart.classList.remove('hidden');
+            } else {
+                floatingCart.classList.add('hidden');
+            }
+        }
+    }
+
     function showShop() {
         const dashboardPage = document.getElementById('dashboard-page');
         const shopPage = document.getElementById('shop-page');
@@ -3289,6 +3415,7 @@
         if (shopPage) shopPage.classList.remove('hidden');
         displayProducts();
         startMerchantPopupTimer();
+        updateFloatingCartVisibility();
     }
 
     function hideShop() {
@@ -3297,6 +3424,7 @@
         if (dashboardPage) dashboardPage.classList.remove('hidden');
         if (shopPage) shopPage.classList.add('hidden');
         resetMerchantPopupTimer();
+        updateFloatingCartVisibility();
     }
 
     // ===========================================
@@ -3582,7 +3710,8 @@
         if (!checkAutoLogin()) {
             showLoginPage();
         }
-        console.log('🔥 RE-COIN App siap dengan Notifikasi Botol + Suara Lonceng!');
+        updateFloatingCartVisibility();
+        console.log('🔥 RE-COIN App siap dengan Notifikasi Botol + Suara Lonceng + Floating Cart + Auto Scroll!');
     };
     </script>
 </body>
