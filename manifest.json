@@ -1,0 +1,39 @@
+{
+  "name": "RE-COIN - Tukar Botol Jadi Belanja",
+  "short_name": "RE-COIN",
+  "description": "Tukar botol plastik jadi saldo belanja + sedekah + hijaukan bumi",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#00b894",
+  "background_color": "#00b894",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://blogger.googleusercontent.com/img/a/AVvXsEiW_DGEguJvY3Oybj5IfLw8itjUoehF6fYxdNfptF5Dr4YY19jRAnlESVuPnlg7ZkpDi8hdbvJ8Huw23VDNQx-yukZ6rvaHoDcXTrmWPP7Nu9qxp0KEz-fKYg1mFcGGBrk2kDGPhWgKElDpTa_WyqV59WZibzep2Jd9rWUFFEuC_hv0mr-fZBuZNwGTfOJ6",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "url": "/",
+      "icons": [{ "src": "https://via.placeholder.com/96x96/00b894/ffffff?text=H", "sizes": "96x96" }]
+    },
+    {
+      "name": "Belanja",
+      "short_name": "Shop",
+      "url": "/?action=shop"
+    },
+    {
+      "name": "Sedekah",
+      "short_name": "Donate",
+      "url": "/?action=sedekah"
+    }
+  ],
+  "categories": ["lifestyle", "shopping", "finance", "environment"],
+  "lang": "id"
+}
