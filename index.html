@@ -2472,7 +2472,7 @@
                 };
                 db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
                     .then(() => {
-                        showNotification('✅ Terhubung ke mesin (sesi 5 menit)', 'success');
+                        showNotification('✅ Terhubung ke mesin (sesi 1 menit)', 'success');
                         mulaiAutoLogoutTimer();
                         const machineInfo = document.getElementById('machine-info-dashboard');
                         const modeBadge = document.getElementById('mode-badge-dashboard');
@@ -3714,4 +3714,3 @@
         console.log('🔥 RE-COIN App siap dengan Notifikasi Botol + Suara Lonceng + Floating Cart + Auto Scroll!');
     };
     </script>
-
