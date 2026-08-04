@@ -1514,6 +1514,9 @@
             <div>Anda menggunakan mesin: <span id="active-machine" class="machine-id"></span></div>
             <div id="session-token-info" class="session-info hidden"></div>
             <span id="source-info-dashboard" class="qr-badge hidden"></span>
+            <div style="font-size: 11px; color: var(--danger); margin-top: 5px; font-weight: 600;">
+                ⏱️ Auto logout dalam 1 menit jika tidak aktif
+            </div>
         </div>
         
         <div class="saldo-header">
@@ -1841,7 +1844,7 @@
     };
 
     // ===========================================
-    // GLOBAL VARIABLES
+    // ⭐ GLOBAL VARIABLES ⭐
     // ===========================================
     let currentUser = {
         phone: "",
@@ -1857,7 +1860,8 @@
     let merchantPopupTimer = null;
     let merchantPopupShown = false;
 
-    const HARGA_PER_BOTOL = 50;
+    // ⭐ HARGA PER BOTOL = RP 25 (DIUBAH DARI 50)
+    const HARGA_PER_BOTOL = 25;
     const EMISI_PER_BOTOL = 60;
     const ADMIN_WA = "6289524538835";
     const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
@@ -1928,7 +1932,7 @@
         if (!notifEl || !textSpan) return;
         
         if (addedAmount > 0) {
-            textSpan.innerHTML = `<i class="fas fa-plus-circle"></i> +${addedAmount} Botol! Total: ${botolCount} botol 🌟`;
+            textSpan.innerHTML = `<i class="fas fa-plus-circle"></i> +${addedAmount} Botol! (+Rp ${addedAmount * HARGA_PER_BOTOL}) Total: ${botolCount} botol 🌟`;
         } else {
             textSpan.innerHTML = `<i class="fas fa-recycle"></i> Total Botol: ${botolCount}`;
         }
@@ -1946,6 +1950,15 @@
             setTimeout(() => {
                 botolElement.classList.remove('increase');
             }, 500);
+        }
+        
+        // ⭐ ANIMASI COIN POP SAAT BOTOL MASUK
+        if (addedAmount > 0) {
+            const coinPop = document.createElement('div');
+            coinPop.className = 'coin-pop';
+            coinPop.innerHTML = '🪙✨';
+            document.body.appendChild(coinPop);
+            setTimeout(() => coinPop.remove(), 600);
         }
     }
 
@@ -2104,22 +2117,46 @@
         });
     }
 
+    // ⭐ AUTO LOGOUT MESIN - 1 MENIT (60 DETIK) ⭐
+    // DIUBAH DARI 5 MENIT (300000 ms) MENJADI 1 MENIT (60000 ms)
     function mulaiAutoLogoutTimer() {
         if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
         autoLogoutTimer = setTimeout(() => {
-            if (currentUser.isMachineMode && currentUser.machine) {
-                db.ref('/' + currentUser.machine + '/active_user').remove();
+            if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
+                // Cek apakah ada aktivitas terakhir
+                db.ref('/' + currentUser.machine + '/active_user/last_activity').once('value', (snap) => {
+                    const lastActivity = snap.val() || 0;
+                    const inactiveTime = Date.now() - lastActivity;
+                    
+                    // Jika tidak ada aktivitas selama 1 menit
+                    if (inactiveTime >= 60000) {
+                        // Hapus sesi mesin
+                        db.ref('/' + currentUser.machine + '/active_user').remove();
+                        showNotification('⏰ Sesi mesin berakhir (1 menit tidak aktif)', 'error');
+                        
+                        // Reset mode mesin
+                        currentUser.isMachineMode = false;
+                        currentUser.machine = "";
+                        machineSessionToken = null;
+                        machineSessionExpiry = null;
+                        
+                        const machineInfo = document.getElementById('machine-info-dashboard');
+                        const modeBadge = document.getElementById('mode-badge-dashboard');
+                        if (machineInfo) machineInfo.classList.add('hidden');
+                        if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
+                        
+                        // Hapus parameter URL
+                        if (window.history && window.history.replaceState) {
+                            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                            window.history.replaceState({}, document.title, newUrl);
+                        }
+                    } else {
+                        // Jika masih ada aktivitas, reset timer
+                        mulaiAutoLogoutTimer();
+                    }
+                });
             }
-            currentUser.isMachineMode = false;
-            currentUser.machine = "";
-            machineSessionToken = null;
-            machineSessionExpiry = null;
-            const machineInfo = document.getElementById('machine-info-dashboard');
-            const modeBadge = document.getElementById('mode-badge-dashboard');
-            if (machineInfo) machineInfo.classList.add('hidden');
-            if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-            showNotification('⏰ Auto logout setelah 5 menit', 'info');
-        }, 300000);
+        }, 60000); // 1 MENIT = 60000 ms
     }
 
     function updateLastActivity() {
@@ -2131,6 +2168,7 @@
                 session_expiry: machineSessionExpiry
             });
         }
+        // ⭐ Reset timer setiap kali ada aktivitas
         if (autoLogoutTimer) {
             clearTimeout(autoLogoutTimer);
             mulaiAutoLogoutTimer();
@@ -2272,8 +2310,9 @@
             }
             if (data.id === currentUser.phone && data.last_activity) {
                 const inactiveTime = Date.now() - data.last_activity;
-                if (inactiveTime > 300000) {
-                    showNotification('⏰ Sesi mesin habis karena tidak aktif', 'error');
+                // ⭐ 1 MENIT = 60000 ms
+                if (inactiveTime > 60000) {
+                    showNotification('⏰ Sesi mesin habis karena 1 menit tidak aktif', 'error');
                     currentUser.isMachineMode = false;
                     currentUser.machine = "";
                     machineSessionToken = null;
@@ -2882,7 +2921,6 @@
         if (cartPanel) cartPanel.classList.toggle('hidden');
     }
 
-    // ========== FUNGSI BARU UNTUK FLOATING CART SCROLL ==========
     function scrollToCartPanel() {
         const cartPanel = document.getElementById('cart-panel');
         if (cartPanel) {
@@ -2906,10 +2944,9 @@
             scrollToCartPanel();
         }
     }
-    // ========== AKHIR FUNGSI BARU ==========
 
     // ===========================================
-    // CHECKOUT FUNCTION (dengan notifikasi ke merchant)
+    // CHECKOUT FUNCTION
     // ===========================================
     async function checkout() {
         if (!navigator.onLine) {
@@ -3711,6 +3748,8 @@
             showLoginPage();
         }
         updateFloatingCartVisibility();
-        console.log('🔥 RE-COIN App siap dengan Notifikasi Botol + Suara Lonceng + Floating Cart + Auto Scroll!');
+        console.log('🔥 RE-COIN App siap! Rp 25/botol | Auto logout 1 menit');
     };
     </script>
+</body>
+</html>
