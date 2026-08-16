@@ -147,6 +147,12 @@
             color: var(--dark);
         }
         
+        .btn-tarik:disabled {
+            background: #dfe6e9;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
         .btn-belanja {
             background: linear-gradient(to right, #6c5ce7, #a363d9);
             color: white;
@@ -1120,226 +1126,9 @@
         
         .saldo-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             margin-bottom: 10px;
-        }
-        
-        .refresh-btn {
-            background: none;
-            border: none;
-            color: var(--info);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            transition: transform 0.3s;
-        }
-        
-        .refresh-btn:active {
-            transform: rotate(180deg);
-        }
-        
-        .product-update-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: var(--success);
-            color: white;
-            padding: 16px;
-            border-radius: 16px;
-            text-align: center;
-            font-weight: 600;
-            z-index: 10000;
-            animation: slideUp 0.3s ease;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        
-        .coin-animation {
-            position: fixed;
-            pointer-events: none;
-            z-index: 10006;
-            font-size: 30px;
-            animation: coinFall 1.5s ease-out forwards;
-        }
-        
-        @keyframes coinFall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(300px) rotate(720deg);
-                opacity: 0;
-            }
-        }
-        
-        .coin-pop {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 80px;
-            z-index: 10010;
-            animation: coinPop 0.6s ease-out forwards;
-            pointer-events: none;
-            text-shadow: 0 0 20px rgba(0,184,148,0.5);
-        }
-        
-        @keyframes coinPop {
-            0% {
-                transform: translate(-50%, -50%) scale(0.2);
-                opacity: 0;
-            }
-            30% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 1;
-            }
-            70% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 0;
-            }
-        }
-        
-        .session-info {
-            font-size: 11px;
-            color: var(--info);
-            margin-top: 5px;
-            text-align: center;
-            word-break: break-all;
-        }
-        
-        .badge-eco {
-            display: inline-block;
-            background: var(--eco);
-            color: white;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            margin-top: 8px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #dfe6e9;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--eco), #27ae60);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 4px;
-        }
-        
-        .milestone-text {
-            font-size: 11px;
-            color: #2e7d32;
-            text-align: center;
-            margin-top: 8px;
-        }
-        
-        .asnaf-grid-modal {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .asnaf-option {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .asnaf-option:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .asnaf-option.selected {
-            border-color: var(--success);
-            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-        }
-        
-        .asnaf-option .asnaf-icon {
-            font-size: 32px;
-            display: block;
-            margin-bottom: 8px;
-        }
-        
-        .asnaf-option .asnaf-name {
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        
-        .asnaf-option .asnaf-desc {
-            font-size: 10px;
-            color: #7f8c8d;
-        }
-        
-        .doa-container {
-            background: #f0f0f0;
-            border-radius: 16px;
-            padding: 16px;
-            margin: 16px 0;
-            text-align: center;
-        }
-        
-        .doa-text {
-            font-style: italic;
-            color: #6c5ce7;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .doa-source {
-            font-size: 11px;
-            color: #7f8c8d;
-        }
-        
-        .sedekah-amount-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        
-        .amount-btn {
-            flex: 1;
-            padding: 12px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        
-        .amount-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .custom-amount-input {
-            margin-top: 10px;
-        }
-        
-        .custom-amount-input input {
-            margin-bottom: 0;
         }
         
         .button-row {
@@ -1585,13 +1374,6 @@
             <div style="font-size: 11px; color: var(--danger); margin-top: 5px; font-weight: 600;">
                 ⏱️ Auto logout dalam 1 menit jika tidak aktif
             </div>
-        </div>
-        
-        <div class="saldo-header">
-            <div></div>
-            <button class="refresh-btn" onclick="refreshSaldo()" title="Refresh Saldo">
-                <i class="fas fa-sync-alt"></i>
-            </button>
         </div>
         
         <div class="stat-card" id="botol-stat-card">
@@ -2472,15 +2254,12 @@
                 showBotolNotification(newSaldo, addedAmount);
             }
 
-            if (newSaldo > oldSaldo) {
-                const tambahBotol = newSaldo - oldSaldo;
-                const tambahRupiah = tambahBotol * HARGA_PER_BOTOL;
-                const emisiBaru = hitungEmisiTerselamatkan(tambahBotol);
-                logDebug('Saldo bertambah!', { tambahBotol, tambahRupiah });
-
-                const btnTarik = document.getElementById('btn-tarik');
-                if (btnTarik) btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
+            // Update tombol tarik saldo
+            const btnTarik = document.getElementById('btn-tarik');
+            if (btnTarik) {
+                btnTarik.disabled = newSaldo * HARGA_PER_BOTOL < 5000;
             }
+            
             updateLastActivity();
         }
 
@@ -2528,6 +2307,12 @@
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (userDisplay) userDisplay.innerText = currentUser.phone;
 
+            // Update tombol tarik saldo saat login
+            const btnTarik = document.getElementById('btn-tarik');
+            if (btnTarik) {
+                btnTarik.disabled = currentUser.botol * HARGA_PER_BOTOL < 5000;
+            }
+
             if (currentUser.isMachineMode) {
                 const activeMachine = document.getElementById('active-machine');
                 if (activeMachine) activeMachine.innerText = currentUser.machine;
@@ -2548,7 +2333,6 @@
                                 .pathname;
                             window.history.replaceState({}, document.title, newUrl);
                         }
-                        refreshSaldo();
                         loadMerchantsAndProducts();
                         startOrdersListener();
                         return;
@@ -2598,7 +2382,6 @@
                 machineSessionExpiry = null;
             }
             saveUserSession();
-            refreshSaldo();
             updateEcoDisplay();
             loadMerchantsAndProducts();
             startOrdersListener();
@@ -2642,94 +2425,8 @@
         // REFRESH FUNCTIONS
         // ===========================================
         function refreshSaldo() {
-            if (currentUser.isMachineMode && currentUser.machine) {
-                if (!machineSessionToken) {
-                    showNotification('Sesi mesin tidak valid!', 'error');
-                    currentUser.isMachineMode = false;
-                    const machineInfo = document.getElementById('machine-info-dashboard');
-                    const modeBadge = document.getElementById('mode-badge-dashboard');
-                    if (machineInfo) machineInfo.classList.add('hidden');
-                    if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                    return;
-                }
-                db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (snap) => {
-                    const currentToken = snap.val();
-                    if (currentToken !== machineSessionToken) {
-                        showNotification('Sesi mesin telah berubah!', 'error');
-                        currentUser.isMachineMode = false;
-                        machineSessionToken = null;
-                        const machineInfo = document.getElementById('machine-info-dashboard');
-                        const modeBadge = document.getElementById('mode-badge-dashboard');
-                        if (machineInfo) machineInfo.classList.add('hidden');
-                        if (modeBadge) modeBadge.innerText = '🌐 Mode Online';
-                        return;
-                    }
-                    doRefreshSaldo();
-                });
-            } else {
-                doRefreshSaldo();
-            }
-        }
-
-        function doRefreshSaldo() {
-            db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
-                const newVal = snap.val() || 0;
-                if (newVal !== currentUser.botol) {
-                    currentUser.botol = newVal;
-                    showNotification('Saldo diperbarui!', 'success');
-                }
-                currentUser.botol = newVal;
-                const countEl = document.getElementById('count');
-                const rupiahEl = document.getElementById('rupiah');
-                const modalSaldo = document.getElementById('modal-saldo');
-                const btnTarik = document.getElementById('btn-tarik');
-                if (countEl) countEl.innerText = newVal;
-                if (rupiahEl) rupiahEl.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-                if (modalSaldo) modalSaldo.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-                if (btnTarik) btnTarik.disabled = newVal * HARGA_PER_BOTOL < 5000;
-                updateEcoDisplay();
-                updateLastActivity();
-            });
-        }
-
-        function logout() {
-            if (productsListenerRef) productsListenerRef.off();
-            if (merchantsListenerRef) merchantsListenerRef.off();
-            if (saldoListenerRef) saldoListenerRef.off();
-            if (ordersListenerRef) ordersListenerRef.off();
-            if (donationsListenerRef) donationsListenerRef.off();
-
-            if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
-            if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
-                db.ref('/' + currentUser.machine + '/active_user').remove();
-            }
-            clearUserSession();
-            showLoginPage();
-            currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web", rememberMe: true };
-            cart = [];
-            deliveryEnabled = false;
-            newProductsSet.clear();
-            saldoListenerActive = false;
-            machineSessionToken = null;
-            machineSessionExpiry = null;
-            merchantPopupShown = false;
-        }
-
-        function showLoginPage() {
-            const loginPage = document.getElementById('login-page');
-            const dashboardPage = document.getElementById('dashboard-page');
-            const shopPage = document.getElementById('shop-page');
-            const ordersPage = document.getElementById('orders-page');
-            const orderDetailPage = document.getElementById('order-detail-page');
-            const phoneInput = document.getElementById('phone-input');
-            const passInput = document.getElementById('pass-input');
-            if (loginPage) loginPage.classList.remove('hidden');
-            if (dashboardPage) dashboardPage.classList.add('hidden');
-            if (shopPage) shopPage.classList.add('hidden');
-            if (ordersPage) ordersPage.classList.add('hidden');
-            if (orderDetailPage) orderDetailPage.classList.add('hidden');
-            if (phoneInput) phoneInput.value = '';
-            if (passInput) passInput.value = '';
+            // Fungsi ini dihapus - tidak digunakan lagi
+            // Saldo akan terupdate secara realtime via listener
         }
 
         // ===========================================
@@ -2897,7 +2594,7 @@
         function addToCart(id) {
             const p = products.find(p => p.id === id);
             if (!p) return;
-            refreshSaldo();
+            // Refresh saldo via listener - tidak perlu manual refresh
             if (currentUser.botol * HARGA_PER_BOTOL < p.price) {
                 showNotification('Saldo tidak cukup!', 'error');
                 return;
@@ -3226,7 +2923,6 @@
                 if (cartPanel) cartPanel.classList.add('hidden');
 
                 updateCartDisplay();
-                refreshSaldo();
 
             } catch (error) {
                 console.error('Checkout error:', error);
@@ -3432,7 +3128,6 @@
         // WITHDRAWAL
         // ===========================================
         function openWithdrawalModal() {
-            refreshSaldo();
             const modalOverlay = document.getElementById('modal-overlay');
             if (modalOverlay) modalOverlay.style.display = 'flex';
         }
@@ -3469,7 +3164,6 @@
                     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(message)}`, '_blank');
                     closeModal();
                     showNotification('Permintaan penarikan dikirim', 'success');
-                    refreshSaldo();
                 })
                 .catch(error => { showNotification('Error: ' + error.message, 'error'); });
         }
