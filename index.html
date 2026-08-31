@@ -121,7 +121,7 @@
             border-color: var(--primary);
         }
         
-        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-sedekah, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi, .btn-merchant, .btn-release-machine {
+        .btn-main, .btn-tarik, .btn-belanja, .btn-secondary, .btn-success, .btn-sedekah, .btn-maps, .btn-refresh, .btn-scan, .btn-checkout, .btn-konfirmasi, .btn-merchant, .btn-release-machine, .btn-admin {
             padding: 16px;
             font-size: 16px;
             border-radius: 16px;
@@ -196,6 +196,11 @@
             background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
             margin-top: 10px;
+        }
+        
+        .btn-admin {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
         }
         
         .btn-main:active, .btn-tarik:active, .btn-belanja:active, .btn-sedekah:active, .btn-secondary:active, .btn-success:active, .btn-maps:active, .btn-checkout:active, .btn-merchant:active, .btn-release-machine:active {
@@ -805,7 +810,7 @@
             color: var(--dark);
         }
         
-        #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay {
+        #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay, #message-modal-overlay, #admin-password-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -819,7 +824,7 @@
         }
         
         @media (min-width: 768px) {
-            #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay {
+            #modal-overlay, #merchant-popup-overlay, #sedekah-modal-overlay, #message-modal-overlay, #admin-password-overlay {
                 align-items: center;
             }
         }
@@ -1539,6 +1544,304 @@
             margin-top: 5px;
             display: inline-block;
         }
+
+        /* Message Popup Styles */
+        .message-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            padding: 20px;
+        }
+        
+        .message-popup-overlay.show {
+            display: flex;
+        }
+        
+        .message-popup-content {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            max-width: 450px;
+            width: 100%;
+            animation: popIn 0.5s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            border: 3px solid var(--primary);
+        }
+        
+        @keyframes popIn {
+            from { transform: scale(0.8) translateY(30px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        
+        .message-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .message-popup-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message-popup-title .icon {
+            font-size: 28px;
+        }
+        
+        .message-popup-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #b2bec3;
+            transition: 0.3s;
+            padding: 5px;
+        }
+        
+        .message-popup-close:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+        
+        .message-popup-body {
+            color: var(--dark);
+            line-height: 1.7;
+            font-size: 15px;
+            margin: 20px 0;
+        }
+        
+        .message-popup-body .message-text {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            margin: 15px 0;
+            font-style: italic;
+        }
+        
+        .message-popup-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .message-popup-footer .btn-popup-primary {
+            flex: 2;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .message-popup-footer .btn-popup-secondary {
+            flex: 1;
+            padding: 14px;
+            background: #dfe6e9;
+            color: var(--dark);
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .message-popup-footer .btn-popup-primary:hover {
+            transform: scale(1.02);
+        }
+        
+        .message-popup-footer .btn-popup-secondary:hover {
+            background: #b2bec3;
+        }
+        
+        .message-popup-timestamp {
+            font-size: 11px;
+            color: #b2bec3;
+            text-align: right;
+            margin-top: 12px;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 12px;
+        }
+        
+        .message-popup-sender {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+            display: inline-block;
+            background: #e8f8f5;
+            padding: 3px 12px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Admin Dashboard Styles */
+        .admin-dashboard {
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .admin-dashboard h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .admin-user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #ecf0f1;
+            border-radius: 16px;
+            padding: 5px;
+        }
+        
+        .admin-user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+        
+        .admin-user-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .admin-user-item.selected {
+            background: #e8f8f5;
+            border: 2px solid var(--primary);
+        }
+        
+        .admin-user-item .user-phone {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .admin-user-item .user-botol {
+            font-size: 12px;
+            color: var(--primary);
+        }
+        
+        .admin-message-form {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .admin-message-form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .selected-user-display {
+            background: #f8f9fa;
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .selected-user-display .label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .selected-user-display .value {
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .selected-user-display .clear-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .admin-actions .btn-secondary {
+            flex: 1;
+            margin-bottom: 0;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        /* Admin Password Modal */
+        .admin-password-modal {
+            background: white;
+            padding: 32px;
+            border-radius: 32px;
+            max-width: 400px;
+            width: 100%;
+            animation: popIn 0.4s ease;
+            text-align: center;
+        }
+        
+        .admin-password-modal .lock-icon {
+            font-size: 64px;
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+        
+        .admin-password-modal h3 {
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .admin-password-modal p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-password-modal input {
+            text-align: center;
+            letter-spacing: 4px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .admin-password-error {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -1550,6 +1853,31 @@
     </div>
     <div id="offline-indicator" class="offline-indicator">
         <i class="fas fa-wifi"></i> Anda sedang offline - data akan tersimpan
+    </div>
+
+    <!-- MESSAGE POPUP (for users) -->
+    <div id="message-popup" class="message-popup-overlay">
+        <div class="message-popup-content">
+            <div class="message-popup-header">
+                <div class="message-popup-title">
+                    <span class="icon">📨</span>
+                    <span>Pesan dari RE-COIN</span>
+                </div>
+                <button class="message-popup-close" onclick="closeMessagePopup()">&times;</button>
+            </div>
+            <div class="message-popup-sender" id="popup-sender">📢 Admin RE-COIN</div>
+            <div class="message-popup-body">
+                <div class="message-text" id="popup-message-text">
+                    Pesan Anda akan muncul di sini.
+                </div>
+            </div>
+            <div class="message-popup-footer">
+                <button class="btn-popup-primary" onclick="closeMessagePopup()">
+                    <i class="fas fa-check-circle"></i> OK, Saya Mengerti
+                </button>
+            </div>
+            <div class="message-popup-timestamp" id="popup-timestamp"></div>
+        </div>
     </div>
 
     <!-- LOGIN PAGE -->
@@ -1578,12 +1906,37 @@
         
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
         
+        <!-- Admin Login Button -->
+        <button class="btn-admin" onclick="showAdminPassword()" style="margin-top: 10px; font-size: 13px; padding: 12px;">
+            <i class="fas fa-user-shield"></i> ADMIN DASHBOARD
+        </button>
+        
         <div class="info-box">
             <strong>🌍 Dampak Lingkungan:</strong><br>
             • 1 botol plastik = 60 gram emisi CO₂e<br>
             • Setiap botol yang didaur ulang menyelamatkan bumi!<br>
             • Kumpulkan botol, dapatkan saldo, dan selamatkan lingkungan<br>
             • 💚 Donasi sebagian saldo Anda untuk 8 golongan penerima manfaat
+        </div>
+    </div>
+
+    <!-- ADMIN PASSWORD MODAL -->
+    <div id="admin-password-overlay">
+        <div class="admin-password-modal">
+            <div class="lock-icon">🔐</div>
+            <h3>Admin Dashboard</h3>
+            <p>Masukkan password admin untuk mengakses dashboard</p>
+            <input type="password" id="admin-password-input" placeholder="Masukkan Password" maxlength="20" autocomplete="off">
+            <div id="admin-password-error" class="admin-password-error">❌ Password salah! Coba lagi.</div>
+            <button class="btn-main" onclick="verifyAdminPassword()" style="margin-top: 16px;">
+                <i class="fas fa-unlock"></i> BUKA DASHBOARD
+            </button>
+            <button class="btn-secondary" onclick="closeAdminPassword()" style="margin-top: 10px;">
+                Batal
+            </button>
+            <div style="font-size: 11px; color: #7f8c8d; margin-top: 16px;">
+                🔑 Password default: <strong>admin123</strong>
+            </div>
         </div>
     </div>
 
@@ -1594,7 +1947,7 @@
             <span id="mode-badge-dashboard" class="mode-badge"></span>
         </div>
         
-        <!-- MACHINE STATUS CARD (BARU) -->
+        <!-- MACHINE STATUS CARD -->
         <div id="machine-status-card" class="machine-status-card stat-card hidden">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <i class="fas fa-microchip" style="font-size: 28px; color: #e67e22;"></i>
@@ -1618,7 +1971,6 @@
         
         <div class="saldo-header">
             <div></div>
-            <!-- Refresh button removed -->
         </div>
         
         <div class="stat-card" id="botol-stat-card">
@@ -1900,6 +2252,65 @@
         </div>
     </div>
 
+    <!-- ADMIN MESSAGE DASHBOARD MODAL -->
+    <div id="message-modal-overlay">
+        <div class="admin-dashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;">
+                    <i class="fas fa-user-shield" style="color: var(--danger);"></i> 
+                    Admin Dashboard
+                </h3>
+                <button onclick="closeAdminDashboard()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: #b2bec3;">&times;</button>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 13px;">
+                <i class="fas fa-info-circle"></i> 
+                Kirim pesan pop-up ke pengguna berdasarkan nomor HP yang terdaftar.
+            </div>
+            
+            <div class="admin-user-list" id="admin-user-list">
+                <div class="loading-spinner" style="padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p style="font-size: 13px;">Memuat daftar pengguna...</p>
+                </div>
+            </div>
+            
+            <div class="admin-message-form" id="admin-message-form">
+                <div class="selected-user-display" id="selected-user-display" style="display: none;">
+                    <span class="label">📱 Pengguna Terpilih:</span>
+                    <span class="value" id="selected-user-phone">-</span>
+                    <span class="value" style="font-size: 12px; color: var(--primary);" id="selected-user-botol">(0 botol)</span>
+                    <button class="clear-btn" onclick="clearSelectedUser()">✕</button>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">
+                        <i class="fas fa-pen"></i> Pesan:
+                    </label>
+                    <textarea id="admin-message-text" placeholder="Tulis pesan yang akan dikirim ke pengguna..." rows="4"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">
+                        <i class="fas fa-tag"></i> Judul (opsional):
+                    </label>
+                    <input type="text" id="admin-message-title" placeholder="Judul pesan (contoh: Promo Spesial!)" style="margin-bottom: 0;">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-main" onclick="sendMessageToUser()" style="flex: 2; margin-bottom: 0;">
+                        <i class="fas fa-paper-plane"></i> KIRIM PESAN
+                    </button>
+                    <button class="btn-secondary" onclick="sendMessageToAll()" style="flex: 1; margin-bottom: 0; font-size: 13px;">
+                        <i class="fas fa-bullhorn"></i> KE SEMUA
+                    </button>
+                </div>
+                
+                <div id="admin-message-result" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
     // ===========================================
     // FIREBASE CONFIGURATION
@@ -1916,6 +2327,11 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // ===========================================
+    // ADMIN PASSWORD CONFIG
+    // ===========================================
+    const ADMIN_PASSWORD = "admin123"; // Ganti dengan password yang diinginkan
 
     // ===========================================
     // DATA ASNAF (8 GOLONGAN)
@@ -1956,8 +2372,9 @@
     let machineSessionExpiry = null;
     let merchantPopupTimer = null;
     let merchantPopupShown = false;
+    let isAdminMode = false;
 
-    const HARGA_PER_BOTOL = 25; // Diubah dari 50 menjadi 25
+    const HARGA_PER_BOTOL = 25;
     const EMISI_PER_BOTOL = 60;
     const ADMIN_WA = "6289524538835";
     const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
@@ -1986,11 +2403,16 @@
     let productsListenerRef = null;
     let merchantsListenerRef = null;
     let donationsListenerRef = null;
+    let messageListenerRef = null;
 
     const DEBUG = true;
     
     // PWA variables
     let deferredPrompt = null;
+    
+    // Admin variables
+    let adminUsers = [];
+    let selectedUserForMessage = null;
 
     // ===========================================
     // PWA FUNCTIONS
@@ -2074,7 +2496,7 @@
     }
 
     // ===========================================
-    // SAVE & RESTORE MACHINE MODE (FIX PWA ISSUE)
+    // SAVE & RESTORE MACHINE MODE
     // ===========================================
     function saveMachineModeToLocal() {
         if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
@@ -2097,14 +2519,12 @@
         
         try {
             const data = JSON.parse(saved);
-            // Cek apakah masih valid (maksimal 1 jam)
             if (Date.now() - data.savedAt > 3600000) {
                 console.log('⏰ Machine mode expired, removing...');
                 localStorage.removeItem('recoin_machine_mode');
                 return false;
             }
             
-            // Cek apakah mesin masih aktif dengan session yang sama
             const snapshot = await db.ref('/' + data.machineId + '/active_user').once('value');
             const activeUser = snapshot.val();
             
@@ -2142,7 +2562,6 @@
             statusCard.classList.remove('hidden');
             if (machineIdSpan) machineIdSpan.innerText = currentUser.machine;
             
-            // Cek siapa yang menggunakan mesin
             db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                 const data = snap.val();
                 if (data && data.id) {
@@ -2182,7 +2601,6 @@
         
         if (confirm('Lepas mode mesin?\n\nAnda akan keluar dari mode mesin dan tidak akan menerima update botol dari mesin ini. Konfirmasi?')) {
             try {
-                // Hapus sesi dari Firebase
                 if (machineSessionToken) {
                     const activeUserRef = db.ref('/' + currentUser.machine + '/active_user');
                     const snapshot = await activeUserRef.once('value');
@@ -2193,16 +2611,13 @@
                     }
                 }
                 
-                // Reset mode mesin
                 currentUser.isMachineMode = false;
                 currentUser.machine = "";
                 machineSessionToken = null;
                 machineSessionExpiry = null;
                 
-                // Hapus dari localStorage
                 localStorage.removeItem('recoin_machine_mode');
                 
-                // Update UI
                 const machineInfo = document.getElementById('machine-info-dashboard');
                 const modeBadge = document.getElementById('mode-badge-dashboard');
                 if (machineInfo) machineInfo.classList.add('hidden');
@@ -2212,7 +2627,6 @@
                 
                 showNotification('✅ Mode mesin dilepas! Sekarang dalam Mode Online', 'success');
                 
-                // Refresh data
                 refreshSaldo();
                 
             } catch (error) {
@@ -2353,7 +2767,6 @@
         const mesin = urlParams.get('mesin');
         const source = urlParams.get('source');
         
-        // Cek juga dari localStorage untuk PWA
         if (!mesin) {
             const savedMachine = localStorage.getItem('recoin_machine_mode');
             if (savedMachine) {
@@ -2451,7 +2864,7 @@
                 session_token: machineSessionToken,
                 session_expiry: machineSessionExpiry
             });
-            saveMachineModeToLocal(); // Update localStorage
+            saveMachineModeToLocal();
         }
         if (autoLogoutTimer) {
             clearTimeout(autoLogoutTimer);
@@ -2639,13 +3052,11 @@
     }
 
     async function checkAutoLogin() {
-        // First try to restore machine mode from localStorage (for PWA)
         const machineRestored = await restoreMachineModeFromLocal();
         
         const session = JSON.parse(localStorage.getItem('recoin_user_session') || '{}');
         if (!session.phone || session.expiresAt < Date.now()) {
             if (!machineRestored) return false;
-            // If machine restored but no user session, we still need user to login
             showNotification('🔌 Mode mesin terdeteksi, silakan login kembali', 'info');
             return false;
         }
@@ -2799,6 +3210,7 @@
                     refreshSaldo();
                     loadMerchantsAndProducts();
                     startOrdersListener();
+                    startMessageListener();
                     return;
                 }
                 machineSessionToken = generateSessionToken(currentUser.phone);
@@ -2857,6 +3269,7 @@
         startProductListener();
         startSaldoListener();
         loadUserDonations();
+        startMessageListener();
     }
 
     function loginSuccess() {
@@ -2952,6 +3365,7 @@
         if (saldoListenerRef) saldoListenerRef.off();
         if (ordersListenerRef) ordersListenerRef.off();
         if (donationsListenerRef) donationsListenerRef.off();
+        if (messageListenerRef) messageListenerRef.off();
         if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
         if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
         if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
@@ -2967,6 +3381,7 @@
         machineSessionToken = null;
         machineSessionExpiry = null;
         merchantPopupShown = false;
+        isAdminMode = false;
         updateMachineStatusCard();
     }
 
@@ -3853,6 +4268,293 @@
     }
 
     // ===========================================
+    // ADMIN PASSWORD FUNCTIONS
+    // ===========================================
+    function showAdminPassword() {
+        document.getElementById('admin-password-overlay').style.display = 'flex';
+        document.getElementById('admin-password-input').value = '';
+        document.getElementById('admin-password-error').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('admin-password-input').focus();
+        }, 300);
+    }
+    
+    function closeAdminPassword() {
+        document.getElementById('admin-password-overlay').style.display = 'none';
+    }
+    
+    function verifyAdminPassword() {
+        const password = document.getElementById('admin-password-input').value;
+        if (password === ADMIN_PASSWORD) {
+            closeAdminPassword();
+            isAdminMode = true;
+            document.getElementById('message-modal-overlay').style.display = 'flex';
+            loadAdminUsers();
+            showNotification('✅ Admin Dashboard diakses', 'success');
+        } else {
+            const errorEl = document.getElementById('admin-password-error');
+            errorEl.style.display = 'block';
+            document.getElementById('admin-password-input').value = '';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 3000);
+            showNotification('❌ Password admin salah!', 'error');
+        }
+    }
+    
+    // Enter key untuk submit password
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && document.getElementById('admin-password-overlay').style.display === 'flex') {
+            verifyAdminPassword();
+        }
+    });
+
+    // ===========================================
+    // ADMIN MESSAGE FUNCTIONS
+    // ===========================================
+    function closeAdminDashboard() {
+        document.getElementById('message-modal-overlay').style.display = 'none';
+        isAdminMode = false;
+        selectedUserForMessage = null;
+    }
+    
+    function loadAdminUsers() {
+        const userList = document.getElementById('admin-user-list');
+        if (!userList) return;
+        
+        userList.innerHTML = '<div class="loading-spinner" style="padding: 20px;"><i class="fas fa-spinner fa-spin"></i><p style="font-size: 13px;">Memuat daftar pengguna...</p></div>';
+        
+        db.ref('/accounts').once('value', (snapshot) => {
+            const users = snapshot.val() || {};
+            adminUsers = [];
+            let html = '';
+            
+            for (let phone in users) {
+                const data = users[phone];
+                adminUsers.push({ phone, ...data });
+                const isSelected = selectedUserForMessage && selectedUserForMessage.phone === phone;
+                html += `<div class="admin-user-item ${isSelected ? 'selected' : ''}" onclick="selectAdminUser('${phone}')">
+                    <div>
+                        <div class="user-phone">📱 ${phone}</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">
+                            Bergabung: ${formatDate(data.created_at)}
+                        </div>
+                    </div>
+                    <div class="user-botol">🔄 ${data.botol || 0} botol</div>
+                </div>`;
+            }
+            
+            if (adminUsers.length === 0) {
+                html = '<div class="empty-state"><i class="fas fa-users"></i><p>Belum ada pengguna terdaftar</p></div>';
+            }
+            
+            userList.innerHTML = html;
+        });
+    }
+    
+    function selectAdminUser(phone) {
+        const user = adminUsers.find(u => u.phone === phone);
+        if (!user) return;
+        
+        selectedUserForMessage = user;
+        
+        document.querySelectorAll('.admin-user-item').forEach(el => el.classList.remove('selected'));
+        const selectedEl = document.querySelector(`.admin-user-item[onclick="selectAdminUser('${phone}')"]`);
+        if (selectedEl) selectedEl.classList.add('selected');
+        
+        const display = document.getElementById('selected-user-display');
+        const phoneDisplay = document.getElementById('selected-user-phone');
+        const botolDisplay = document.getElementById('selected-user-botol');
+        
+        if (display && phoneDisplay && botolDisplay) {
+            display.style.display = 'flex';
+            phoneDisplay.innerText = phone;
+            botolDisplay.innerText = `(${user.botol || 0} botol)`;
+        }
+        
+        document.getElementById('admin-message-result').innerHTML = '';
+    }
+    
+    function clearSelectedUser() {
+        selectedUserForMessage = null;
+        document.getElementById('selected-user-display').style.display = 'none';
+        document.querySelectorAll('.admin-user-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('admin-message-result').innerHTML = '';
+    }
+    
+    function sendMessageToUser() {
+        if (!selectedUserForMessage) {
+            showNotification('Pilih pengguna terlebih dahulu!', 'error');
+            document.getElementById('admin-message-result').innerHTML = '<div style="color: var(--danger); padding: 10px;">❌ Pilih pengguna terlebih dahulu!</div>';
+            return;
+        }
+        
+        sendMessageToSpecificUser(selectedUserForMessage.phone);
+    }
+    
+    function sendMessageToAll() {
+        if (adminUsers.length === 0) {
+            showNotification('Tidak ada pengguna untuk dikirim pesan', 'error');
+            return;
+        }
+        
+        if (!confirm(`Kirim pesan ke SEMUA pengguna (${adminUsers.length} orang)?`)) return;
+        
+        const messageText = document.getElementById('admin-message-text').value.trim();
+        const title = document.getElementById('admin-message-title').value.trim() || '📨 Pesan dari RE-COIN';
+        
+        if (!messageText) {
+            showNotification('Harap tulis pesan terlebih dahulu!', 'error');
+            document.getElementById('admin-message-result').innerHTML = '<div style="color: var(--danger); padding: 10px;">❌ Harap tulis pesan terlebih dahulu!</div>';
+            return;
+        }
+        
+        let successCount = 0;
+        let failCount = 0;
+        
+        document.getElementById('admin-message-result').innerHTML = '<div style="color: var(--info); padding: 10px;">⏳ Mengirim ke semua pengguna...</div>';
+        
+        adminUsers.forEach((user, index) => {
+            setTimeout(() => {
+                sendMessageToDatabase(user.phone, messageText, title)
+                    .then(() => {
+                        successCount++;
+                        document.getElementById('admin-message-result').innerHTML = 
+                            `<div style="color: var(--success); padding: 10px;">✅ Berhasil mengirim ke ${successCount} pengguna${failCount > 0 ? `, ${failCount} gagal` : ''}</div>`;
+                    })
+                    .catch(() => {
+                        failCount++;
+                        document.getElementById('admin-message-result').innerHTML = 
+                            `<div style="color: var(--warning); padding: 10px;">⚠️ ${successCount} berhasil, ${failCount} gagal</div>`;
+                    });
+            }, index * 500);
+        });
+        
+        showNotification(`📨 Mengirim pesan ke ${adminUsers.length} pengguna...`, 'info');
+        document.getElementById('admin-message-text').value = '';
+        document.getElementById('admin-message-title').value = '';
+    }
+    
+    function sendMessageToSpecificUser(phone) {
+        const messageText = document.getElementById('admin-message-text').value.trim();
+        const title = document.getElementById('admin-message-title').value.trim() || '📨 Pesan dari RE-COIN';
+        
+        if (!messageText) {
+            showNotification('Harap tulis pesan terlebih dahulu!', 'error');
+            document.getElementById('admin-message-result').innerHTML = '<div style="color: var(--danger); padding: 10px;">❌ Harap tulis pesan terlebih dahulu!</div>';
+            return;
+        }
+        
+        if (!phone) {
+            showNotification('Pilih pengguna terlebih dahulu!', 'error');
+            return;
+        }
+        
+        document.getElementById('admin-message-result').innerHTML = '<div style="color: var(--info); padding: 10px;">⏳ Mengirim pesan...</div>';
+        
+        sendMessageToDatabase(phone, messageText, title)
+            .then(() => {
+                document.getElementById('admin-message-result').innerHTML = 
+                    `<div style="color: var(--success); padding: 10px;">✅ Pesan berhasil dikirim ke ${phone}</div>`;
+                showNotification(`✅ Pesan berhasil dikirim ke ${phone}`, 'success');
+                document.getElementById('admin-message-text').value = '';
+                document.getElementById('admin-message-title').value = '';
+            })
+            .catch((error) => {
+                document.getElementById('admin-message-result').innerHTML = 
+                    `<div style="color: var(--danger); padding: 10px;">❌ Gagal mengirim: ${error.message}</div>`;
+                showNotification('Gagal mengirim pesan', 'error');
+            });
+    }
+    
+    function sendMessageToDatabase(phone, message, title) {
+        const messageId = 'MSG' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const messageData = {
+            id: messageId,
+            target: phone,
+            title: title || '📨 Pesan dari RE-COIN',
+            message: message,
+            sender: 'Admin RE-COIN',
+            timestamp: Date.now(),
+            read: false,
+            delivered: true
+        };
+        
+        return db.ref(`/messages/${phone}/${messageId}`).set(messageData);
+    }
+    
+    // ===========================================
+    // MESSAGE LISTENER FOR USERS
+    // ===========================================
+    function startMessageListener() {
+        if (!currentUser.phone) return;
+        logDebug('Memulai listener pesan untuk user:', currentUser.phone);
+        
+        if (messageListenerRef) messageListenerRef.off();
+        messageListenerRef = db.ref(`/messages/${currentUser.phone}`);
+        messageListenerRef.on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            logDebug('Pesan baru diterima:', message);
+            
+            if (message && !message.read) {
+                db.ref(`/messages/${currentUser.phone}/${snapshot.key}/read`).set(true);
+                showMessagePopup(message);
+            }
+        });
+        
+        db.ref(`/messages/${currentUser.phone}`).orderByChild('read').equalTo(false).once('value', (snapshot) => {
+            snapshot.forEach((child) => {
+                const message = child.val();
+                if (message) {
+                    db.ref(`/messages/${currentUser.phone}/${child.key}/read`).set(true);
+                    showMessagePopup(message);
+                }
+            });
+        });
+    }
+    
+    function showMessagePopup(message) {
+        const popup = document.getElementById('message-popup');
+        const textEl = document.getElementById('popup-message-text');
+        const senderEl = document.getElementById('popup-sender');
+        const timestampEl = document.getElementById('popup-timestamp');
+        
+        if (!popup || !textEl) return;
+        
+        textEl.innerHTML = `<strong>${message.title || '📨 Pesan dari RE-COIN'}</strong><br><br>${message.message}`;
+        
+        if (senderEl) {
+            senderEl.innerHTML = `📢 ${message.sender || 'Admin RE-COIN'}`;
+        }
+        
+        if (timestampEl) {
+            timestampEl.innerHTML = `📅 ${formatDate(message.timestamp)}`;
+        }
+        
+        popup.classList.add('show');
+        
+        if (window.messagePopupTimeout) clearTimeout(window.messagePopupTimeout);
+        window.messagePopupTimeout = setTimeout(() => {
+            closeMessagePopup();
+        }, 30000);
+        
+        playBellSound();
+        
+        logDebug('Menampilkan popup pesan:', message);
+    }
+    
+    function closeMessagePopup() {
+        const popup = document.getElementById('message-popup');
+        if (popup) {
+            popup.classList.remove('show');
+            if (window.messagePopupTimeout) {
+                clearTimeout(window.messagePopupTimeout);
+                window.messagePopupTimeout = null;
+            }
+        }
+    }
+
+    // ===========================================
     // INIT
     // ===========================================
     window.onload = function() {
@@ -3868,13 +4570,13 @@
         if (!checkAutoLogin()) {
             showLoginPage();
         }
-        // PWA Initialization
         registerServiceWorker();
         beforeInstallPrompt();
         initOfflineDetection();
         updateFloatingCartVisibility();
-        console.log('🔥 RE-COIN App siap dengan PWA Installable + Machine Mode Persistence + Notifikasi Botol + Suara Lonceng + Floating Cart + Auto Scroll!');
-        console.log('💰 Harga per botol: Rp 25 (diubah dari 50)');
+        console.log('🔥 RE-COIN App siap dengan Admin Password Protection!');
+        console.log('🔑 Admin Password: ' + ADMIN_PASSWORD);
+        console.log('💰 Harga per botol: Rp 25');
     };
     </script>
 </body>
