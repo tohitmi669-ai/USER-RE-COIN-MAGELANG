@@ -6,10 +6,8 @@
     <title>RE-COIN | Tukar Botol Jadi Belanja + Hijaukan Bumi</title>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -2633,8 +2631,8 @@
         <input type="password" id="pass-input" placeholder="Password" required>
 
         <div class="remember-me">
-            <input type="checkbox" id="remember-me" checked>
-            <label for="remember-me">Ingat saya (7 hari)</label>
+            <input type="checkbox" id="remember-me" checked disabled>
+            <label for="remember-me">✅ Login otomatis aktif (selalu tersimpan)</label>
         </div>
 
         <button id="btn-auth" class="btn-main" onclick="handleAuth()">LOGIN / DAFTAR</button>
@@ -2991,7 +2989,7 @@
     </div>
 
     <!-- ========================================================== -->
-    <!-- JAVASCRIPT (SEMUA FUNGSI DI PERTAHANKAN)                    -->
+    <!-- JAVASCRIPT (SEMUA FUNGSI DI PERTAHANKAN + AUTO-LOGIN)      -->
     <!-- ========================================================== -->
     <script>
         // ===========================================
@@ -3036,7 +3034,7 @@
 
         const HARGA_PER_BOTOL = 25;
         const EMISI_PER_BOTOL = 60;
-        const REMEMBER_ME_DURATION = 7 * 24 * 60 * 60 * 1000;
+        const REMEMBER_ME_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 tahun
 
         let cart = [];
         let merchants = [];
@@ -3225,17 +3223,14 @@
                 sessionCountdown = remaining;
 
                 if (remaining <= 0) {
-                    // Sesi berakhir karena tidak ada aktivitas
                     console.log('⏰ Session expired due to inactivity');
                     stopSessionTimer();
                     endMachineSession('⏰ Sesi mesin berakhir karena tidak ada aktivitas selama 1 menit');
                     return;
                 }
 
-                // Update timer display
                 updateSessionTimerDisplay();
 
-                // Warning jika sisa < 10 detik
                 const timerEl = document.getElementById('session-timer-display');
                 if (timerEl) {
                     if (remaining <= 10) {
@@ -3274,13 +3269,11 @@
         function resetSessionTimer() {
             if (currentUser.isMachineMode && currentUser.machine) {
                 lastActivityTime = Date.now();
-                // Update di Firebase
                 if (machineSessionToken) {
                     db.ref('/' + currentUser.machine + '/active_user').update({
                         last_activity: Date.now()
                     });
                 }
-                // Restart timer jika belum berakhir
                 if (!sessionTimerInterval) {
                     startSessionTimer();
                 } else {
@@ -3302,7 +3295,6 @@
             stopSessionTimer();
 
             if (currentUser.isMachineMode && currentUser.machine) {
-                // Hapus session dari Firebase
                 if (machineSessionToken) {
                     db.ref('/' + currentUser.machine + '/active_user').remove()
                         .then(() => {
@@ -3313,7 +3305,6 @@
                         });
                 }
 
-                // Reset status
                 currentUser.isMachineMode = false;
                 currentUser.machine = "";
                 machineSessionToken = null;
@@ -3321,7 +3312,6 @@
 
                 localStorage.removeItem('recoin_machine_mode');
 
-                // Update UI
                 const machineInfo = document.getElementById('machine-info-dashboard');
                 if (machineInfo) machineInfo.classList.add('hidden');
 
@@ -3334,7 +3324,6 @@
                     timerEl.classList.remove('warning');
                 }
 
-                // Update badge mode
                 const modeBadge = document.querySelector('.mode-badge');
                 if (modeBadge) {
                     modeBadge.innerText = '🌐 Mode Online';
@@ -3343,10 +3332,8 @@
 
                 showNotification(reason || '⏰ Sesi mesin berakhir', 'info');
 
-                // Refresh saldo untuk memastikan data terbaru
                 refreshSaldo();
 
-                // Update URL
                 if (window.history && window.history.replaceState) {
                     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                     window.history.replaceState({}, document.title, newUrl);
@@ -3355,22 +3342,6 @@
 
             isSessionEnding = false;
         }
-
-        // Override updateLastActivity untuk reset timer
-        const originalUpdateLastActivity = updateLastActivity;
-        updateLastActivity = function() {
-            if (!currentUser.isMachineMode || !currentUser.machine) return;
-            if (machineSessionToken) {
-                db.ref('/' + currentUser.machine + '/active_user').update({
-                    last_activity: Date.now(),
-                    session_token: machineSessionToken,
-                    session_expiry: machineSessionExpiry
-                });
-                saveMachineModeToLocal();
-            }
-            // Reset timer setiap ada aktivitas
-            resetSessionTimer();
-        };
 
         // ===========================================
         // DISPLAY MACHINE STATUS CARD
@@ -3387,7 +3358,6 @@
                 statusCard.classList.remove('hidden');
                 if (machineIdSpan) machineIdSpan.innerText = currentUser.machine;
 
-                // Start timer jika belum berjalan
                 if (!sessionTimerInterval) {
                     startSessionTimer();
                 }
@@ -3457,7 +3427,6 @@
 
                     updateMachineStatusCard();
 
-                    // Update badge mode
                     const modeBadge = document.querySelector('.mode-badge');
                     if (modeBadge) {
                         modeBadge.innerText = '🌐 Mode Online';
@@ -3524,7 +3493,6 @@
                 }, 500);
             }
 
-            // Reset session timer when botol added (aktivitas)
             resetSessionTimer();
         }
 
@@ -3681,7 +3649,6 @@
 
         function mulaiAutoLogoutTimer() {
             // Tidak digunakan lagi karena kita pakai session timer 1 menit
-            // Biarkan kosong untuk kompatibilitas
         }
 
         // ===========================================
@@ -3833,7 +3800,6 @@
                     updateMachineStatusCard();
                 }
                 if (data.id === currentUser.phone) {
-                    // Reset timer jika ada aktivitas dari mesin
                     if (data.last_activity) {
                         lastActivityTime = data.last_activity;
                         resetSessionTimer();
@@ -3844,127 +3810,105 @@
         }
 
         // ===========================================
-        // AUTO LOGIN
+        // AUTO LOGIN - SELALU SIMPAN SESSION
         // ===========================================
         function saveUserSession() {
-            if (!currentUser.phone || !currentUser.rememberMe) return;
+            if (!currentUser.phone) return;
+            // Selalu simpan session (auto-login permanen)
             localStorage.setItem('recoin_user_session', JSON.stringify({
                 phone: currentUser.phone,
-                expiresAt: Date.now() + REMEMBER_ME_DURATION,
+                expiresAt: Date.now() + REMEMBER_ME_DURATION, // 1 tahun
                 machine: currentUser.machine,
                 isMachineMode: currentUser.isMachineMode,
                 loginSource: currentUser.loginSource,
                 sessionToken: machineSessionToken,
-                sessionExpiry: machineSessionExpiry
+                sessionExpiry: machineSessionExpiry,
+                savedAt: Date.now()
             }));
             if (currentUser.isMachineMode) {
                 saveMachineModeToLocal();
             }
+            console.log('💾 Session saved for auto-login:', currentUser.phone);
         }
 
         function clearUserSession() {
             localStorage.removeItem('recoin_user_session');
             localStorage.removeItem('recoin_machine_mode');
+            console.log('🗑️ Session cleared');
         }
 
         async function checkAutoLogin() {
-            const machineRestored = await restoreMachineModeFromLocal();
+            try {
+                const session = JSON.parse(localStorage.getItem('recoin_user_session') || '{}');
 
-            const session = JSON.parse(localStorage.getItem('recoin_user_session') || '{}');
-            if (!session.phone || session.expiresAt < Date.now()) {
-                if (!machineRestored) return false;
-                showNotification('🔌 Mode mesin terdeteksi, silakan login kembali', 'info');
-                return false;
-            }
+                // Cek apakah ada session
+                if (!session.phone) {
+                    console.log('ℹ️ Tidak ada session tersimpan');
+                    return false;
+                }
 
-            currentUser.phone = session.phone;
-            currentUser.machine = session.machine || "";
-            currentUser.isMachineMode = session.isMachineMode || machineRestored;
-            currentUser.loginSource = session.loginSource || 'web';
-            currentUser.rememberMe = true;
+                // Cek expiry - kalau expired, tetap coba login (jangan hapus)
+                if (session.expiresAt && session.expiresAt < Date.now()) {
+                    console.log('⚠️ Session expired, tapi tetap coba login...');
+                }
 
-            if (machineRestored && !currentUser.isMachineMode) {
-                currentUser.isMachineMode = true;
-                currentUser.machine = session.machine || (await restoreMachineModeFromLocal() ? currentUser.machine : "");
-            }
+                console.log('🔄 Auto-login untuk:', session.phone);
 
-            machineSessionToken = session.sessionToken || null;
-            machineSessionExpiry = session.sessionExpiry || null;
+                // Set data user dari session
+                currentUser.phone = session.phone;
+                currentUser.machine = session.machine || "";
+                currentUser.isMachineMode = session.isMachineMode || false;
+                currentUser.loginSource = session.loginSource || 'web';
+                currentUser.rememberMe = true;
 
-            const snap = await db.ref('/accounts/' + session.phone).once('value');
-            if (snap.exists()) {
+                machineSessionToken = session.sessionToken || null;
+                machineSessionExpiry = session.sessionExpiry || null;
+
+                // Cek apakah akun masih ada di Firebase
+                const snap = await db.ref('/accounts/' + session.phone).once('value');
+
+                if (!snap.exists()) {
+                    console.log('❌ Akun tidak ditemukan di database');
+                    clearUserSession();
+                    return false;
+                }
+
+                // Set botol dari database
                 currentUser.botol = snap.val().botol || 0;
+
+                // Jika mode mesin, validasi session mesin
+                if (currentUser.isMachineMode && currentUser.machine) {
+                    try {
+                        const machineSnap = await db.ref('/' + currentUser.machine + '/active_user').once('value');
+                        const activeUser = machineSnap.val();
+
+                        if (!activeUser || activeUser.session_token !== machineSessionToken) {
+                            console.log('⚠️ Session mesin tidak valid, beralih ke mode online');
+                            currentUser.isMachineMode = false;
+                            currentUser.machine = "";
+                            machineSessionToken = null;
+                            machineSessionExpiry = null;
+                            // Update session di localStorage
+                            saveUserSession();
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Gagal cek session mesin:', e);
+                        currentUser.isMachineMode = false;
+                        currentUser.machine = "";
+                        machineSessionToken = null;
+                        machineSessionExpiry = null;
+                    }
+                }
+
+                // Langsung login
+                console.log('✅ Auto-login berhasil!');
                 completeLogin();
                 return true;
-            } else {
-                clearUserSession();
-                showLoginPage();
+
+            } catch (error) {
+                console.error('❌ Auto-login error:', error);
                 return false;
             }
-        }
-
-        // ===========================================
-        // SALDO REAL-TIME
-        // ===========================================
-        function startSaldoListener() {
-            if (!currentUser.phone || saldoListenerActive) return;
-            if (currentUser.isMachineMode && !machineSessionToken) {
-                logDebug('Mode mesin aktif tapi tidak ada token, skip listener');
-                return;
-            }
-            logDebug('Memulai listener saldo real-time...');
-            saldoListenerActive = true;
-            lastSaldo = currentUser.botol;
-            if (saldoListenerRef) saldoListenerRef.off();
-            saldoListenerRef = db.ref('/accounts/' + currentUser.phone + '/botol');
-            saldoListenerRef.on('value', (snapshot) => {
-                if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
-                    db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (tokenSnap) => {
-                        if (tokenSnap.val() !== machineSessionToken) {
-                            logDebug('Sesi tidak valid, skip update saldo');
-                            return;
-                        }
-                        processSaldoUpdate(snapshot.val());
-                    });
-                } else {
-                    processSaldoUpdate(snapshot.val());
-                }
-            });
-        }
-
-        function refreshSaldoPromise() {
-            return new Promise((resolve) => {
-                db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
-                    currentUser.botol = snap.val() || 0;
-                    updateSaldoDisplay();
-                    resolve();
-                });
-            });
-        }
-
-        function processSaldoUpdate(newSaldo) {
-            const oldSaldo = lastSaldo;
-            logDebug('Saldo berubah:', { old: oldSaldo, new: newSaldo });
-            const addedAmount = newSaldo - oldSaldo;
-            lastSaldo = newSaldo;
-            currentUser.botol = newSaldo;
-            updateSaldoDisplay();
-            updateEcoDisplay();
-            if (addedAmount > 0) {
-                showBotolNotification(newSaldo, addedAmount);
-                // Reset timer aktivitas
-                resetSessionTimer();
-            }
-            updateLastActivity();
-        }
-
-        function updateSaldoDisplay() {
-            const countEl = document.getElementById('count');
-            const rupiahEl = document.getElementById('rupiah');
-            const modalSaldo = document.getElementById('modal-saldo');
-            if (countEl) countEl.innerText = currentUser.botol;
-            if (rupiahEl) rupiahEl.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
-            if (modalSaldo) modalSaldo.innerText = formatRupiah(currentUser.botol * HARGA_PER_BOTOL);
         }
 
         // ===========================================
@@ -3978,17 +3922,33 @@
                 showNotification('HP 10 digit, password 4 karakter', 'error');
                 return;
             }
-            currentUser = { ...currentUser, phone, rememberMe: document.getElementById('remember-me').checked,
-                loginSource: mode.loginSource, machine: mode.machineId, isMachineMode: mode.mode === 'machine' };
+            
+            // SELALU set rememberMe = true untuk auto-login
+            currentUser = { 
+                ...currentUser, 
+                phone, 
+                rememberMe: true, 
+                loginSource: mode.loginSource, 
+                machine: mode.machineId, 
+                isMachineMode: mode.mode === 'machine' 
+            };
+            
             db.ref('/accounts/' + phone).once('value', (snap) => {
                 if (snap.exists()) {
-                    if (snap.val().password === password) loginSuccess();
-                    else showNotification('Password salah!', 'error');
+                    if (snap.val().password === password) {
+                        // Simpan session SEGERA sebelum login
+                        saveUserSession();
+                        loginSuccess();
+                    } else {
+                        showNotification('Password salah!', 'error');
+                    }
                 } else {
                     db.ref('/accounts/' + phone).set({ password, botol: 0, created_at: Date.now() })
-                        .then(() => { showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱',
-                            'success');
-                            loginSuccess(); })
+                        .then(() => { 
+                            showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success');
+                            saveUserSession(); // Simpan session
+                            loginSuccess(); 
+                        })
                         .catch(() => showNotification('Gagal buat akun', 'error'));
                 }
             });
@@ -4027,6 +3987,7 @@
                             .pathname;
                             window.history.replaceState({}, document.title, newUrl);
                         }
+                        saveUserSession();
                         refreshSaldo();
                         loadMerchantsAndProducts();
                         startOrdersListener();
@@ -4050,9 +4011,9 @@
                     db.ref('/' + currentUser.machine + '/active_user').set(sessionData)
                         .then(() => {
                             saveMachineModeToLocal();
+                            saveUserSession();
                             showNotification('✅ Terhubung ke mesin (sesi 1 menit)', 'success');
 
-                            // Start session timer
                             startSessionTimer();
 
                             const machineInfo = document.getElementById('machine-info-dashboard');
@@ -4063,7 +4024,6 @@
                                 sessionInfo.classList.remove('hidden');
                             }
 
-                            // Update badge mode
                             const modeBadge = document.querySelector('.mode-badge');
                             if (modeBadge) {
                                 modeBadge.innerText = '🔌 Mode Mesin';
@@ -4101,7 +4061,7 @@
                 }
             }
 
-            saveUserSession();
+            saveUserSession(); // ← SELALU SIMPAN SESSION
             refreshSaldo();
             updateEcoDisplay();
             loadMerchantsAndProducts();
@@ -4205,6 +4165,10 @@
         }
 
         function logout() {
+            if (!confirm('Yakin ingin logout?\n\nAnda perlu login lagi setelah ini.')) {
+                return;
+            }
+            
             if (productsListenerRef) productsListenerRef.off();
             if (merchantsListenerRef) merchantsListenerRef.off();
             if (saldoListenerRef) saldoListenerRef.off();
@@ -4220,7 +4184,7 @@
             if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                 db.ref('/' + currentUser.machine + '/active_user').remove();
             }
-            clearUserSession();
+            clearUserSession(); // ← HAPUS SESSION HANYA SAAT LOGOUT
             showLoginPage();
             currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web",
             rememberMe: true };
@@ -4430,7 +4394,7 @@
             }
             updateCartDisplay();
             showNotification(`${p.name} ditambahkan ke keranjang`, 'success');
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function updateCartDisplay() {
@@ -4484,13 +4448,13 @@
                 cart.splice(index, 1);
             }
             updateCartDisplay();
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function removeFromCart(id) {
             cart = cart.filter(i => i.id !== id);
             updateCartDisplay();
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function toggleCart() {
@@ -4669,7 +4633,7 @@
                 if (cartPanel) cartPanel.classList.add('hidden');
                 updateCartDisplay();
                 refreshSaldo();
-                resetSessionTimer(); // Aktivitas
+                resetSessionTimer();
             } catch (error) {
                 console.error('Checkout error:', error);
                 showNotification('Error: ' + error.message, 'error');
@@ -4765,7 +4729,7 @@
                 await db.ref().update(updates);
                 showNotification('✅ Pesanan dikonfirmasi! Saldo merchant bertambah.', 'success');
                 order.status = 'selesai';
-                resetSessionTimer(); // Aktivitas
+                resetSessionTimer();
             } catch (error) { console.error('Confirmation error:', error);
                 showNotification('Gagal konfirmasi: ' + error.message, 'error'); }
         }
@@ -4822,7 +4786,7 @@
             const orderDetailPage = document.getElementById('order-detail-page');
             if (ordersPage) ordersPage.classList.add('hidden');
             if (orderDetailPage) orderDetailPage.classList.remove('hidden');
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function hideOrderDetail() {
@@ -4830,7 +4794,7 @@
             const orderDetailPage = document.getElementById('order-detail-page');
             if (ordersPage) ordersPage.classList.remove('hidden');
             if (orderDetailPage) orderDetailPage.classList.add('hidden');
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function showAllOrders() {
@@ -4842,7 +4806,7 @@
             if (shopPage) shopPage.classList.add('hidden');
             if (ordersPage) ordersPage.classList.remove('hidden');
             if (orderDetailPage) orderDetailPage.classList.add('hidden');
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function hideOrders() {
@@ -4852,7 +4816,7 @@
             if (dashboardPage) dashboardPage.classList.remove('hidden');
             if (shopPage) shopPage.classList.add('hidden');
             if (ordersPage) ordersPage.classList.add('hidden');
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -4862,13 +4826,13 @@
             refreshSaldo();
             const modalOverlay = document.getElementById('modal-overlay');
             if (modalOverlay) modalOverlay.style.display = 'flex';
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function closeModal() {
             const modalOverlay = document.getElementById('modal-overlay');
             if (modalOverlay) modalOverlay.style.display = 'none';
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function updatePaymentPlaceholder() {
@@ -4899,7 +4863,7 @@
                     closeModal();
                     showNotification('Permintaan penarikan dikirim', 'success');
                     refreshSaldo();
-                    resetSessionTimer(); // Aktivitas
+                    resetSessionTimer();
                 })
                 .catch(error => { showNotification('Error: ' + error.message, 'error'); });
         }
@@ -4918,19 +4882,19 @@
             merchantPopupShown = true;
             const overlay = document.getElementById('merchant-popup-overlay');
             if (overlay) overlay.style.display = 'flex';
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function closeMerchantPopup() {
             const overlay = document.getElementById('merchant-popup-overlay');
             if (overlay) overlay.style.display = 'none';
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function goToMerchantRegistration() {
             window.open('https://tohitmi669-ai.github.io/MERCHANT-RECOIN/', '_blank');
             closeMerchantPopup();
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function resetMerchantPopupTimer() {
@@ -4960,7 +4924,7 @@
             displayProducts();
             startMerchantPopupTimer();
             updateFloatingCartVisibility();
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         function hideShop() {
@@ -4970,7 +4934,7 @@
             if (shopPage) shopPage.classList.add('hidden');
             resetMerchantPopupTimer();
             updateFloatingCartVisibility();
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -4986,13 +4950,14 @@
             msg += `📦 Produk: ${products.length}\n`;
             msg += `📝 Pesanan: ${userOrders.length}\n`;
             msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
+            msg += `💾 Session Tersimpan: ${localStorage.getItem('recoin_user_session') ? 'YA' : 'TIDAK'}\n`;
             if (currentUser.isMachineMode) {
                 msg += `🖥️ Mesin ID: ${currentUser.machine}\n`;
                 msg += `🔑 Token: ${(machineSessionToken || '').substr(0,20)}...\n`;
                 msg += `⏱️ Sisa waktu: ${sessionCountdown} detik\n`;
             }
             alert(msg);
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -5099,7 +5064,7 @@
                     playBellSound();
                     showNotification(`📢 Broadcast: ${broadcastData.title || 'Pengumuman'}`, 'info');
                     updateMessageBadge();
-                    resetSessionTimer(); // Aktivitas
+                    resetSessionTimer();
                 }
             });
 
@@ -5181,7 +5146,7 @@
                     playBellSound();
                     showNotification(`📨 Pesan dari ${messageData.sender || 'Admin'}`, 'info');
                     updateMessageBadge();
-                    resetSessionTimer(); // Aktivitas
+                    resetSessionTimer();
                 }
             });
 
@@ -5262,7 +5227,7 @@
             }
 
             console.log('📨 Menampilkan popup pesan:', message);
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -5330,7 +5295,7 @@
             }
 
             console.log('📨 Menampilkan popup pesan dengan gambar:', message);
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -5345,7 +5310,7 @@
                     window.messagePopupTimeout = null;
                 }
             }
-            resetSessionTimer(); // Aktivitas
+            resetSessionTimer();
         }
 
         // ===========================================
@@ -5468,7 +5433,7 @@
                         showNotification(`📨 Ada ${total} pesan/broadcast baru!`, 'success');
                     }
                     updateMessageBadge();
-                    resetSessionTimer(); // Aktivitas
+                    resetSessionTimer();
                 });
             });
         }
@@ -5541,9 +5506,12 @@
         }
 
         // ===========================================
-        // INIT
+        // INIT - AUTO LOGIN PADA SAAT REFRESH
         // ===========================================
-        window.onload = function() {
+        window.onload = async function() {
+            console.log('🚀 RE-COIN App starting...');
+
+            // Setup mode mesin dari URL (jika ada)
             const mode = getModeFromUrl();
             if (mode.mode === 'machine') {
                 const machineInfo = document.getElementById('machine-info-login');
@@ -5553,19 +5521,30 @@
                 if (machineIdDisplay) machineIdDisplay.innerText = mode.machineId;
                 if (sourceInfo) sourceInfo.innerText = mode.loginSource === 'machine' ? 'via QR' : 'via Web';
             }
-            if (!checkAutoLogin()) {
+
+            // ✅ COBA AUTO-LOGIN DULU (AWAIT agar benar-benar menunggu)
+            const loggedIn = await checkAutoLogin();
+
+            if (!loggedIn) {
+                console.log('ℹ️ Menampilkan halaman login');
                 showLoginPage();
+            } else {
+                console.log('✅ User sudah login otomatis (tidak perlu login lagi)');
             }
+
+            // Init fitur lain
             registerServiceWorker();
             beforeInstallPrompt();
             initOfflineDetection();
             updateFloatingCartVisibility();
             startAutoMessageCheck();
+
             console.log('🔥 RE-COIN App siap!');
             console.log('💰 Harga per botol: Rp 25');
             console.log('📢 Sistem broadcast realtime aktif!');
             console.log('📨 Sistem pesan admin aktif!');
             console.log('⏱️ Sesi mesin: 1 menit');
+            console.log('🔄 Auto-login: AKTIF (refresh tidak akan logout)');
         };
     </script>
 
