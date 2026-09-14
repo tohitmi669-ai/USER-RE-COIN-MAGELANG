@@ -237,6 +237,7 @@
             font-weight: 900;
             margin: 6px 0 4px 0;
             letter-spacing: -0.5px;
+            transition: transform 0.3s ease, color 0.3s ease;
         }
 
         .saldo-card .saldo-sub {
@@ -247,6 +248,8 @@
 
         .saldo-card .saldo-sub span {
             font-weight: 700;
+            transition: transform 0.3s ease;
+            display: inline-block;
         }
 
         /* ===========================
@@ -813,6 +816,12 @@
             font-weight: 800;
             color: #1e7e34;
             margin: 4px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .val-eco.increase {
+            animation: numberPop 0.5s ease;
+            color: var(--success);
         }
 
         .val-rupiah {
@@ -821,6 +830,7 @@
             color: var(--dark);
             margin: 4px 0;
             letter-spacing: -0.5px;
+            transition: transform 0.3s ease;
         }
 
         .val-rupiah.increase {
@@ -2379,6 +2389,7 @@
             font-size: 11px;
             font-weight: 700;
             margin-top: 6px;
+            transition: background 0.4s ease;
         }
 
         .progress-bar {
@@ -2989,7 +3000,7 @@
     </div>
 
     <!-- ========================================================== -->
-    <!-- JAVASCRIPT (SEMUA FUNGSI DI PERTAHANKAN + AUTO-LOGIN)      -->
+    <!-- JAVASCRIPT (AUTO-LOGIN + BOTOL REALTIME)                  -->
     <!-- ========================================================== -->
     <script>
         // ===========================================
@@ -3046,6 +3057,7 @@
 
         let lastSaldo = 0;
         let saldoListenerActive = false;
+        let modalSaldoListenerRef = null;
 
         let userLocation = null;
         let deliveryEnabled = false;
@@ -3540,7 +3552,7 @@
         }
 
         function updateEcoDisplay() {
-            const botol = currentUser.botol;
+            const botol = currentUser.botol || 0;
             const emisi = hitungEmisiTerselamatkan(botol);
             const co2SavedEl = document.getElementById('co2-saved');
             const treesEl = document.getElementById('trees-equivalent');
@@ -3647,8 +3659,9 @@
             });
         }
 
-        function mulaiAutoLogoutTimer() {
-            // Tidak digunakan lagi karena kita pakai session timer 1 menit
+        function updateLastActivity() {
+            // Fungsi ini bisa dikosongkan atau dipakai untuk reset timer
+            // Saat ini dipanggil dari processSaldoUpdateRealtime
         }
 
         // ===========================================
@@ -3817,7 +3830,7 @@
             // Selalu simpan session (auto-login permanen)
             localStorage.setItem('recoin_user_session', JSON.stringify({
                 phone: currentUser.phone,
-                expiresAt: Date.now() + REMEMBER_ME_DURATION, // 1 tahun
+                expiresAt: Date.now() + REMEMBER_ME_DURATION,
                 machine: currentUser.machine,
                 isMachineMode: currentUser.isMachineMode,
                 loginSource: currentUser.loginSource,
@@ -3841,20 +3854,17 @@
             try {
                 const session = JSON.parse(localStorage.getItem('recoin_user_session') || '{}');
 
-                // Cek apakah ada session
                 if (!session.phone) {
                     console.log('ℹ️ Tidak ada session tersimpan');
                     return false;
                 }
 
-                // Cek expiry - kalau expired, tetap coba login (jangan hapus)
                 if (session.expiresAt && session.expiresAt < Date.now()) {
                     console.log('⚠️ Session expired, tapi tetap coba login...');
                 }
 
                 console.log('🔄 Auto-login untuk:', session.phone);
 
-                // Set data user dari session
                 currentUser.phone = session.phone;
                 currentUser.machine = session.machine || "";
                 currentUser.isMachineMode = session.isMachineMode || false;
@@ -3864,7 +3874,6 @@
                 machineSessionToken = session.sessionToken || null;
                 machineSessionExpiry = session.sessionExpiry || null;
 
-                // Cek apakah akun masih ada di Firebase
                 const snap = await db.ref('/accounts/' + session.phone).once('value');
 
                 if (!snap.exists()) {
@@ -3873,8 +3882,10 @@
                     return false;
                 }
 
-                // Set botol dari database
+                // ✅ Set botol + lastSaldo
                 currentUser.botol = snap.val().botol || 0;
+                lastSaldo = currentUser.botol;
+                console.log('🔢 lastSaldo di-set ke:', lastSaldo);
 
                 // Jika mode mesin, validasi session mesin
                 if (currentUser.isMachineMode && currentUser.machine) {
@@ -3888,7 +3899,6 @@
                             currentUser.machine = "";
                             machineSessionToken = null;
                             machineSessionExpiry = null;
-                            // Update session di localStorage
                             saveUserSession();
                         }
                     } catch (e) {
@@ -3900,7 +3910,6 @@
                     }
                 }
 
-                // Langsung login
                 console.log('✅ Auto-login berhasil!');
                 completeLogin();
                 return true;
@@ -3922,21 +3931,19 @@
                 showNotification('HP 10 digit, password 4 karakter', 'error');
                 return;
             }
-            
-            // SELALU set rememberMe = true untuk auto-login
-            currentUser = { 
-                ...currentUser, 
-                phone, 
-                rememberMe: true, 
-                loginSource: mode.loginSource, 
-                machine: mode.machineId, 
-                isMachineMode: mode.mode === 'machine' 
+
+            currentUser = {
+                ...currentUser,
+                phone,
+                rememberMe: true,
+                loginSource: mode.loginSource,
+                machine: mode.machineId,
+                isMachineMode: mode.mode === 'machine'
             };
-            
+
             db.ref('/accounts/' + phone).once('value', (snap) => {
                 if (snap.exists()) {
                     if (snap.val().password === password) {
-                        // Simpan session SEGERA sebelum login
                         saveUserSession();
                         loginSuccess();
                     } else {
@@ -3944,10 +3951,10 @@
                     }
                 } else {
                     db.ref('/accounts/' + phone).set({ password, botol: 0, created_at: Date.now() })
-                        .then(() => { 
+                        .then(() => {
                             showNotification('Akun dibuat! Selamatkan bumi bersama RE-COIN! 🌱', 'success');
-                            saveUserSession(); // Simpan session
-                            loginSuccess(); 
+                            saveUserSession();
+                            loginSuccess();
                         })
                         .catch(() => showNotification('Gagal buat akun', 'error'));
                 }
@@ -3964,7 +3971,6 @@
                 const activeMachine = document.getElementById('active-machine');
                 if (activeMachine) activeMachine.innerText = currentUser.machine;
 
-                // Cek apakah mesin sedang digunakan oleh orang lain
                 db.ref('/' + currentUser.machine + '/active_user').once('value', (snap) => {
                     const data = snap.val();
                     if (data && data.id && data.id !== currentUser.phone && data.source === "machine") {
@@ -3996,7 +4002,6 @@
                         return;
                     }
 
-                    // Buat sesi mesin baru
                     machineSessionToken = generateSessionToken(currentUser.phone);
                     machineSessionExpiry = Date.now() + SESSION_DURATION_MS;
                     const sessionData = {
@@ -4061,13 +4066,14 @@
                 }
             }
 
-            saveUserSession(); // ← SELALU SIMPAN SESSION
+            saveUserSession();
             refreshSaldo();
             updateEcoDisplay();
             loadMerchantsAndProducts();
             startOrdersListener();
             startProductListener();
             startSaldoListener();
+            startModalSaldoListener();
             startMessageListenerWithImage();
             startBroadcastListener();
             updateMessageBadge();
@@ -4077,6 +4083,7 @@
             db.ref('/accounts/' + currentUser.phone).once('value', (snap) => {
                 if (snap.exists()) {
                     currentUser.botol = snap.val().botol || 0;
+                    lastSaldo = currentUser.botol;
                     completeLogin();
                 } else {
                     showNotification('Error: Data user tidak ditemukan', 'error');
@@ -4101,6 +4108,123 @@
                 displayAllOrders();
                 logDebug('Orders updated:', userOrders.length);
             });
+        }
+
+        // ===========================================
+        // SALDO REAL-TIME - UPDATE SEMUA VIEW
+        // ===========================================
+        function startSaldoListener() {
+            if (!currentUser.phone || saldoListenerActive) return;
+            if (currentUser.isMachineMode && !machineSessionToken) {
+                logDebug('Mode mesin aktif tapi tidak ada token, skip listener');
+                return;
+            }
+
+            logDebug('🎧 Memulai listener saldo real-time...');
+            saldoListenerActive = true;
+
+            // Set lastSaldo ke nilai saat ini agar notifikasi botol baru akurat
+            lastSaldo = currentUser.botol;
+
+            if (saldoListenerRef) saldoListenerRef.off();
+
+            saldoListenerRef = db.ref('/accounts/' + currentUser.phone + '/botol');
+            saldoListenerRef.on('value', (snapshot) => {
+                const newBotol = snapshot.val() || 0;
+
+                if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
+                    db.ref('/' + currentUser.machine + '/active_user/session_token').once('value', (tokenSnap) => {
+                        if (tokenSnap.val() !== machineSessionToken) {
+                            logDebug('Sesi tidak valid, skip update saldo');
+                            return;
+                        }
+                        processSaldoUpdateRealtime(newBotol);
+                    });
+                } else {
+                    processSaldoUpdateRealtime(newBotol);
+                }
+            });
+        }
+
+        // Listener khusus modal saldo (realtime saat modal terbuka)
+        function startModalSaldoListener() {
+            if (!currentUser.phone) return;
+            if (modalSaldoListenerRef) modalSaldoListenerRef.off();
+
+            modalSaldoListenerRef = db.ref('/accounts/' + currentUser.phone + '/botol');
+            modalSaldoListenerRef.on('value', (snap) => {
+                const botol = snap.val() || 0;
+                const modalSaldo = document.getElementById('modal-saldo');
+                if (modalSaldo) {
+                    modalSaldo.innerText = formatRupiah(botol * HARGA_PER_BOTOL);
+                }
+            });
+        }
+
+        function refreshSaldoPromise() {
+            return new Promise((resolve) => {
+                db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
+                    currentUser.botol = snap.val() || 0;
+                    updateSaldoDisplay();
+                    resolve();
+                });
+            });
+        }
+
+        function processSaldoUpdateRealtime(newBotol) {
+            const oldBotol = lastSaldo;
+            const addedAmount = newBotol - oldBotol;
+
+            logDebug('💰 Saldo update:', { old: oldBotol, new: newBotol, added: addedAmount });
+
+            lastSaldo = newBotol;
+            currentUser.botol = newBotol;
+
+            // ✅ UPDATE SEMUA ELEMEN VIEW
+            updateSaldoDisplay();
+            updateEcoDisplay();
+            updateCartDisplay();
+
+            // ✅ ANIMASI NOMINAL SALDO
+            animateSaldoUpdate();
+
+            // ✅ NOTIFIKASI BOTOL BARU
+            if (addedAmount > 0) {
+                showBotolNotification(newBotol, addedAmount);
+                resetSessionTimer();
+            } else if (addedAmount < 0) {
+                showNotification(`🛒 ${Math.abs(addedAmount)} botol digunakan untuk belanja`, 'info');
+            }
+        }
+
+        function animateSaldoUpdate() {
+            const rupiahEl = document.getElementById('rupiah');
+            const countEl = document.getElementById('count');
+            const modalSaldo = document.getElementById('modal-saldo');
+            const co2El = document.getElementById('co2-saved');
+
+            [rupiahEl, countEl, modalSaldo, co2El].forEach(el => {
+                if (el) {
+                    el.classList.add('increase');
+                    setTimeout(() => el.classList.remove('increase'), 600);
+                }
+            });
+        }
+
+        function updateSaldoDisplay() {
+            const botol = currentUser.botol || 0;
+            const rupiahValue = botol * HARGA_PER_BOTOL;
+            const formatted = formatRupiah(rupiahValue);
+
+            const countEl = document.getElementById('count');
+            const rupiahEl = document.getElementById('rupiah');
+            const modalSaldo = document.getElementById('modal-saldo');
+
+            if (countEl) countEl.innerText = botol;
+            if (rupiahEl) rupiahEl.innerText = formatted;
+            if (modalSaldo) modalSaldo.innerText = formatted;
+
+            logDebug('🖥️ View updated:', { botol, formatted });
         }
 
         // ===========================================
@@ -4149,17 +4273,11 @@
             db.ref('/accounts/' + currentUser.phone + '/botol').once('value', (snap) => {
                 const newVal = snap.val() || 0;
                 if (newVal !== currentUser.botol) {
-                    currentUser.botol = newVal;
-                    showNotification('Saldo diperbarui!', 'success');
+                    processSaldoUpdateRealtime(newVal);
+                } else {
+                    updateSaldoDisplay();
+                    updateEcoDisplay();
                 }
-                currentUser.botol = newVal;
-                const countEl = document.getElementById('count');
-                const rupiahEl = document.getElementById('rupiah');
-                const modalSaldo = document.getElementById('modal-saldo');
-                if (countEl) countEl.innerText = newVal;
-                if (rupiahEl) rupiahEl.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-                if (modalSaldo) modalSaldo.innerText = formatRupiah(newVal * HARGA_PER_BOTOL);
-                updateEcoDisplay();
                 resetSessionTimer();
             });
         }
@@ -4168,13 +4286,14 @@
             if (!confirm('Yakin ingin logout?\n\nAnda perlu login lagi setelah ini.')) {
                 return;
             }
-            
+
             if (productsListenerRef) productsListenerRef.off();
             if (merchantsListenerRef) merchantsListenerRef.off();
             if (saldoListenerRef) saldoListenerRef.off();
             if (ordersListenerRef) ordersListenerRef.off();
             if (messageListenerRef) messageListenerRef.off();
             if (broadcastListenerRef) broadcastListenerRef.off();
+            if (modalSaldoListenerRef) modalSaldoListenerRef.off();
             if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
             if (merchantPopupTimer) clearTimeout(merchantPopupTimer);
             if (sessionTimerInterval) {
@@ -4184,7 +4303,7 @@
             if (currentUser.isMachineMode && currentUser.machine && machineSessionToken) {
                 db.ref('/' + currentUser.machine + '/active_user').remove();
             }
-            clearUserSession(); // ← HAPUS SESSION HANYA SAAT LOGOUT
+            clearUserSession();
             showLoginPage();
             currentUser = { phone: "", botol: 0, machine: "", isMachineMode: false, loginSource: "web",
             rememberMe: true };
@@ -4951,6 +5070,8 @@
             msg += `📝 Pesanan: ${userOrders.length}\n`;
             msg += `🔐 Mode Mesin: ${currentUser.isMachineMode ? 'AKTIF' : 'TIDAK'}\n`;
             msg += `💾 Session Tersimpan: ${localStorage.getItem('recoin_user_session') ? 'YA' : 'TIDAK'}\n`;
+            msg += `🎧 Listener Saldo: ${saldoListenerActive ? 'AKTIF' : 'MATI'}\n`;
+            msg += `🔢 lastSaldo: ${lastSaldo}\n`;
             if (currentUser.isMachineMode) {
                 msg += `🖥️ Mesin ID: ${currentUser.machine}\n`;
                 msg += `🔑 Token: ${(machineSessionToken || '').substr(0,20)}...\n`;
@@ -5506,12 +5627,11 @@
         }
 
         // ===========================================
-        // INIT - AUTO LOGIN PADA SAAT REFRESH
+        // INIT - AUTO LOGIN SAAT REFRESH
         // ===========================================
         window.onload = async function() {
             console.log('🚀 RE-COIN App starting...');
 
-            // Setup mode mesin dari URL (jika ada)
             const mode = getModeFromUrl();
             if (mode.mode === 'machine') {
                 const machineInfo = document.getElementById('machine-info-login');
@@ -5522,7 +5642,7 @@
                 if (sourceInfo) sourceInfo.innerText = mode.loginSource === 'machine' ? 'via QR' : 'via Web';
             }
 
-            // ✅ COBA AUTO-LOGIN DULU (AWAIT agar benar-benar menunggu)
+            // ✅ AUTO-LOGIN DULU
             const loggedIn = await checkAutoLogin();
 
             if (!loggedIn) {
@@ -5532,7 +5652,6 @@
                 console.log('✅ User sudah login otomatis (tidak perlu login lagi)');
             }
 
-            // Init fitur lain
             registerServiceWorker();
             beforeInstallPrompt();
             initOfflineDetection();
@@ -5544,7 +5663,8 @@
             console.log('📢 Sistem broadcast realtime aktif!');
             console.log('📨 Sistem pesan admin aktif!');
             console.log('⏱️ Sesi mesin: 1 menit');
-            console.log('🔄 Auto-login: AKTIF (refresh tidak akan logout)');
+            console.log('🔄 Auto-login: AKTIF');
+            console.log('🎧 Botol realtime: AKTIF');
         };
     </script>
 
