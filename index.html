@@ -83,7 +83,7 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 .eco-card{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #BBF7D0}
 .eco-card::before{content:'🌱';position:absolute;bottom:-10px;right:-10px;font-size:80px;opacity:.15;pointer-events:none}
 .jenis-botol-card{background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;cursor:pointer}
-.jenis-botol-card::before{content:'♻️';position:absolute;bottom:-10px;right:-10px;font-size:80px;opacity:.12;pointer-events:none}
+.jenis-botol-card::before{content:'';position:absolute;bottom:-10px;right:-10px;font-size:80px;opacity:.12;pointer-events:none}
 .jenis-botol-label{color:#1E40AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .stat-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
 .eco-label{color:#166534;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
@@ -247,7 +247,7 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 <div class="dana-header-icons"><button onclick="refreshSaldo()"><i class="fas fa-sync-alt"></i></button><button onclick="logout()"><i class="fas fa-sign-out-alt"></i></button></div>
 </div>
 <div class="dana-balance-card">
-<div class="dana-balance-label"><span>💰 Saldo Rekening Sampah</span><span id="mode-badge-dashboard" class="mode-badge">🌐 Online</span></div>
+<div class="dana-balance-label"><span>Saldo Rekening Sampah</span><span id="mode-badge-dashboard" class="mode-badge">🌐 Online</span></div>
 <div class="dana-balance-value" id="rupiah">Rp 0</div>
 <div class="dana-balance-sub"><i class="fas fa-recycle"></i><span id="count">0</span> botol terkumpul</div>
 </div>
@@ -275,30 +275,30 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 </div>
 <div id="machine-info-dashboard" class="machine-info hidden">Mesin: <span id="active-machine" class="machine-id"></span><div id="session-token-info" class="session-info hidden"></div><span id="source-info-dashboard" class="qr-badge hidden"></span></div>
 <div class="eco-card stat-card" style="margin-top:16px">
-<div class="eco-label">🌱 DAMPAK LINGKUNGAN ANDA</div>
+<div class="eco-label">DAMPAK LINGKUNGAN ANDA</div>
 <div class="val-eco" id="co2-saved">0 kg</div>
-<div id="eco-equivalents" style="font-size:12px;margin-top:6px;color:#166534;line-height:1.6">🌳 Setara <span id="trees-equivalent">0</span> pohon/tahun<br>💡 Hemat <span id="energy-equivalent">0</span> kWh listrik</div>
+<div id="eco-equivalents" style="font-size:12px;margin-top:6px;color:#166534;line-height:1.6">Setara <span id="trees-equivalent">0</span> pohon/tahun<br>Hemat <span id="energy-equivalent">0</span> kWh listrik</div>
 <div class="progress-bar"><div class="progress-fill" id="eco-progress"></div></div>
 <div class="milestone-text" id="next-milestone"></div>
-<div id="eco-badge" class="badge-eco">🌿 Eco Warrior in Progress</div>
+<div id="eco-badge" class="badge-eco">Eco Warrior in Progress</div>
 </div>
 <div class="jenis-botol-card stat-card" onclick="openJenisBotolModal()">
-<div class="jenis-botol-label">♻️ JENIS BOTOL DITERIMA</div>
+<div class="jenis-botol-label">JENIS BOTOL DITERIMA</div>
 <div style="font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6">Klik untuk melihat daftar botol</div>
 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><span style="background:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">💧 Air Mineral</span><span style="background:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">🥤 Soda</span><span style="background:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">🧴 Shampo</span></div>
 </div>
 <div class="my-orders" id="my-orders-summary"><h4><i class="fas fa-shopping-bag"></i> Pesanan Saya</h4><div id="recent-orders"><p style="color:var(--text2);font-size:13px;text-align:center">Memuat pesanan...</p></div><button class="btn-secondary" style="margin-top:10px;font-size:13px" onclick="showAllOrders()">Lihat Semua Pesanan</button></div>
-<div id="msg-limit" class="warning-text">Minimal saldo Rp 5.000 untuk tarik tunai (200 botol)</div>
+<div id="msg-limit" class="warning-text">Minimal saldo Rp 5.000 untuk tarik tunai </div>
 <div id="pwa-install-container"></div>
 <button class="btn-logout" onclick="logout()">LOGOUT</button>
-<button class="btn-debug" onclick="debugDatabase()">🔍 DEBUG DATABASE</button>
+<button class="btn-debug" onclick="debugDatabase()"> DEBUG DATABASE</button>
 </div>
 </div>
 
 <!-- SHOP -->
 <div id="shop-page" class="card card-full hidden">
 <button class="btn-back" onclick="hideShop()">← Kembali ke Dashboard</button>
-<div class="cart-header"><h3 style="margin:0">🛍️ Belanja</h3><div class="cart-icon" onclick="toggleCart()">🛒<span class="cart-count" id="cart-count">0</span></div></div>
+<div class="cart-header"><h3 style="margin:0">Belanja</h3><div class="cart-icon" onclick="toggleCart()">🛒<span class="cart-count" id="cart-count">0</span></div></div>
 <div id="cart-panel" class="cart-panel hidden">
 <h4 style="margin:0 0 12px">Keranjang Belanja</h4>
 <div id="cart-items"></div>
