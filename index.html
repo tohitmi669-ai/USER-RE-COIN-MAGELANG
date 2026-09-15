@@ -63,7 +63,7 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 .dana-user-greeting{font-size:12px;opacity:.85;margin-bottom:2px}
 .dana-user-phone{font-size:14px;font-weight:700}
 .dana-header-icons{display:flex;gap:8px}
-.dana-header-icons button{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.dana-header-icons button{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;position:relative}
 .dana-balance-card{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:20px;position:relative;z-index:2;margin-bottom:16px}
 .dana-balance-label{font-size:12px;opacity:.85;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
 .dana-balance-value{font-size:32px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
@@ -71,13 +71,14 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 .dana-balance-sub{font-size:12px;opacity:.8;display:flex;align-items:center;gap:6px}
 @keyframes numberPop{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
 .dana-quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:-50px 0 20px;position:relative;z-index:10;background:#fff;padding:16px;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-.dana-action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:8px 4px;border-radius:12px}
+.dana-action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:8px 4px;border-radius:12px;position:relative}
 .dana-action-btn:active{background:var(--primary-light);transform:scale(.95)}
-.dana-action-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;margin-bottom:2px}
+.dana-action-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;margin-bottom:2px;position:relative}
 .dana-action-icon.blue{background:linear-gradient(135deg,#118EEA,#1B9CFC)}
 .dana-action-icon.gold{background:linear-gradient(135deg,#FFB800,#FFA502)}
 .dana-action-icon.purple{background:linear-gradient(135deg,#6C5CE7,#A363D9)}
 .dana-action-icon.green{background:linear-gradient(135deg,#2ED573,#27AE60)}
+.dana-action-icon.red{background:linear-gradient(135deg,#FF4757,#C0392B)}
 .dana-action-label{font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.3}
 .stat-card{background:#fff;padding:20px;border-radius:20px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04);border:1px solid var(--border)}
 .eco-card{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #BBF7D0}
@@ -142,8 +143,8 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 .order-summary{background:var(--gray-light);border-radius:16px;padding:16px;margin:16px 0}
 .summary-row{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}
 .grand-total{font-weight:800;font-size:20px;color:var(--primary);margin-top:10px;padding-top:10px;border-top:2px solid var(--border);text-align:center}
-#modal-overlay,#merchant-popup-overlay,#jenis-botol-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:1000}
-@media(min-width:768px){#modal-overlay,#merchant-popup-overlay,#jenis-botol-modal-overlay{align-items:center}}
+#modal-overlay,#merchant-popup-overlay,#jenis-botol-modal-overlay,#broadcast-modal-overlay,#broadcast-history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:1000}
+@media(min-width:768px){#modal-overlay,#merchant-popup-overlay,#jenis-botol-modal-overlay,#broadcast-modal-overlay,#broadcast-history-overlay{align-items:center}}
 .modal{background:#fff;padding:24px;border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:slideUpModal .3s ease}
 @keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(min-width:768px){.modal{border-radius:24px}}
@@ -214,6 +215,33 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 @media(max-width:480px){.button-row .btn-tarik,.button-row .btn-belanja{font-size:12px;padding:12px 6px}}
 .button-row{display:flex;gap:12px;margin:16px 0}
 .button-row .btn-tarik,.button-row .btn-belanja{flex:1;margin-bottom:0;padding:14px 8px;font-size:13px;white-space:nowrap}
+
+/* ===== BROADCAST STYLES ===== */
+.broadcast-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 4px;animation:pulseBadge 1.5s infinite}
+@keyframes pulseBadge{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,71,87,.7)}50%{transform:scale(1.1);box-shadow:0 0 0 6px rgba(255,71,87,0)}}
+.broadcast-modal{background:#fff;padding:0;border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:slideUpModal .3s ease;overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+@media(min-width:768px){.broadcast-modal{border-radius:24px}}
+.broadcast-header{padding:20px 24px;background:linear-gradient(135deg,#118EEA,#1B9CFC);color:#fff;position:relative}
+.broadcast-header.priority-high{background:linear-gradient(135deg,#FF4757,#C0392B)}
+.broadcast-header.priority-medium{background:linear-gradient(135deg,#FFB800,#FFA502)}
+.broadcast-header.priority-low{background:linear-gradient(135deg,#118EEA,#1B9CFC)}
+.broadcast-header h3{margin:0 0 4px;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.broadcast-header .broadcast-time{font-size:11px;opacity:.85}
+.broadcast-body{padding:24px;overflow-y:auto;flex:1}
+.broadcast-message{font-size:15px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.broadcast-footer{padding:16px 24px;border-top:1px solid var(--border);background:#FAFBFC}
+.broadcast-history-item{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:.2s;position:relative}
+.broadcast-history-item:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.broadcast-history-item.unread{border-left:4px solid var(--primary);background:linear-gradient(90deg,rgba(17,142,234,.03),#fff)}
+.broadcast-history-item .bh-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.broadcast-history-item .bh-title{font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px}
+.broadcast-history-item .bh-date{font-size:11px;color:var(--text2)}
+.broadcast-history-item .bh-preview{font-size:13px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.broadcast-priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.broadcast-priority-dot.high{background:#FF4757}
+.broadcast-priority-dot.medium{background:#FFB800}
+.broadcast-priority-dot.low{background:#118EEA}
+.broadcast-unread-dot{position:absolute;top:12px;right:12px;width:10px;height:10px;background:var(--danger);border-radius:50%;animation:pulseBadge 1.5s infinite}
 </style>
 </head>
 <body>
@@ -244,7 +272,11 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 <div class="dana-dashboard-header">
 <div class="dana-header-top">
 <div class="dana-user-info"><div class="dana-avatar" id="user-avatar-initial">R</div><div><div class="dana-user-greeting">Selamat datang,</div><div class="dana-user-phone" id="user-display">-</div></div></div>
-<div class="dana-header-icons"><button onclick="refreshSaldo()"><i class="fas fa-sync-alt"></i></button><button onclick="logout()"><i class="fas fa-sign-out-alt"></i></button></div>
+<div class="dana-header-icons">
+<button onclick="openBroadcastHistory()" id="broadcast-bell-btn" title="Pesan Admin"><i class="fas fa-bell"></i><span id="broadcast-badge-dashboard" class="broadcast-badge hidden">0</span></button>
+<button onclick="refreshSaldo()"><i class="fas fa-sync-alt"></i></button>
+<button onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+</div>
 </div>
 <div class="dana-balance-card">
 <div class="dana-balance-label"><span>Saldo Rekening Sampah</span><span id="mode-badge-dashboard" class="mode-badge">🌐 Online</span></div>
@@ -274,6 +306,20 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 </div>
 </div>
 <div id="machine-info-dashboard" class="machine-info hidden">Mesin: <span id="active-machine" class="machine-id"></span><div id="session-token-info" class="session-info hidden"></div><span id="source-info-dashboard" class="qr-badge hidden"></span></div>
+
+<!-- BROADCAST BANNER DASHBOARD -->
+<div id="broadcast-banner" class="hidden" style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1.5px solid #FED7AA;border-radius:20px;padding:16px;margin-top:16px;cursor:pointer;position:relative" onclick="openLatestBroadcast()">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#FFB800,#FFA502);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-bullhorn" style="color:#fff;font-size:18px"></i></div>
+<div style="flex:1;min-width:0">
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-weight:800;font-size:13px;color:#92400E">📢 PESAN DARI ADMIN</span><span id="broadcast-banner-priority" style="font-size:10px;padding:2px 8px;border-radius:10px;background:#FFB800;color:#fff;font-weight:700"></span></div>
+<div id="broadcast-banner-text" style="font-size:12px;color:#78350F;line-height:1.5;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical"></div>
+</div>
+<i class="fas fa-chevron-right" style="color:#D97706;font-size:14px"></i>
+</div>
+<span id="broadcast-banner-dot" class="broadcast-unread-dot hidden"></span>
+</div>
+
 <div class="eco-card stat-card" style="margin-top:16px">
 <div class="eco-label">DAMPAK LINGKUNGAN ANDA</div>
 <div class="val-eco" id="co2-saved">0 kg</div>
@@ -373,6 +419,42 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 </div>
 </div>
 
+<!-- ===== BROADCAST MODAL (POPUP PESAN ADMIN) ===== -->
+<div id="broadcast-modal-overlay">
+<div class="broadcast-modal" id="broadcast-modal-content">
+<div class="broadcast-header" id="broadcast-modal-header">
+<button onclick="closeBroadcastModal()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;padding:0">&times;</button>
+<h3><i class="fas fa-bullhorn"></i> <span id="broadcast-modal-title">Pesan Admin</span></h3>
+<div class="broadcast-time" id="broadcast-modal-time"></div>
+</div>
+<div class="broadcast-body">
+<div class="broadcast-message" id="broadcast-modal-message"></div>
+<div id="broadcast-modal-attachment" class="hidden" style="margin-top:16px"></div>
+</div>
+<div class="broadcast-footer">
+<button class="btn-main" onclick="closeBroadcastModal()" style="margin:0"><i class="fas fa-check"></i> MENGERTI</button>
+</div>
+</div>
+</div>
+
+<!-- ===== BROADCAST HISTORY MODAL ===== -->
+<div id="broadcast-history-overlay">
+<div class="broadcast-modal" style="max-height:90vh">
+<div class="broadcast-header">
+<button onclick="closeBroadcastHistory()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;padding:0">&times;</button>
+<h3><i class="fas fa-bell"></i> Pesan dari Admin</h3>
+<div class="broadcast-time" id="broadcast-history-count">0 pesan</div>
+</div>
+<div class="broadcast-body" id="broadcast-history-list" style="background:var(--bg);padding:16px">
+<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat pesan...</p></div>
+</div>
+<div class="broadcast-footer">
+<button class="btn-secondary" onclick="markAllBroadcastsRead()" style="margin-bottom:8px"><i class="fas fa-check-double"></i> Tandai Semua Dibaca</button>
+<button class="btn-main" onclick="closeBroadcastHistory()" style="margin:0">TUTUP</button>
+</div>
+</div>
+</div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyDgm6P2T7DCLCy4ROuPNu6WtE_PIzoMvWk",authDomain:"re-coin-magelang-2026.firebaseapp.com",databaseURL:"https://re-coin-magelang-2026-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"re-coin-magelang-2026",storageBucket:"re-coin-magelang-2026.firebasestorage.app",messagingSenderId:"864198166030",appId:"1:864198166030:web:62e91d05f706592a2f9e5f"};
 firebase.initializeApp(firebaseConfig);
@@ -393,6 +475,15 @@ let cart=[],merchants=[],products=[],userOrders=[],newProductsSet=new Set(),last
 let userLocation=null,deliveryEnabled=false,manualAddress="",autoLogoutTimer=null;
 let saldoListenerRef=null,ordersListenerRef=null,productsListenerRef=null,merchantsListenerRef=null;
 let deferredPrompt=null,audioContext=null;
+
+// ===== BROADCAST VARIABLES =====
+let broadcastsListenerRef=null;
+let allBroadcasts=[];
+let readBroadcastIds=[];
+let unreadBroadcastCount=0;
+let latestBroadcast=null;
+let broadcastModalShownForIds=new Set();
+let broadcastAudioContext=null;
 
 function logDebug(...a){if(DEBUG)console.log('[DEBUG]',...a)}
 function formatRupiah(a){if(a==undefined||a===null)return'Rp 0';return'Rp '+a.toLocaleString('id-ID')}
@@ -453,7 +544,10 @@ function handleAuth(){const p=document.getElementById('phone-input').value.repla
 
 function completeLogin(){const lp=document.getElementById('login-page');const dp=document.getElementById('dashboard-page');const ud=document.getElementById('user-display');const ua=document.getElementById('user-avatar-initial');if(lp)lp.classList.add('hidden');if(dp)dp.classList.remove('hidden');if(ud)ud.innerText=currentUser.phone;if(ua)ua.innerText=currentUser.phone.charAt(0).toUpperCase();
 if(currentUser.isMachineMode){const am=document.getElementById('active-machine');if(am)am.innerText=currentUser.machine;db.ref('/'+currentUser.machine+'/active_user').once('value',s=>{const d=s.val();if(d&&d.id&&d.id!==currentUser.phone&&d.source==="machine"){showNotification('⚠️ Mesin sedang digunakan!','error');currentUser.isMachineMode=false;currentUser.machine="";machineSessionToken=null;localStorage.removeItem('recoin_machine_mode');const mi=document.getElementById('machine-info-dashboard');const mb=document.getElementById('mode-badge-dashboard');if(mi)mi.classList.add('hidden');if(mb)mb.innerText='🌐 Online';updateMachineStatusCard();refreshSaldo();loadMerchantsAndProducts();startOrdersListener();return}machineSessionToken=generateSessionToken(currentUser.phone);machineSessionExpiry=Date.now()+300000;db.ref('/'+currentUser.machine+'/active_user').set({id:currentUser.phone,login_time:Date.now(),last_activity:Date.now(),source:"machine",session_token:machineSessionToken,session_expiry:machineSessionExpiry}).then(()=>{saveMachineModeToLocal();showNotification('✅ Terhubung ke mesin','success');mulaiAutoLogoutTimer();const mi=document.getElementById('machine-info-dashboard');const mb=document.getElementById('mode-badge-dashboard');const si=document.getElementById('session-token-info');if(mi)mi.classList.remove('hidden');if(mb)mb.innerText='🔌 Mesin';if(si){si.innerHTML=`Token: ${machineSessionToken.substr(0,15)}...`;si.classList.remove('hidden')}startMachineSessionListener();updateMachineStatusCard()}).catch(()=>{currentUser.isMachineMode=false;const mi=document.getElementById('machine-info-dashboard');const mb=document.getElementById('mode-badge-dashboard');if(mi)mi.classList.add('hidden');if(mb)mb.innerText='🌐 Online';updateMachineStatusCard()})})}else{const mb=document.getElementById('mode-badge-dashboard');const mi=document.getElementById('machine-info-dashboard');if(mb)mb.innerText='🌐 Online';if(mi)mi.classList.add('hidden');machineSessionToken=null;machineSessionExpiry=null;updateMachineStatusCard()}
-saveUserSession();refreshSaldo();updateEcoDisplay();loadMerchantsAndProducts();startOrdersListener();startProductListener();startSaldoListener()}
+saveUserSession();refreshSaldo();updateEcoDisplay();loadMerchantsAndProducts();startOrdersListener();startProductListener();startSaldoListener();
+// ===== START BROADCAST LISTENER =====
+startBroadcastListener();
+}
 
 function loginSuccess(){db.ref('/accounts/'+currentUser.phone).once('value',s=>{if(s.exists()){currentUser.botol=s.val().botol||0;completeLogin()}else showNotification('Error: Data user tidak ditemukan','error')})}
 
@@ -463,7 +557,25 @@ function refreshSaldo(){if(currentUser.isMachineMode&&currentUser.machine){if(!m
 
 function doRefreshSaldo(){db.ref('/accounts/'+currentUser.phone+'/botol').once('value',s=>{const n=s.val()||0;if(n!==currentUser.botol){currentUser.botol=n;showNotification('Saldo diperbarui!','success')}currentUser.botol=n;const c=document.getElementById('count');const r=document.getElementById('rupiah');const ms=document.getElementById('modal-saldo');const bt=document.getElementById('btn-tarik');if(c)c.innerText=n;if(r)r.innerText=formatRupiah(n*HARGA_PER_BOTOL);if(ms)ms.innerText=formatRupiah(n*HARGA_PER_BOTOL);if(bt)bt.disabled=n*HARGA_PER_BOTOL<5000;updateEcoDisplay();updateLastActivity()})}
 
-function logout(){if(productsListenerRef)productsListenerRef.off();if(merchantsListenerRef)merchantsListenerRef.off();if(saldoListenerRef)saldoListenerRef.off();if(ordersListenerRef)ordersListenerRef.off();if(autoLogoutTimer)clearTimeout(autoLogoutTimer);if(merchantPopupTimer)clearTimeout(merchantPopupTimer);if(currentUser.isMachineMode&&currentUser.machine&&machineSessionToken)db.ref('/'+currentUser.machine+'/active_user').remove();clearUserSession();showLoginPage();currentUser={phone:"",botol:0,machine:"",isMachineMode:false,loginSource:"web",rememberMe:true};cart=[];deliveryEnabled=false;newProductsSet.clear();saldoListenerActive=false;machineSessionToken=null;machineSessionExpiry=null;merchantPopupShown=false;updateMachineStatusCard()}
+function logout(){
+if(productsListenerRef)productsListenerRef.off();
+if(merchantsListenerRef)merchantsListenerRef.off();
+if(saldoListenerRef)saldoListenerRef.off();
+if(ordersListenerRef)ordersListenerRef.off();
+if(broadcastsListenerRef)broadcastsListenerRef.off();
+if(autoLogoutTimer)clearTimeout(autoLogoutTimer);
+if(merchantPopupTimer)clearTimeout(merchantPopupTimer);
+if(currentUser.isMachineMode&&currentUser.machine&&machineSessionToken)db.ref('/'+currentUser.machine+'/active_user').remove();
+clearUserSession();
+showLoginPage();
+currentUser={phone:"",botol:0,machine:"",isMachineMode:false,loginSource:"web",rememberMe:true};
+cart=[];deliveryEnabled=false;newProductsSet.clear();saldoListenerActive=false;
+machineSessionToken=null;machineSessionExpiry=null;merchantPopupShown=false;
+allBroadcasts=[];readBroadcastIds=[];unreadBroadcastCount=0;latestBroadcast=null;broadcastModalShownForIds.clear();
+updateMachineStatusCard();
+updateBroadcastBadge();
+const bb=document.getElementById('broadcast-banner');if(bb)bb.classList.add('hidden');
+}
 
 function showLoginPage(){const lp=document.getElementById('login-page');const dp=document.getElementById('dashboard-page');const sp=document.getElementById('shop-page');const op=document.getElementById('orders-page');const od=document.getElementById('order-detail-page');const pi=document.getElementById('phone-input');const pa=document.getElementById('pass-input');if(lp)lp.classList.remove('hidden');if(dp)dp.classList.add('hidden');if(sp)sp.classList.add('hidden');if(op)op.classList.add('hidden');if(od)od.classList.add('hidden');if(pi)pi.value='';if(pa)pa.value=''}
 
@@ -518,7 +630,7 @@ function updateFloatingCartVisibility(){const sp=document.getElementById('shop-p
 function showShop(){const dp=document.getElementById('dashboard-page');const sp=document.getElementById('shop-page');if(dp)dp.classList.add('hidden');if(sp)sp.classList.remove('hidden');displayProducts();startMerchantPopupTimer();updateFloatingCartVisibility()}
 function hideShop(){const dp=document.getElementById('dashboard-page');const sp=document.getElementById('shop-page');if(dp)dp.classList.remove('hidden');if(sp)sp.classList.add('hidden');resetMerchantPopupTimer();updateFloatingCartVisibility()}
 
-function debugDatabase(){const e=hitungEmisiTerselamatkan(currentUser.botol);let m=`👤 User: ${currentUser.phone}\n💰 Saldo: ${formatRupiah(currentUser.botol*HARGA_PER_BOTOL)}\n💰 Harga/botol: ${formatRupiah(HARGA_PER_BOTOL)}\n🌱 Emisi: ${e.kg.toFixed(1)} kg CO₂e\n🌳 Pohon: ${e.setaraPohon.toFixed(1)}\n♻️ Jenis Botol: ${JENIS_BOTOL_LIST.length}\n🏪 Merchant: ${merchants.length}\n📦 Produk: ${products.length}\n📝 Pesanan: ${userOrders.length}\n🔐 Mode Mesin: ${currentUser.isMachineMode?'AKTIF':'TIDAK'}\n`;if(currentUser.isMachineMode){m+=`🖥️ Mesin ID: ${currentUser.machine}\n🔑 Token: ${(machineSessionToken||'').substr(0,20)}...\n`}alert(m)}
+function debugDatabase(){const e=hitungEmisiTerselamatkan(currentUser.botol);let m=`👤 User: ${currentUser.phone}\n💰 Saldo: ${formatRupiah(currentUser.botol*HARGA_PER_BOTOL)}\n💰 Harga/botol: ${formatRupiah(HARGA_PER_BOTOL)}\n🌱 Emisi: ${e.kg.toFixed(1)} kg CO₂e\n🌳 Pohon: ${e.setaraPohon.toFixed(1)}\n♻️ Jenis Botol: ${JENIS_BOTOL_LIST.length}\n🏪 Merchant: ${merchants.length}\n📦 Produk: ${products.length}\n📝 Pesanan: ${userOrders.length}\n📢 Broadcast: ${allBroadcasts.length} (${unreadBroadcastCount} belum dibaca)\n🔐 Mode Mesin: ${currentUser.isMachineMode?'AKTIF':'TIDAK'}\n`;if(currentUser.isMachineMode){m+=`🖥️ Mesin ID: ${currentUser.machine}\n🔑 Token: ${(machineSessionToken||'').substr(0,20)}...\n`}alert(m)}
 
 async function sendFonnteNotification(target,message,type='order'){if(!target||target.length<10)return{success:false,error:'Invalid target number'};const fn=target.replace(/[^0-9]/g,'');try{const r=await fetch(`${FONNTE_CONFIG.BASE_URL}/send`,{method:'POST',headers:{'Authorization':FONNTE_CONFIG.API_KEY,'Content-Type':'application/json'},body:JSON.stringify({target:fn,message,delay:'2',countryCode:'62',type:'text'})});const res=await r.json();if(res.status===true)return{success:true,data:res};else return{success:false,error:res.reason||'Unknown error'}}catch(e){return{success:false,error:e.message}}}
 
@@ -528,6 +640,301 @@ function registerServiceWorker(){if('serviceWorker'in navigator){window.addEvent
 function showInstallButton(){const c=document.getElementById('pwa-install-container');if(!c)return;if(document.getElementById('install-pwa-btn'))return;const b=document.createElement('button');b.id='install-pwa-btn';b.className='btn-install-pwa';b.innerHTML='<i class="fas fa-download"></i> Install Aplikasi RE-COIN 📱';b.onclick=async()=>{if(!deferredPrompt){showNotification('✨ Klik menu browser (⋮) → "Install App"','info');return}deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted'){showNotification('✅ RE-COIN terinstall!','success');b.remove()}deferredPrompt=null};c.appendChild(b)}
 function beforeInstallPrompt(){window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;showInstallButton()})}
 function initOfflineDetection(){window.addEventListener('online',()=>{const i=document.getElementById('offline-indicator');if(i){i.classList.remove('show');i.style.background='#27ae60';i.innerHTML='<i class="fas fa-check-circle"></i> Kembali online';setTimeout(()=>i.classList.remove('show'),3000)}showNotification('✅ Koneksi internet tersambung kembali','success')});window.addEventListener('offline',()=>{const i=document.getElementById('offline-indicator');if(i){i.classList.add('show');i.style.background='#e74c3c';i.innerHTML='<i class="fas fa-wifi"></i> Anda sedang offline'}showNotification('⚠️ Koneksi internet terputus','error')})}
+
+// ============================================================
+// ==================== BROADCAST FUNCTIONS ====================
+// ============================================================
+
+/**
+ * Memulai listener untuk broadcast dari admin.
+ * Struktur data Firebase yang diharapkan:
+ * /broadcasts/{broadcastId} = {
+ *   title: "Judul pesan",
+ *   message: "Isi pesan lengkap",
+ *   timestamp: 1234567890,
+ *   priority: "high" | "medium" | "low",
+ *   target: "all" | "user_phone" (opsional, default: all),
+ *   attachment_url: "https://..." (opsional),
+ *   attachment_type: "image" | "link" (opsional),
+ *   sender: "Admin" (opsional)
+ * }
+ */
+function startBroadcastListener(){
+  if(!currentUser.phone)return;
+  if(broadcastsListenerRef)broadcastsListenerRef.off();
+
+  // Load read broadcast IDs from localStorage
+  loadReadBroadcastIds();
+
+  broadcastsListenerRef=db.ref('/broadcasts');
+  broadcastsListenerRef.on('value',snap=>{
+    const newBroadcasts=[];
+    snap.forEach(child=>{
+      const b={id:child.key,...child.val()};
+      // Filter: broadcast untuk semua ATAU untuk user ini
+      const isForAll=!b.target||b.target==='all'||b.target==='semua';
+      const isForMe=b.target===currentUser.phone;
+      if(isForAll||isForMe){
+        newBroadcasts.push(b);
+      }
+    });
+    // Urutkan dari terbaru
+    newBroadcasts.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+
+    // Deteksi broadcast BARU (belum pernah ditampilkan popup)
+    const reallyNew=newBroadcasts.filter(b=>{
+      if(broadcastModalShownForIds.has(b.id))return false;
+      // Tampilkan popup hanya untuk broadcast dalam 24 jam terakhir
+      const age=Date.now()-(b.timestamp||0);
+      return age<24*60*60*1000;
+    });
+
+    allBroadcasts=newBroadcasts;
+    latestBroadcast=newBroadcasts[0]||null;
+
+    // Hitung yang belum dibaca
+    unreadBroadcastCount=newBroadcasts.filter(b=>!readBroadcastIds.includes(b.id)).length;
+
+    // Update UI
+    updateBroadcastBadge();
+    updateBroadcastBanner();
+    if(!document.getElementById('broadcast-history-overlay').classList.contains('hidden')){
+      renderBroadcastHistory();
+    }
+
+    // Tampilkan popup untuk broadcast baru
+    if(reallyNew.length>0){
+      // Tandai semua sebagai sudah ditampilkan
+      reallyNew.forEach(b=>broadcastModalShownForIds.add(b.id));
+      // Tampilkan yang paling baru/prioritas tinggi
+      const toShow=reallyNew.sort((a,b)=>{
+        const pOrder={high:3,medium:2,low:1};
+        const pa=pOrder[a.priority||'low']||1;
+        const pb=pOrder[b.priority||'low']||1;
+        if(pa!==pb)return pb-pa;
+        return (b.timestamp||0)-(a.timestamp||0);
+      })[0];
+      setTimeout(()=>showBroadcastModal(toShow),800);
+    }
+  },err=>{
+    console.error('[Broadcast] Listener error:',err);
+  });
+}
+
+function loadReadBroadcastIds(){
+  try{
+    const stored=localStorage.getItem('recoin_read_broadcasts_'+currentUser.phone);
+    readBroadcastIds=stored?JSON.parse(stored):[];
+  }catch(e){readBroadcastIds=[]}
+}
+
+function saveReadBroadcastIds(){
+  try{
+    localStorage.setItem('recoin_read_broadcasts_'+currentUser.phone,JSON.stringify(readBroadcastIds));
+  }catch(e){}
+}
+
+function updateBroadcastBadge(){
+  const badge=document.getElementById('broadcast-badge-dashboard');
+  if(!badge)return;
+  if(unreadBroadcastCount>0){
+    badge.innerText=unreadBroadcastCount>99?'99+':unreadBroadcastCount;
+    badge.classList.remove('hidden');
+  }else{
+    badge.classList.add('hidden');
+  }
+}
+
+function updateBroadcastBanner(){
+  const banner=document.getElementById('broadcast-banner');
+  const text=document.getElementById('broadcast-banner-text');
+  const priority=document.getElementById('broadcast-banner-priority');
+  const dot=document.getElementById('broadcast-banner-dot');
+  if(!banner||!text)return;
+
+  if(!latestBroadcast){
+    banner.classList.add('hidden');
+    return;
+  }
+
+  banner.classList.remove('hidden');
+  const title=latestBroadcast.title||'Pesan Admin';
+  const msg=latestBroadcast.message||'';
+  text.innerHTML=`<strong>${escapeHtml(title)}:</strong> ${escapeHtml(msg).substring(0,120)}${msg.length>120?'...':''}`;
+
+  const p=latestBroadcast.priority||'low';
+  if(priority){
+    priority.innerText=p==='high'?'PENTING':p==='medium'?'INFO':'UMUM';
+    priority.style.background=p==='high'?'#FF4757':p==='medium'?'#FFB800':'#118EEA';
+  }
+
+  if(dot){
+    if(!readBroadcastIds.includes(latestBroadcast.id)){
+      dot.classList.remove('hidden');
+    }else{
+      dot.classList.add('hidden');
+    }
+  }
+}
+
+function openLatestBroadcast(){
+  if(!latestBroadcast){
+    showNotification('Belum ada pesan dari admin','info');
+    return;
+  }
+  showBroadcastModal(latestBroadcast);
+}
+
+function showBroadcastModal(b){
+  if(!b)return;
+  const overlay=document.getElementById('broadcast-modal-overlay');
+  const header=document.getElementById('broadcast-modal-header');
+  const title=document.getElementById('broadcast-modal-title');
+  const time=document.getElementById('broadcast-modal-time');
+  const message=document.getElementById('broadcast-modal-message');
+  const attachment=document.getElementById('broadcast-modal-attachment');
+
+  if(title)title.innerText=b.title||'Pesan Admin';
+  if(time)time.innerText=formatDate(b.timestamp);
+  if(message)message.innerText=b.message||'';
+
+  // Priority styling
+  if(header){
+    header.className='broadcast-header';
+    const p=b.priority||'low';
+    if(p==='high')header.classList.add('priority-high');
+    else if(p==='medium')header.classList.add('priority-medium');
+    else header.classList.add('priority-low');
+  }
+
+  // Attachment
+  if(attachment){
+    if(b.attachment_url){
+      attachment.classList.remove('hidden');
+      if(b.attachment_type==='image'){
+        attachment.innerHTML=`<img src="${escapeHtml(b.attachment_url)}" style="width:100%;border-radius:12px;margin-top:8px" onerror="this.style.display='none'">`;
+      }else{
+        attachment.innerHTML=`<a href="${escapeHtml(b.attachment_url)}" target="_blank" style="display:inline-block;background:var(--primary);color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600;font-size:14px"><i class="fas fa-external-link-alt"></i> Buka Link</a>`;
+      }
+    }else{
+      attachment.classList.add('hidden');
+      attachment.innerHTML='';
+    }
+  }
+
+  if(overlay)overlay.style.display='flex';
+
+  // Tandai sudah dibaca
+  if(!readBroadcastIds.includes(b.id)){
+    readBroadcastIds.push(b.id);
+    saveReadBroadcastIds();
+    unreadBroadcastCount=allBroadcasts.filter(x=>!readBroadcastIds.includes(x.id)).length;
+    updateBroadcastBadge();
+    updateBroadcastBanner();
+  }
+
+  // Sound notification
+  playBroadcastSound();
+}
+
+function closeBroadcastModal(){
+  const overlay=document.getElementById('broadcast-modal-overlay');
+  if(overlay)overlay.style.display='none';
+}
+
+function playBroadcastSound(){
+  try{
+    if(!broadcastAudioContext)broadcastAudioContext=new(window.AudioContext||window.webkitAudioContext)();
+    const ctx=broadcastAudioContext;
+    // Two-tone bell
+    [0,0.15].forEach((delay,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=i===0?988:1319;
+      g.gain.value=.25;
+      o.start(ctx.currentTime+delay);
+      g.gain.exponentialRampToValueAtTime(.00001,ctx.currentTime+delay+.4);
+      o.stop(ctx.currentTime+delay+.4);
+    });
+    if(ctx.state==='suspended')ctx.resume();
+  }catch(e){}
+}
+
+function openBroadcastHistory(){
+  const overlay=document.getElementById('broadcast-history-overlay');
+  if(overlay)overlay.style.display='flex';
+  renderBroadcastHistory();
+}
+
+function closeBroadcastHistory(){
+  const overlay=document.getElementById('broadcast-history-overlay');
+  if(overlay)overlay.style.display='none';
+}
+
+function renderBroadcastHistory(){
+  const list=document.getElementById('broadcast-history-list');
+  const count=document.getElementById('broadcast-history-count');
+  if(!list)return;
+
+  if(count)count.innerText=`${allBroadcasts.length} pesan • ${unreadBroadcastCount} belum dibaca`;
+
+  if(allBroadcasts.length===0){
+    list.innerHTML='<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada pesan dari admin</p></div>';
+    return;
+  }
+
+  let h='';
+  allBroadcasts.forEach(b=>{
+    const isUnread=!readBroadcastIds.includes(b.id);
+    const p=b.priority||'low';
+    const pIcon=p==='high'?'🔴':p==='medium'?'🟡':'🔵';
+    const pLabel=p==='high'?'PENTING':p==='medium'?'INFO':'UMUM';
+    h+=`<div class="broadcast-history-item ${isUnread?'unread':''}" onclick="showBroadcastModalFromHistory('${b.id}')">
+      ${isUnread?'<span class="broadcast-unread-dot"></span>':''}
+      <div class="bh-header">
+        <div class="bh-title">
+          <span class="broadcast-priority-dot ${p}"></span>
+          ${escapeHtml(b.title||'Pesan Admin')}
+        </div>
+        <div class="bh-date">${formatDate(b.timestamp)}</div>
+      </div>
+      <div class="bh-preview">${escapeHtml(b.message||'')}</div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${p==='high'?'#FEE2E2':p==='medium'?'#FEF3C7':'#DBEAFE'};color:${p==='high'?'#991B1B':p==='medium'?'#92400E':'#1E40AF'}">${pIcon} ${pLabel}</span>
+        ${isUnread?'<span style="font-size:10px;color:var(--primary);font-weight:700">● Belum dibaca</span>':'<span style="font-size:10px;color:var(--text2)">✓ Dibaca</span>'}
+      </div>
+    </div>`;
+  });
+  list.innerHTML=h;
+}
+
+function showBroadcastModalFromHistory(id){
+  const b=allBroadcasts.find(x=>x.id===id);
+  if(b)showBroadcastModal(b);
+  // Update tampilan history setelah dibaca
+  setTimeout(renderBroadcastHistory,300);
+}
+
+function markAllBroadcastsRead(){
+  if(allBroadcasts.length===0){
+    showNotification('Tidak ada pesan','info');
+    return;
+  }
+  allBroadcasts.forEach(b=>{
+    if(!readBroadcastIds.includes(b.id))readBroadcastIds.push(b.id);
+  });
+  saveReadBroadcastIds();
+  unreadBroadcastCount=0;
+  updateBroadcastBadge();
+  updateBroadcastBanner();
+  renderBroadcastHistory();
+  showNotification('✅ Semua pesan ditandai dibaca','success');
+}
+
+// ============================================================
+// ==================== END BROADCAST =========================
+// ============================================================
 
 window.onload=function(){const m=getModeFromUrl();if(m.mode==='machine'){const mi=document.getElementById('machine-info-login');const md=document.getElementById('machine-id-display');const si=document.getElementById('source-info-login');if(mi)mi.classList.remove('hidden');if(md)md.innerText=m.machineId;if(si)si.innerText=m.loginSource==='machine'?'via QR':'via Web'}if(!checkAutoLogin())showLoginPage();registerServiceWorker();beforeInstallPrompt();initOfflineDetection();updateFloatingCartVisibility();console.log('🔥 RE-COIN siap! Harga per botol: Rp '+HARGA_PER_BOTOL)};
 </script>
