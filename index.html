@@ -356,7 +356,7 @@ button:disabled{background:#DFE6E9!important;cursor:not-allowed;opacity:.6;box-s
 <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);padding:14px;border-radius:14px;margin-bottom:20px;border:1px solid #BBF7D0"><div style="font-size:13px;color:#166534;line-height:1.6"><strong>💡 Info:</strong> Setiap botol bernilai <strong>Rp 25</strong>. Pastikan botol <strong>bersih, kosong, tidak penyok</strong>.</div></div>
 <p style="margin-bottom:12px;font-weight:600;font-size:14px">Daftar botol yang bisa ditukar:</p>
 <div id="jenis-botol-list"></div>
-<div style="background:#FEF3C7;padding:14px;border-radius:14px;margin:16px 0;border-left:4px solid #F59E0B"><div style="font-size:12px;color:#92400E;line-height:1.6"><strong>⚠️ Perhatian:</strong><br>• Botol harus bersih & kosong<br>• Tidak menerima botol kaca/kaleng<br>• Botol penyok/rusak tidak diterima<br>• Minimal 1 botol</div></div>
+<div style="background:#FEF3C7;padding:14px;border-radius:14px;margin:16px 0;border-left:4px solid #F59E0B"><div style="font-size:12px;color:#92400E;line-height:1.6"><strong>⚠️ Perhatian:</strong><br>• Botol harus bersih & kosong<br>• Tidak menerima botol kaca<br>• Botol penyok/rusak tidak diterima<br>• Minimal 1 botol</div></div>
 <button class="btn-main" onclick="closeJenisBotolModal()" style="margin-top:10px"><i class="fas fa-check"></i> MENGERTI</button>
 </div>
 </div>
@@ -379,7 +379,7 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
 const JENIS_BOTOL_LIST=[
-{id:'air_mineral',name:'Botol Air Mineral',icon:'💧',desc:'Semua ukuran (330ml, 600ml, 1.5L, galon)',contoh:'Aqua, Le Minerale, Cleo, Vit, dll',warna:'#118EEA'},
+{id:'air_mineral',name:'Botol Air Mineral',icon:'💧',desc:'Semua ukuran (330ml, 600ml, 1.5L)',contoh:'Aqua, Le Minerale, Cleo, Vit, dll',warna:'#118EEA'},
 {id:'soda',name:'Botol Minuman Soda',icon:'🥤',desc:'Botol soda & minuman berkarbonasi',contoh:'Coca-Cola, Pepsi, Sprite, Fanta, dll',warna:'#FF4757'},
 {id:'shampo',name:'Botol Shampo & Sabun',icon:'🧴',desc:'Botol shampo, sabun cair, deterjen',contoh:'Sunsilk, Pantene, Head & Shoulders, Rinso, dll',warna:'#6C5CE7'}
 ];
